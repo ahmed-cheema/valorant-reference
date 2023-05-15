@@ -1,0 +1,548 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+  @media screen and (max-width: 768px) {
+    .nav-tabs {
+      width: 100% !important;
+    }
+  }
+
+  a {
+      text-decoration: none;
+  }
+
+  table.dataTable.no-footer > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+  table {
+    border-radius: 5px;
+  }
+
+  .hiddenLink {
+        color: inherit !important;
+        text-decoration: inherit !important;
+  }
+
+  hr {
+    background-color: black !important;
+    color: black !important;
+    border: solid 1px black !important;
+  }
+
+  .nav-tabs {
+    width: 75%;
+  }
+
+  .nav-custom {
+    color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+  a.active, .nav-custom:hover {
+    color: white !important;
+    background-color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+    .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#None {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+  <div class="p-2" style="width: fit-content; overflow: hidden; text-align: center; margin-left: auto; margin-right: auto;">
+    <div style="display: inline-block; vertical-align: middle;">
+      <img src="{{ topAgentImage }}" alt="{{ topAgent }}" height="60px" title="Most Played Agent: {{ topAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+    </div>
+    <div style="display: inline-block; vertical-align: middle; white-space: nowrap;">
+      <h1 style="font-weight:bold"
+      title="{{ username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ displayName }}</h1>
+    </div>
+  </div>
+
+  <div id="buttons" style="text-align:center; margin-top: 1%;">
+    <div style="display: inline-block;">
+      <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_detail' username %}" role="button">Overview</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' username %}" role="button">Splits</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' username %}" role="button">Teammates</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ displayName }}=1" role="button">Matches</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' username %}" role="button">Game Log</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2 style="text-align:center; font-weight:normal">Overview</h2>
+
+  <br>
+  <h4 style="font-weight:normal">Summary</h4>
+
+  <div id="summary-basic" class="tab-pane active table-responsive-lg">
+    <table id="table-summary-basic" class=" table table-hover table-striped table-sm center"
+            style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+      <thead>
+        <tr>
+            <th></th>
+            <th style="text-align:center;" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
+            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th style="text-align:center;" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
+            <th style="text-align:center;" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center;" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
+            <th style="text-align:center;" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+            <th style="text-align:center;" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            <th style="text-align:center;" title="Headshot Percentage" data-bs-toggle="tooltip" data-bs-placement="top">HS%</th>
+            <th style="text-align:center;" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+            <th style="text-align:center;" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in lst %}
+          <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+            <td style="width:7%">{{ p.Label }}</td>
+            <td style="width:2%; text-align:center"><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%">{{ p.num_matches }}</td>
+            <td style="text-align:center; width:1%; {% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ p.kills_per_20|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%; {% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
+            <td style="text-align:center; width:1%">{{ p.acs|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%">{{ p.adr|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%">{{ p.hs_pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if p.k_pct > 0.5 %}color:green{% elif p.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ p.k_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%">{{ p.kast|floatformat:3 }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <br>
+  <h4 style="font-weight:normal">Kills / Deaths</h4>
+
+  <ul class="nav nav-tabs" id="kdTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom active" style="font-size:80%;" id="rate-tab" data-bs-toggle="tab" href="#kd-rate" role="tab">Average</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="totals-tab" data-bs-toggle="tab" href="#kd-total" role="tab">Total</a>
+    </li>
+  </ul>
+
+  <div id="kd-tabs" class="tab-content">
+
+    <div id="kd-rate" class="tab-pane active table-responsive-lg">
+      <table id="table-kd-rate" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th></th>
+              <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th style="text-align:center" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center;" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
+              <th style="text-align:center" title="First Bloods per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+              <th style="text-align:center" title="First Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+              <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+              <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+              <th style="text-align:center" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+              </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%;">{{ p.kills_per_20|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.deaths_per_20|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%; {% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.d_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fb_per_20|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fd_per_20|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fb_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fd_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.fb_fd_ratio > 1 %}color:green{% elif p.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ p.fb_fd_ratio|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="kd-total" class="tab-pane table-responsive-lg">
+      <table id="table-kd-total" class="table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th></th>
+              <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center;" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
+              <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+              <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+              <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+              <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+              <th style="text-align:center" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+              </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%;">{{ p.total_kills }}</td>
+              <td style="text-align:center; width:1%;">{{ p.total_deaths }}</td>
+              <td style="text-align:center; width:1%; {% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;; border-right:1px solid rgb(222, 226, 230)">{{ p.d_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.first_bloods }}</td>
+              <td style="text-align:center; width:1%;">{{ p.first_deaths }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fb_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.fd_pct|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.fb_fd_ratio > 1 %}color:green{% elif p.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ p.fb_fd_ratio|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <br>
+  <h4 style="font-weight:normal">Attack / Defense</h4>
+
+  <ul class="nav nav-tabs" id="sideTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom active" style="font-size:80%;" id="rate-tab" data-bs-toggle="tab" href="#side-rate" role="tab">Average</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="totals-tab" data-bs-toggle="tab" href="#side-total" role="tab">Total</a>
+    </li>
+  </ul>
+
+  <div id="side-tabs" class="tab-content">
+
+    <div id="side-rate" class="tab-pane active table-responsive-lg">
+      <table id="table-side-rate" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th></th>
+            <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
+            <th colspan="5" style="text-align:center">Defense</th>
+          </tr>
+          <tr>
+              <th></th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th style="text-align:center" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              <th style="text-align:center" title="Attack Kills per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Attack Deaths per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Attack Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th style="text-align:center" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              <th style="text-align:center" title="Defense Kills per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Defense Deaths per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Defense Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center;" title="Defense Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%">{{ p.Label }}</td>
+              <td class="mp" style="text-align:center; width:0.5%; border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%; {% if p.attack_win_pct > 0.5 %}color:green{% elif p.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.attack_win_pct|floatformat:3 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.attack_kp12|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.attack_dp12|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%; {% if p.attack_kdr > 1 %}color:green{% elif p.attack_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.attack_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.attack_adr|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%; {% if p.defense_win_pct > 0.5 %}color:green{% elif p.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.defense_win_pct|floatformat:3 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_kp12|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_dp12|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%; {% if p.defense_kdr > 1 %}color:green{% elif p.defense_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.defense_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_adr|floatformat:1 }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="side-total" class="tab-pane table-responsive-lg">
+      <table id="table-side-total" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th></th>
+            <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
+            <th colspan="5" style="text-align:center">Defense</th>
+          </tr>
+          <tr>
+              <th></th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th style="text-align:center" title="Attack Rounds" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+              <th style="text-align:center" title="Attack Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Attack Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Attack Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th style="text-align:center" title="Defense Rounds" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+              <th style="text-align:center" title="Defense Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Defense Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Defense Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center;" title="Defense Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%">{{ p.Label }}</td>
+              <td class="mp" style="text-align:center; width:0.5%; border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%; {% if p.attack_win_pct > 0.5 %}color:green{% elif p.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.attack_rounds }}</td>
+              <td style="text-align:center; width:1%;">{{ p.attack_kills }}</td>
+              <td style="text-align:center; width:1%;">{{ p.attack_deaths }}</td>
+              <td style="text-align:center; width:1%; {% if p.attack_kdr > 1 %}color:green{% elif p.attack_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.attack_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.attack_adr|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%; {% if p.defense_win_pct > 0.5 %}color:green{% elif p.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.defense_rounds }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_kills }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_deaths }}</td>
+              <td style="text-align:center; width:1%; {% if p.defense_kdr > 1 %}color:green{% elif p.defense_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.defense_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.defense_adr|floatformat:1 }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <br>
+  <h4 style="font-weight:normal">Multi-Kills</h4>
+
+  <ul class="nav nav-tabs" id="mkTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom active" style="font-size:80%;" id="rate-tab" data-bs-toggle="tab" href="#mk-rate" role="tab">Average</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="totals-tab" data-bs-toggle="tab" href="#mk-total" role="tab">Total</a>
+    </li>
+  </ul>
+
+  <div id="mk-tabs" class="tab-content">
+
+    <div id="mk-rate" class="tab-pane active table-responsive-lg">
+      <table id="table-mk-rate" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="7" style="text-align:center;">Rounds with X kills</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th> 
+            <th style="text-align:center;" title="Zero Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">0</th>
+            <th style="text-align:center;" title="One Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">1</th>
+            <th style="text-align:center;" title="Two Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">2</th>
+            <th style="text-align:center;" title="Three Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">3</th>
+            <th style="text-align:center;" title="Four Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">4</th>
+            <th style="text-align:center;" title="Five Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">5</th>
+            <th style="text-align:center;" title="Six Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">6</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%;">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%">{{ p.zero_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.one_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.two_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.three_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.four_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.five_kills_p20|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.six_kills_p20|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="mk-total" class="tab-pane table-responsive-lg">
+      <table id="table-mk-total" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="7" style="text-align:center;">Rounds with X kills</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th> 
+            <th style="text-align:center;" title="Zero Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">0</th>
+            <th style="text-align:center;" title="One Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">1</th>
+            <th style="text-align:center;" title="Two Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">2</th>
+            <th style="text-align:center;" title="Three Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">3</th>
+            <th style="text-align:center;" title="Four Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">4</th>
+            <th style="text-align:center;" title="Five Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">5</th>
+            <th style="text-align:center;" title="Six Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">6</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%;">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.rounds }}</td>
+              <td style="text-align:center; width:1%">{{ p.zero_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.one_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.two_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.three_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.four_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.five_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.six_kills }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <br>
+  <h4 style="font-weight:normal">Round Outcome</h4>
+
+  <ul class="nav nav-tabs" id="outcomeTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom active" style="font-size:80%;" id="rate-tab" data-bs-toggle="tab" href="#outcome-rate" role="tab">Average</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="totals-tab" data-bs-toggle="tab" href="#outcome-total" role="tab">Total</a>
+    </li>
+  </ul>
+
+  <div id="outcome-tabs" class="tab-content">
+
+    <div id="outcome-rate" class="tab-pane active table-responsive-lg">
+      <table id="table-outcome-rate" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Rounds Won</th>
+            <th colspan="5" style="text-align:center">Rounds Lost</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">MP</th>
+            <th style="text-align:center;" title="Average Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Kills per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+            <th style="text-align:center;" title="Deaths per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+            <th style="text-align:center;" title="Kill/Death Ratio in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            <th style="text-align:center;" title="Average Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Kills per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+            <th style="text-align:center;" title="Deaths per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+            <th style="text-align:center;" title="Kill/Death Ratio in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center;" title="Average Damage per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%;">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%;">{{ p.avg_rounds_won|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%">{{ p.win_kills_avg|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.win_deaths_avg|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.win_kdr > 1 %}color:green{% elif p.win_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.win_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.win_adr|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.avg_rounds_lost|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_kills_avg|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_deaths_avg|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; {% if p.loss_kdr > 1 %}color:green{% elif p.loss_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.loss_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_adr|floatformat:1 }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="outcome-total" class="tab-pane table-responsive-lg">
+      <table id="table-outcome-total" class=" table table-hover table-striped table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+            <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Rounds Won</th>
+            <th colspan="5" style="text-align:center">Rounds Lost</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">MP</th>
+            <th style="text-align:center;" title="Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Kills in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+            <th style="text-align:center;" title="Deaths in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+            <th style="text-align:center;" title="Kill/Death Ratio in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            <th style="text-align:center;" title="Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Kills in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+            <th style="text-align:center;" title="Deaths in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+            <th style="text-align:center;" title="Kill/Death Ratio in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center;" title="Average Damage per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in lst %}
+            <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
+              <td style="width:7%;">{{ p.Label }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td style="text-align:center; width:1%;">{{ p.rounds_won }}</td>
+              <td style="text-align:center; width:1%">{{ p.win_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.win_deaths }}</td>
+              <td style="text-align:center; width:1%; {% if p.win_kdr > 1 %}color:green{% elif p.win_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.win_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ p.win_adr|floatformat:1 }}</td>
+              <td style="text-align:center; width:1%;">{{ p.rounds_lost }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_kills }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_deaths }}</td>
+              <td style="text-align:center; width:1%; {% if p.loss_kdr > 1 %}color:green{% elif p.loss_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.loss_kdr|floatformat:2 }}</td>
+              <td style="text-align:center; width:1%">{{ p.loss_adr|floatformat:1 }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  
+</div>
+{% endblock %}

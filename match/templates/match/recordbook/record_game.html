@@ -1,0 +1,344 @@
+{% extends 'match/base.html' %}
+
+{% load record_elements %}
+
+{% block css %}
+<style>
+    .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#records {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    h2 {
+        text-align:center;
+    }
+
+    h4 {
+        text-align:center;
+    }
+
+    a {
+        text-decoration: none;
+    } 
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+
+    table.dataTable.no-footer > tbody > tr:last-child > td {
+        border-bottom: none;
+    }
+    table {
+        border-radius: 5px;
+    }
+
+    .hiddenLink {
+        color: inherit !important;
+        text-decoration: inherit !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+        }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+    <h2 style="text-align:center">Record Book</h2>
+
+    <div id="buttons" style="text-align:center; margin-top: 1%;">
+        <div style="display: inline-block;">
+            <a class="btn btn-outline-dark shadow-sm " style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
+        </div>
+    </div>
+
+    <hr>
+    
+    <br>
+    <h4>Kills</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Most single-game kills:</strong></p>
+            {% for game in MostKills %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Fewest single-game kills:</strong></p>
+            {% for game in LeastKills %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Deaths</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Most single-game deaths:</strong></p>
+            {% for game in MostDeaths %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Fewest single-game deaths:</strong></p>
+            {% for game in LeastDeaths %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Assists</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Most single-game assists:</strong></p>
+            {% for game in MostAssists %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Fewest single-game assists:</strong></p>
+                <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#FewestAssists" aria-expanded="false" aria-controls="collapseExample">
+                    Show All
+                </button>
+                <div class="collapse" id="FewestAssists">
+                    {% for game in LeastAssists %}
+                        <p style="margin-bottom:0;">
+                            {% game_element game %}
+                        </p>
+                    {% endfor %}  
+                </div>
+        </div>
+    </div>
+
+    <br>
+    <h4>Kill Death Ratio (K/D)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game K/D:</strong></p>
+                {% for game in BestKDR %}
+                <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height=30px title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}:</a> 
+                {{ game.Value|floatformat:2 }} 
+                <a href="{% url 'match_detail' game.MatchID % }"> ({{ game.Date|date:"n/j/y" }}) </a>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game K/D:</strong></p>
+            {% for game in WorstKDR %}
+                <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height=30px title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}:</a> 
+                {{ game.Value|floatformat:2 }} 
+                <a href="{% url 'match_detail' game.MatchID % }"> ({{ game.Date|date:"n/j/y" }}) </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Average Combat Score (ACS)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game ACS:</strong></p>
+            {% for game in BestACS %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game ACS:</strong></p>
+            {% for game in WorstACS %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Average Damage per Round (ADR)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game ADR:</strong></p>
+            {% for game in BestADR %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game ADR:</strong></p>
+            {% for game in WorstADR %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>First Bloods / Deaths</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Most single-game first bloods:</strong></p>
+            {% for game in MostFB %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Most single-game first deaths:</strong></p>
+            {% for game in MostFD %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Kill Percentage (K%)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game K%:</strong></p>
+            {% for game in HighestK_Pct %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game K%:</strong></p>
+            {% for game in LowestK_Pct %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Killed / Assisted / Survived / Traded Ratio (KAST%)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game KAST%:</strong></p>
+            {% for game in HighestKAST %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game KAST%:</strong></p>
+            {% for game in LowestKAST %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Headshot Percentage (HS%)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game HS%:</strong></p>
+            {% for game in HighestHS_Pct %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game HS%:</strong></p>
+            {% for game in LowestHS_Pct %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4>Damage Delta (DD)</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Highest single-game DD:</strong></p>
+            {% for game in HighestDD %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Lowest single-game DD:</strong></p>
+            {% for game in LowestDD %}
+                <p style="margin-bottom:0;">
+                    {% game_element game %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+
+</div>
+{% endblock %}

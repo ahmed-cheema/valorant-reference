@@ -1,0 +1,615 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+  @media screen and (max-width: 768px) {
+    table {
+      width: 100% !important;
+    }
+    div#info {
+      width: 100% !important;
+    }
+    div#buttons {
+      width: 100% !important;
+    }
+    }
+    span {
+      font-size:60% !important;
+    }
+
+    .hiddenLink {
+          text-decoration: inherit !important;
+    }
+
+
+    .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#None {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+      var table = $('#data-table').DataTable( {
+          ordering: false,
+          paging: false,
+          searching: false,
+          info: false,
+      });
+  });
+</script>
+{% endblock %}
+
+
+{% block content %}
+  <br>
+
+  <div id="info" style="width:75%; text-align:center;">
+    <div class="col-xl-4 rounded p-2 mb-4" 
+    style="display:inline-block; border: 1px solid black; {% if match.TeamOneWon %}background-color:rgb(195, 230, 203){% elif match.MatchDraw %}background-color:white{% else %}background-color:rgb(245,198,203){% endif %}">
+      <h3 style="text-align:center"> {{ match.Map }}</h3>
+      <h2 class="" style="font-weight:bold; text-align:center">{{ match.Score }}</h2>
+      <p style="text-align:center;">{{ match.Date }}</p>
+    </div>
+  </div>
+
+  <br>
+
+  <div id="buttons" style="width:75%; text-align:center;">
+    <div style="display: inline-block;">
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#basic" role="button">Basic</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#detailed" role="button">Detailed</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#kills" role="button">Kills/Deaths</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#side" role="button">Attack/Defense</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#multikills" role="button">Multi-Kills</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#outcome" role="button">Round Outcome</a>
+    </div>
+  </div>
+
+  <br><br>
+
+  <h3 id="basic">Basic</h3>
+  
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm "
+         style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168);">
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Team</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
+        <th style="text-align:center" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+        <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center" >{{ player.Kills }}</td>
+            <td style="text-align:center">{{ player.Deaths }}</td>
+            <td style="text-align:center">{{ player.Assists }}</td>
+            <td style="text-align:center; {% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230); {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.ACS }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.ExactADR|floatformat:0 }}</td>
+            <td style="text-align:center">{{ player.FirstBloods }}</td>
+            <td style="text-align:center">{{ player.FirstDeaths }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
+        <th style="text-align:center" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+        <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td style="width:7%"><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%">{{ player.Kills }}</td>
+            <td style="text-align:center; width:1%">{{ player.Deaths }}</td>
+            <td style="text-align:center; width:1%">{{ player.Assists }}</td>
+            <td style="text-align:center; width:1%; {% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.ACS }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ player.ExactADR|floatformat:0 }}</td>
+            <td style="text-align:center; width:1%">{{ player.FirstBloods }}</td>
+            <td style="text-align:center; width:1%">{{ player.FirstDeaths }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br>
+
+  <h3 id="detailed">Detailed</h3>
+
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm" 
+    style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168)">
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Team</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Tracker Score" data-bs-toggle="tooltip" data-bs-placement="top">TRS</th>
+        <th style="text-align:center" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+        <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center" title="Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
+        <th style="text-align:center" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="Headshot Percentage" data-bs-toggle="tooltip" data-bs-placement="top">HS%</th>
+        <th style="text-align:center" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th style="text-align:center" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center">{{ player.TRS }}</td>
+            <td style="text-align:center">{{ player.ACS }}</td>
+            <td style="text-align:center; {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; {% if player.DamageDelta > 0 %}color:green{% elif player.DamageDelta == 0 %}{% else %}color:red{% endif %}">{{ player.DamageDelta }}</td>
+            <td style="text-align:center;">{{ player.ExactADR|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.HS_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; {% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %};">{{ player.K_Pct|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.KAST|floatformat:2 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Tracker Score" data-bs-toggle="tooltip" data-bs-placement="top">TRS</th>
+        <th style="text-align:center" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+        <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center" title="Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
+        <th style="text-align:center" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="Headshot Percentage" data-bs-toggle="tooltip" data-bs-placement="top">HS%</th>
+        <th style="text-align:center" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th style="text-align:center" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td style="width:7%"><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%">{{ player.TRS }}</td>
+            <td style="text-align:center; width:1%">{{ player.ACS }}</td>
+            <td style="text-align:center; width:1%; {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if player.DamageDelta > 0 %}color:green{% elif player.DamageDelta == 0 %}{% else %}color:red{% endif %}">{{ player.DamageDelta }}</td>
+            <td style="text-align:center; width:1%">{{ player.ExactADR|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.HS_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %};">{{ player.K_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.KAST|floatformat:2 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br>
+
+  <h3 id="kills">Kills / Deaths</h3>
+
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm"
+     style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168)">
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Team</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+        <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+        <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+        <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+        <th style="text-align:center" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center">{{ player.Kills }}</td>
+            <td style="text-align:center">{{ player.Deaths }}</td>
+            <td style="text-align:center; {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; {% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %}; border-right:1px solid rgb(222, 226, 230)">{{ player.K_Pct|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.FirstBloods }}</td>
+            <td style="text-align:center">{{ player.FirstDeaths }}</td>
+            <td style="text-align:center">{{ player.FB_Pct|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.FD_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; {% if player.FBFDRatio > 1 %}color:green{% elif player.FBFDRatio == 1 %}{% else %}color:red{% endif %}">{{ player.FBFDRatio|floatformat:2 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr style="font-size:100%;">
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+        <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+        <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+        <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+        <th style="text-align:center" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td style="width:7%"><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%">{{ player.Kills }}</td>
+            <td style="text-align:center; width:1%">{{ player.Deaths }}</td>
+            <td style="text-align:center; width:1%; {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %}; border-right:1px solid rgb(222, 226, 230)">{{ player.K_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.FirstBloods }}</td>
+            <td style="text-align:center; width:1%">{{ player.FirstDeaths }}</td>
+            <td style="text-align:center; width:1%">{{ player.FB_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.FD_Pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if player.FBFDRatio > 1 %}color:green{% elif player.FBFDRatio == 1 %}{% else %}color:red{% endif %}">{{ player.FBFDRatio|floatformat:2 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br>
+
+  <h3 id="side">Attack / Defense</h3>
+
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm" 
+    style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168)">
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
+        <th colspan="5" style="text-align:center">Defense</th>
+      </tr>
+      <tr>
+        <th>Team</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Attack Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
+        <th style="text-align:center" title="Attack Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Attack Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Attack Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="Defense Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
+        <th style="text-align:center" title="Defense Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Defense Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Defense Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Defense Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; {% if player.AttackWinPct > 0.5 %}color:green{% elif player.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.AttackScore }}</td>
+            <td style="text-align:center">{{ player.AttackKills }}</td>
+            <td style="text-align:center">{{ player.AttackDeaths }}</td>
+            <td style="text-align:center; {% if player.AttackKillDeathRatio > 1 %}color:green{% elif player.AttackKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.AttackKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.AttackAverageDamage|floatformat:1 }}</td>
+            <td style="text-align:center; {% if player.DefenseWinPct > 0.5 %}color:green{% elif player.DefenseWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.DefenseScore }}</td>
+            <td style="text-align:center">{{ player.DefenseKills }}</td>
+            <td style="text-align:center">{{ player.DefenseDeaths }}</td>
+            <td style="text-align:center; {% if player.DefenseKillDeathRatio > 1 %}color:green{% elif player.DefenseKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.DefenseKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.DefenseAverageDamage|floatformat:1 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
+        <th colspan="5" style="text-align:center">Defense</th>
+      </tr>
+      <tr>
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Attack Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
+        <th style="text-align:center" title="Attack Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Attack Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Attack Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="Defense Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
+        <th style="text-align:center" title="Defense Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Defense Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Defense Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Defense Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td style="width:7%"><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%; {% if player.AttackWinPct > 0.5 %}color:green{% elif player.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.AttackScore }}</td>
+            <td style="text-align:center; width:1%">{{ player.AttackKills }}</td>
+            <td style="text-align:center; width:1%">{{ player.AttackDeaths }}</td>
+            <td style="text-align:center; width:1%; {% if player.AttackKillDeathRatio > 1 %}color:green{% elif player.AttackKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.AttackKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ player.AttackAverageDamage|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%; {% if player.DefenseWinPct > 0.5 %}color:green{% elif player.DefenseWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.DefenseScore }}</td>
+            <td style="text-align:center; width:1%">{{ player.DefenseKills }}</td>
+            <td style="text-align:center; width:1%">{{ player.DefenseDeaths }}</td>
+            <td style="text-align:center; width:1%; {% if player.DefenseKillDeathRatio > 1 %}color:green{% elif player.DefenseKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.DefenseKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.DefenseAverageDamage|floatformat:1 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br>
+
+  <h3 id="multikills">Multi-Kills</h3>
+
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm" 
+    style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168)">
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="7" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Rounds with X kills</th>
+        <th colspan="7" style="text-align:center;">Rounds with at least X kills</th>
+      </tr>
+      <tr>
+        <th style="width:7%">Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230); width:1%"></th> 
+        <th style="text-align:center; width:1%">0</th>
+        <th style="text-align:center; width:1%">1</th>
+        <th style="text-align:center; width:1%">2</th>
+        <th style="text-align:center; width:1%">3</th>
+        <th style="text-align:center; width:1%">4</th>
+        <th style="text-align:center; width:1%">5</th>
+        <th style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">6</th>
+        <th style="text-align:center; width:1%">0</th>
+        <th style="text-align:center; width:1%">1</th>
+        <th style="text-align:center; width:1%">2</th>
+        <th style="text-align:center; width:1%">3</th>
+        <th style="text-align:center; width:1%">4</th>
+        <th style="text-align:center; width:1%">5</th>
+        <th style="text-align:center; width:1%">6</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center">{{ player.ZeroKillRounds }}</td>
+            <td style="text-align:center">{{ player.OneKillRounds }}</td>
+            <td style="text-align:center">{{ player.TwoKillRounds }}</td>
+            <td style="text-align:center">{{ player.ThreeKillRounds }}</td>
+            <td style="text-align:center">{{ player.FourKillRounds }}</td>
+            <td style="text-align:center">{{ player.FiveKillRounds }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.SixKillRounds }}</td>
+            <td style="text-align:center">{{ player.AtLeastZeroKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastOneKill }}</td>
+            <td style="text-align:center">{{ player.AtLeastTwoKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastThreeKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastFourKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastFiveKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastSixKills }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="7" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Rounds with X kills</th>
+        <th colspan="7" style="text-align:center;">Rounds with at least X kills</th>
+      </tr>
+      <tr>
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th> 
+        <th style="text-align:center">0</th>
+        <th style="text-align:center">1</th>
+        <th style="text-align:center">2</th>
+        <th style="text-align:center">3</th>
+        <th style="text-align:center">4</th>
+        <th style="text-align:center">5</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">6</th>
+        <th style="text-align:center">0</th>
+        <th style="text-align:center">1</th>
+        <th style="text-align:center">2</th>
+        <th style="text-align:center">3</th>
+        <th style="text-align:center">4</th>
+        <th style="text-align:center">5</th>
+        <th style="text-align:center">6</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center">{{ player.ZeroKillRounds }}</td>
+            <td style="text-align:center">{{ player.OneKillRounds }}</td>
+            <td style="text-align:center">{{ player.TwoKillRounds }}</td>
+            <td style="text-align:center">{{ player.ThreeKillRounds }}</td>
+            <td style="text-align:center">{{ player.FourKillRounds }}</td>
+            <td style="text-align:center">{{ player.FiveKillRounds }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.SixKillRounds }}</td>
+            <td style="text-align:center">{{ player.AtLeastZeroKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastOneKill }}</td>
+            <td style="text-align:center">{{ player.AtLeastTwoKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastThreeKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastFourKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastFiveKills }}</td>
+            <td style="text-align:center">{{ player.AtLeastSixKills }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br>
+  
+  <h3 id="outcome">Round Outcome</h3>
+
+  <div class="table-responsive-lg">
+  <table class=" table table-hover table-striped table-sm" 
+    style="font-size:100%; font-weight:normal; width:75%; border:1px solid rgb(168, 168, 168)">
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Rounds Won</th>
+        <th colspan="5" style="text-align:center">Rounds Lost</th>
+      </tr>
+      <tr>
+        <th>Team</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center;" title="Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+        <th style="text-align:center;" title="Kills in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center;" title="Deaths in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center;" title="Kill/Death Ratio in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center;" title="Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+        <th style="text-align:center;" title="Kills in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center;" title="Deaths in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center;" title="Kill/Death Ratio in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team A" %}
+          <tr>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center;">{{ player.Match.TeamOneScore }}</td>
+            <td style="text-align:center">{{ player.WinKills }}</td>
+            <td style="text-align:center">{{ player.WinDeaths }}</td>
+            <td style="text-align:center; {% if player.WinKillDeathRatio > 1 %}color:green{% elif player.WinKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.WinKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.WinAverageDamage|floatformat:1 }}</td>
+            <td style="text-align:center;">{{ player.Match.TeamTwoScore }}</td>
+            <td style="text-align:center">{{ player.LossKills }}</td>
+            <td style="text-align:center">{{ player.LossDeaths }}</td>
+            <td style="text-align:center; {% if player.LossKillDeathRatio > 1 %}color:green{% elif player.LossKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.LossKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center">{{ player.LossAverageDamage|floatformat:1 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+    <thead>
+      <tr>
+        <th></th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230); width:32%">Rounds Won</th>
+        <th colspan="5" style="text-align:center; width:32%">Rounds Lost</th>
+      </tr>
+      <tr>
+        <th>Opponents</th>
+        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th style="text-align:center" title="Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+        <th style="text-align:center" title="Kills in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Kill/Death Ratio in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Won" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th style="text-align:center" title="Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+        <th style="text-align:center" title="Kills in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+        <th style="text-align:center" title="Deaths in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+        <th style="text-align:center" title="Kill/Death Ratio in Rounds Lost" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round Lost" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in match.player_set.all %}
+        {% if player.Team == "Team B" %}
+          <tr>
+            <td style="width:7%"><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td style="text-align:center; width:1%;">{{ player.Match.TeamTwoScore }}</td>
+            <td style="text-align:center; width:1%">{{ player.WinKills }}</td>
+            <td style="text-align:center; width:1%">{{ player.WinDeaths }}</td>
+            <td style="text-align:center; width:1%; {% if player.WinKillDeathRatio > 1 %}color:green{% elif player.WinKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.WinKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230)">{{ player.WinAverageDamage|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%;">{{ player.Match.TeamOneScore }}</td>
+            <td style="text-align:center; width:1%">{{ player.LossKills }}</td>
+            <td style="text-align:center; width:1%">{{ player.LossDeaths }}</td>
+            <td style="text-align:center; width:1%; {% if player.LossKillDeathRatio > 1 %}color:green{% elif player.LossKillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.LossKillDeathRatio|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%">{{ player.LossAverageDamage|floatformat:1 }}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <br><br><br>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+{% load record_elements %}
+
+<p style="margin-bottom:0;"><strong>Highest Career {{ varName }}:</strong></p>
+<img src="{{ record.TopAgentImage }}" alt="{{ record.TopAgent }}" height=30px title="{{ record.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+<a href="{% url 'player_detail' record.TopUsername %}">{{ record.TopDisplayName }}:</a>
+{{ record.TopValue|floatformat:FloatCount }}
+<br>
+<p style="margin-bottom:0;"><strong>Lowest Career {{ varName }}:</strong></p>
+<img src="{{ record.BotAgentImage }}" alt="{{ record.BotAgent }}" height=30px title="{{ record.BotAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+<a href="{% url 'player_detail' record.BotUsername %}">{{ record.BotDisplayName }}:</a>
+{{ record.BotValue|floatformat:FloatCount }}

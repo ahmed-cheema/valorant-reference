@@ -1,0 +1,45 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+    .nav-link {
+        margin-right: 30px;
+    }
+
+    .nav-link#blog {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+
+    @media screen and (min-width: 767px) {
+        p {
+            font-size: 18px;
+            padding-right: 20%;
+            padding-bottom: 10px;
+            padding-left: 20%;
+        }
+    }
+
+    @media screen and (max-width: 670px) {
+        p {
+            font-size: 18px;
+            padding-right: 10%;
+            padding-bottom: 10px;
+            padding-left: 10%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<p style="text-align:center; padding-top:25%;">
+    whet
+</p>
+
+{% endblock %}

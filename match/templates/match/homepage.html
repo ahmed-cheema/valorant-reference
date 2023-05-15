@@ -1,0 +1,183 @@
+{% extends 'match/base.html' %}
+{% load homepage %}
+
+{% block css %}
+<style>
+  .nav-link {
+      margin-right: 30px;
+  }
+
+  .nav-link#None {
+      color:red !important;
+      border-bottom: solid 3px red !important;
+  }
+
+  .hover-nav:hover {
+      color:red !important;
+      border-bottom: solid 3px red !important;
+  }
+
+  a.hidden {
+    color: black;
+    text-decoration: none !important;
+  }
+
+  @media screen and (max-width: 768px) {
+    div.match-box {
+      width: 100% !important;
+    }
+  }
+
+  table.dataTable.no-footer > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+      var table = $('#table').DataTable( {
+          columnDefs: [
+                { orderable: false,
+                  targets: [0] },
+          ],
+          paging: false,
+          searching: false,
+          info: false,
+          order: [[1, 'desc']],
+          scrollY: 195,
+          scrollCollapse: true,
+          paging: false,
+      });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+  <h1 class="text-center pt-2"></h1>
+
+
+
+  <div class="row justify-content-center">
+
+    <div class="col">
+
+      <div class="match-box"
+           style="background-color: #f0f0f0;
+                  border: 2px solid black;
+                  border-radius: 5px;
+                  padding: 10px;
+                  margin-bottom: 10px;
+                  margin-left: auto;
+                  margin-right: auto;">
+
+        <h3 style="text-align:center; font-weight:bold">
+          {{ History.Matches }} Matches
+        </h3>
+
+        <h5 class="text-success" style="text-align:center;">
+          {{ History.Wins }} Wins
+        </h5>
+        <h5 class="text-danger" style="text-align:center;">
+          {{ History.Losses }} Losses
+        </h5>
+        <h5 style="text-align:center;;">
+          {{ History.Draws }} Draws
+        </h5>
+        <h5 class="{% if History.WinPct > 0.5 %} text-success {% elif History.WinPct < 0.5 %} text-danger {% endif %}" style="text-align:center;">
+          {{ History.WinPctStr }} Win Pct
+        </h5>
+
+        <h5 style="text-align:center; margin-bottom:0px; font-weight:bold;">
+          {% with w_class="text-success" l_class="text-danger" t_class="text-black" %}
+            <span class="{{ t_class }}">...</span>
+            {% for letter in History.Form %}
+              {% if letter == "W" %}
+                <span class="{{ w_class }}">W</span>
+              {% elif letter == "L" %}
+                <span class="{{ l_class }}">L</span>
+              {% elif letter == "T" %}
+                <span class="{{ t_class }}">T</span>
+              {% endif %}
+            {% endfor %}
+          {% endwith %}
+        </h5>
+
+      </div>
+
+    </div>
+
+    <div class="col">
+      
+      <div style="margin-left:auto; margin-right:auto; text-align:center">
+        <img src="https://tr.rbxcdn.com/f9ed653a04ceaf91748949a3ee509d1b/352/352/Avatar/Png" height=250>
+      </div>
+
+    </div>
+
+    <div class="col">
+      
+      <table class="table table-hover table-striped table-sm responsive" id="table"
+             style="border:1px solid black">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Player</th>
+            <th title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in Players %}
+            <tr>
+              <td style="text-align:left;">
+                <img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                  <a href="{% url 'player_detail' p.Username %}" style="text-decoration: none">
+                    {{ p.DisplayName }}
+                  </a>
+              </td>
+              <td>{{ p.num_matches }}</td>
+              <td>{{ p.kdr|floatformat:2 }}</td>
+              <td>{{ p.acs|floatformat:1 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+  <br>
+
+  <div class="row justify-content-center">
+
+    <div class="col">
+      {% match_box FirstMatch "First Match" %}
+    </div>
+
+    <div class="col">
+      {% match_box RandomMatch "Random" %}
+    </div>
+
+    <div class="col">
+      {% match_box LastMatch "Last Match" %}
+    </div>
+
+  </div>
+
+
+</div>
+
+{% endblock %}

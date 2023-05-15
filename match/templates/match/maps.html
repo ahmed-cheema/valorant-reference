@@ -1,0 +1,389 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+    a {
+      text-decoration: none;
+    } 
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+    button[aria-selected="true"] {
+        color: white !important;
+    }
+    .btn-outline-dark {
+        color: black !important;
+    }
+    .btn-outline-dark:hover {
+        color: white !important;
+    }
+
+    .form-select-clone {
+      display:block !important;
+      padding:.375rem .75rem .375rem .75rem !important;
+      width:68%;
+      font-size:1rem !important;
+      font-weight:400 !important;
+      line-height:1.5 !important;
+      color:#212529 !important;
+      background-color:#fff !important;
+      background-repeat:no-repeat;
+      background-position:right .75rem center;
+      background-size:16px 12px !important;
+      border:1px solid #ced4da !important;
+      border-radius:.375rem !important;
+      transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      appearance:none;
+  }
+
+  table.dataTable.no-footer > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+  table {
+    border-radius: 5px;
+  }
+
+  .hiddenLink {
+        color: inherit !important;
+        text-decoration: inherit !important;
+  }
+
+   .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#maps {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script>
+    function resetFilter() {
+        // Clear all filter inputs
+        $('#dateRange').data('daterangepicker').setStartDate(moment("01/01/2023", "MM/DD/YYYY"));
+        $('#dateRange').data('daterangepicker').setEndDate(moment().add(1, 'days'));
+
+    
+        // Submit the filter form to reset the table
+        $('#filter-form').submit();
+    }
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#table-overview').DataTable( {
+            columnDefs: [{
+                orderable: false, targets: [0] 
+            }],
+            "paging": false,
+            "info": false,
+            "searching": false,
+            order: [[2, 'desc']]
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#table-combat').DataTable( {
+            columnDefs: [{
+                orderable: false, targets: [0] 
+            }],
+            "paging": false,
+            "info": false,
+            "searching": false,
+            order: [[2, 'desc']]
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#table-highs').DataTable( {
+            columnDefs: [
+                {
+                   orderable: false, targets: [0] 
+                },
+                { 
+                    'orderData':[7], 'targets': [2] 
+                },
+                {
+                    'targets': [7],
+                    'visible': false,
+                    'searchable': false
+                },
+                { 
+                    'orderData':[8], 'targets': [3] 
+                },
+                {
+                    'targets': [8],
+                    'visible': false,
+                    'searchable': false
+                },
+                { 
+                    'orderData':[9], 'targets': [4] 
+                },
+                {
+                    'targets': [9],
+                    'visible': false,
+                    'searchable': false
+                },
+                { 
+                    'orderData':[10], 'targets': [5] 
+                },
+                {
+                    'targets': [10],
+                    'visible': false,
+                    'searchable': false
+                },
+                { 
+                    'orderData':[11], 'targets': [5] 
+                },
+                {
+                    'targets': [11],
+                    'visible': false,
+                    'searchable': false
+                },
+            ],
+            "paging": false,
+            "info": false,
+            "searching": false,
+            order: [[1, 'desc']]
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+
+<script type="text/javascript">
+  $(function() {
+
+      var start = moment("{% if date_filter is None %}01/01/2023{% else %}{{ start_date }}{% endif %}", 'MM/DD/YYYY');
+      var end = {% if date_filter is None %}moment().add(1, 'days'){% else %}moment("{{ end_date }}", "MM/DD/YYYY"){% endif %};
+  
+      function cb(start, end) {
+          $('#dateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      }
+  
+      $('#dateRange').daterangepicker({
+          startDate: start,
+          endDate: end,
+          ranges: {
+             'Today': [moment(), moment()],
+             'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+             'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+             'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+             'This Month': [moment().startOf('month'), moment().endOf('month')],
+             'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          }
+      }, cb);
+  
+      cb(start, end);
+  
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+  <h2 style="text-align:center">Map Statistics</h2>
+
+  <div style="width:75%; margin-left:auto; margin-right:auto">
+  <form method="get" action="" id="filter-form">
+    <div class="row mb-4">
+
+      <div class="col-md-4">
+        <label for="dateRange" class="form-label">Date Range:</label>
+        <br>
+        <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
+      </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <button type="button" class="btn btn-secondary" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
+  </form>
+  </div>
+
+  <ul class="nav justify-content-center" style="margin-top:1%">
+    <li class="nav-item">
+        <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-overview">Summary</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-combat">Combat</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-highs">Highs</button>
+    </li>
+  </ul>
+
+  <br>
+
+  <div class="tab-content">
+
+  <div id="tab-overview" class="tab-pane active table-responsive-lg">
+    <table id="table-overview" class=" table table-hover table-striped table-sm center"
+           style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+      <thead>
+        <tr>
+            <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Matches</th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">All Rounds</th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack Rounds</th>
+            <th colspan="2" style="text-align:center">Defense Rounds</th>
+        </tr>
+        <tr>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Map</th>
+            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in maps %}
+          <tr>
+            <td style="text-align:center; width:2%; border-right:1px solid rgb(222, 226, 230);"><a href="{% url 'map_detail' m.Match__Map %}">{{ m.Match__Map }}</a></td>
+            <td style="text-align:center; width:1%;">{{ m.num_matches }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.rounds_played }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.attack_rounds }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.defense_rounds }}</td>
+            <td style="text-align:center; width:1%; {% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tab-combat" class="tab-pane table-responsive-lg">
+    <table id="table-combat" class=" table table-hover table-striped table-sm center"
+           style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+      <thead>
+        <tr>
+            <th style="text-align:center;">Map</th>
+            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th style="text-align:center;" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th style="text-align:center;" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+            <th style="text-align:center;" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            <th style="text-align:center;" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+            <th style="text-align:center;" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+            <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+            <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+            <th style="text-align:center" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in maps %}
+          <tr>
+            <td style="text-align:center; width:2%;"><a href="{% url 'map_detail' m.Match__Map %}">{{ m.Match__Map }}</a></td>
+            <td style="text-align:center; width:1%;">{{ m.num_matches }}</td>
+            <td style="text-align:center; width:1%; {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%; {% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.acs|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.adr|floatformat:1 }}</td>
+            <td style="text-align:center; width:1%; {% if m.k_pct > 0.5 %}color:green{% elif m.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ m.k_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.kast|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.fb_pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.fd_pct|floatformat:2 }}</td>
+            <td style="text-align:center; width:1%; {% if m.fb_fd_ratio > 1 %}color:green{% elif m.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ m.fb_fd_ratio|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+          <tr>
+            <td>No data found</td>
+            <td> </td>
+            <td> </td>
+            <td></td>
+            <td> </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tab-highs" class="tab-pane table-responsive-lg">
+    <table id="table-highs" class=" table table-hover table-striped table-sm center"
+           style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+      <thead>
+        <tr>
+            <th style="text-align:center;">Map</th>
+            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th style="text-align:center;" title="Most Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+            <th style="text-align:center;" title="Highest Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+            <th style="text-align:center;" title="Highest Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+            <th style="text-align:center;" title="Most First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+            <th style="text-align:center;" title="Most First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in maps %}
+          <tr>
+            <td style="text-align:center; width:2%;"><a href="{% url 'map_detail' m.Match__Map %}">{{ m.Match__Map }}</a></td>
+            <td style="text-align:center; width:1%">{{ m.num_matches }}</td>
+            <td style="text-align:center; width:1%"><a href="{% url 'match_detail' m.max_kills_id %}">{{ m.max_kills_player }} ({{ m.max_kills }})</a></td>
+            <td style="text-align:center; width:1%"><a href="{% url 'match_detail' m.max_acs_id %}">{{ m.max_acs_player }} ({{ m.max_acs }})</a></td>
+            <td style="text-align:center; width:1%"><a href="{% url 'match_detail' m.max_adr_id %}">{{ m.max_adr_player }} ({{ m.max_adr|floatformat:0 }})</a></td>
+            <td style="text-align:center; width:1%"><a href="{% url 'match_detail' m.max_fb_id %}">{{ m.max_fb_player }} ({{ m.max_fb }})</a></td>
+            <td style="text-align:center; width:1%"><a href="{% url 'match_detail' m.max_fd_id %}">{{ m.max_fd_player }} ({{ m.max_fd }})</a></td>
+            <td>{{ m.max_kills }}</td>
+            <td>{{ m.max_acs }}</td>
+            <td>{{ m.max_adr }}</td>
+            <td>{{ m.max_fb }}</td>
+            <td>{{ m.max_fd }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  </div>
+  
+</div>
+{% endblock %}

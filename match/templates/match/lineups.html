@@ -1,0 +1,292 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block css %}
+<style>
+  a {
+    text-decoration: none;
+  } 
+
+  table.center {
+    margin-left:auto; 
+    margin-right:auto;
+  }
+
+  button[aria-selected="true"] {
+    color: white !important;
+  }
+
+  .btn-outline-dark {
+    color: black !important;
+  }
+
+  .btn-outline-dark:hover {
+    color: white !important;
+  }
+
+  .form-select-clone {
+    display:block !important;
+    padding:.375rem .75rem .375rem .75rem !important;
+    width:68%;
+    font-size:1rem !important;
+    font-weight:400 !important;
+    line-height:1.5 !important;
+    color:#212529 !important;
+    background-color:#fff !important;
+    background-repeat:no-repeat;
+    background-position:right .75rem center;
+    background-size:16px 12px !important;
+    border:1px solid #ced4da !important;
+    border-radius:.375rem !important;
+    transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+  }
+
+  table.dataTable.no-footer > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  table {
+    border-radius: 5px;
+  }
+
+  .hiddenLink {
+    color: inherit !important;
+    text-decoration: inherit !important;
+  }
+
+  .nav-link {
+    margin-right: 30px;
+  }
+
+  .nav-link#lineups {
+    color:red !important;
+    border-bottom: solid 3px red !important;
+  }
+
+  .hover-nav:hover {
+    color:red !important;
+    border-bottom: solid 3px red !important;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script>
+    function resetFilter() {
+        // Clear all filter inputs
+        $('#map').val('All');
+        $('#minMP').val(0);
+        $('#dateRange').data('daterangepicker').setStartDate(moment("01/01/2023", "MM/DD/YYYY"));
+        $('#dateRange').data('daterangepicker').setEndDate(moment().add(1, 'days'));
+  
+        // Loop through each button with an id that starts with "toggler-"
+      $('[id^="toggler-"]').each(function() {
+        var $toggler = $(this);
+        var playerId = $toggler.attr('id').split('-')[1];
+        var $radios = $('input[type="radio"][name="' + playerId + '"]');
+  
+        // Set the radio input with value="2" to checked
+        $radios.filter('[value="2"]').prop('checked', true);
+  
+        // Update the button color to match the reset state
+        $toggler
+          .removeClass('btn-danger btn-success btn-outline-dark')
+          .addClass('btn-outline-dark');
+      });
+    
+        // Submit the filter form to reset the table
+        $('#filter-form').submit();
+    }
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#table-overview').DataTable( {
+            columnDefs: [{
+                orderable: false, targets: [0] 
+            }],
+            "paging": false,
+            "info": false,
+            "searching": false,
+            order: [[1, 'desc']]
+        });
+    });
+</script>
+
+<script type="text/javascript">
+  $(function() {
+
+      var start = moment("{% if date_filter is None %}01/01/2023{% else %}{{ start_date }}{% endif %}", 'MM/DD/YYYY');
+      var end = {% if date_filter is None %}moment().add(1, 'days'){% else %}moment("{{ end_date }}", "MM/DD/YYYY"){% endif %};
+  
+      function cb(start, end) {
+          $('#dateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      }
+  
+      $('#dateRange').daterangepicker({
+          startDate: start,
+          endDate: end,
+          ranges: {
+             'Today': [moment(), moment()],
+             'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+             'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+             'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+             'This Month': [moment().startOf('month'), moment().endOf('month')],
+             'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          }
+      }, cb);
+  
+      cb(start, end);
+  
+  });
+</script>
+
+<script>
+    $(document).ready(function() {
+      var colorClasses = ["btn-danger", "btn-success", "btn-outline-dark"];
+  
+      $('[id^="toggler-"]').each(function() {
+        var $toggler = $(this);
+        var playerId = $toggler.attr('id').split('-')[1];
+        var $radios = $('input[type="radio"][name="' + playerId + '"]');
+  
+        $toggler.click(function() {
+          var $checked = $radios.filter(':checked');
+          var $next = $radios.eq($radios.index($checked) + 1);
+          if (!$next.length) {
+            $next = $radios.first();
+          }
+          $next.prop("checked", true);
+          var newValue = $radios.filter(':checked').val();
+          $toggler
+            .removeClass(colorClasses.join(" "))
+            .addClass(colorClasses[newValue]);
+        });
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+  <h2 style="text-align:center">Lineups</h2>
+
+  <div style="width:75%; margin-left:auto; margin-right:auto">
+  <form method="get" action="" id="filter-form">
+
+    <div class="row mb-4">
+
+        <div class="col-md-2">
+            <label for="map" class="form-label">Map:</label>
+            <select id="map" name="map" class="form-select">
+                <option value="">All</option>
+                {% for map in unique_maps %}
+                <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="dateRange" class="form-label">Date Range:</label>
+            <br>
+            <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
+        </div>
+
+        <div class="col-md-2">
+            <label for="minMP" class="form-label">Minimum Matches:</label>
+            <input type="range" 
+              class="form-control-range" 
+              name="minMP"
+              id="minMP" 
+              onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
+              {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
+              min = 0
+              max = {{ max_matches }}>
+            <span id="rangeval">{% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}</span>
+          </div>
+        
+    </div>
+
+    <div class="row mb-2 ">
+        <div class="col-md-10">
+          {% for player in unique_players %}
+            <div class="btn-group-toggle d-inline-block" data-toggle="buttons">
+              {% if button_values|default:None %}
+                {% with button_values|get_item:player as value %}
+                  <input type="radio" name="{{ player }}" value="2" {% if value == 2 %}checked{% endif %} hidden>
+                  <input type="radio" name="{{ player }}" value="1" {% if value == 1 %}checked{% endif %} hidden>
+                  <input type="radio" name="{{ player }}" value="0" {% if value == 0 %}checked{% endif %} hidden>
+                  <button type="button" id="toggler-{{ player }}" class="btn {% if value == 0 %}{{ colorClasses.0 }}{% elif value == 1 %}{{ colorClasses.1 }}{% else %}{{ colorClasses.2 }}{% endif %}">{{ player }}</button>
+                {% endwith %}
+              {% else %}
+                <input type="radio" name="{{ player }}" value="2" checked hidden>
+                <input type="radio" name="{{ player }}" value="1" hidden>
+                <input type="radio" name="{{ player }}" value="0" hidden>
+                <button type="button" id="toggler-{{ player }}" class="btn btn-outline-dark">{{ player }}</button>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <button type="button" class="btn btn-secondary" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
+  </form>
+  </div>
+
+  <div class="table-responsive-lg">
+    <table id="table-overview" class=" table table-hover table-striped table-sm center"
+           style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+      <thead>
+        <tr>
+            <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Matches</th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">All Rounds</th>
+            <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack Rounds</th>
+            <th colspan="2" style="text-align:center">Defense Rounds</th>
+        </tr>
+        <tr>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Lineup</th>
+            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th style="text-align:center;" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th style="text-align:center;" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in lineups %}
+        <tr>
+            <td style="text-align:center; width:10%; border-right:1px solid rgb(222, 226, 230)">{{ m.Match__Players }}</td>
+            <td style="text-align:center; width:1%;"><a href="{% url 'match_list' %}{{m.MatchFilterStr}}">{{ m.num_matches }}</a></td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.rounds_played }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.attack_rounds }}</td>
+            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
+            <td style="text-align:center; width:1%;">{{ m.defense_rounds }}</td>
+            <td style="text-align:center; width:1%; {% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+</div>
+{% endblock %}

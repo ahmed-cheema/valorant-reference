@@ -1,0 +1,286 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+  a {
+      text-decoration: none;
+  }
+
+  .form-select-clone {
+    display:block !important;
+    padding:.375rem .75rem .375rem .75rem !important;
+    width:50%;
+    font-size:1rem !important;
+    font-weight:400 !important;
+    line-height:1.5 !important;
+    color:#212529 !important;
+    background-color:#fff !important;
+    background-repeat:no-repeat;
+    background-position:right .75rem center;
+    background-size:16px 12px !important;
+    border:1px solid #ced4da !important;
+    border-radius:.375rem !important;
+    transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+  } 
+
+  table.dataTable.no-footer > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+  table {
+    border-radius: 5px;
+  }
+
+  .hiddenLink {
+      text-decoration: inherit !important;
+  }
+
+  hr {
+    background-color: black !important;
+    color: black !important;
+    border: solid 1px black !important;
+  }
+
+  .bigHr {
+    background-color: black !important;
+    color: black !important;
+    border: solid 2px black !important;
+    height: 5px !important;
+  }
+
+   .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#None {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#performances').DataTable( {
+            columnDefs: [
+                { orderable: false,
+                  targets: [0,1] },
+                { orderData: [5],
+                  targets: [4] },
+                { 'targets': [5],
+                  'visible': false,
+                  'searchable': false },
+            ],
+            info: false,
+            paging: false,
+            searching: false,
+            order: [[2, 'desc']]
+        });
+    });
+</script>
+
+<script>
+  function resetFilter() {
+      // Clear all filter inputs
+      $('#map').val('All');
+      $('#agent').val('All');
+      $('#role').val('All');
+      $('#outcome').val('All');
+      $('#minMP').val(0);
+      $('#dateRange').data('daterangepicker').setStartDate(moment("01/01/2023", "MM/DD/YYYY"));
+      $('#dateRange').data('daterangepicker').setEndDate(moment().add(1, 'days'));
+
+  
+      // Submit the filter form to reset the table
+      $('#filter-form').submit();
+  }
+</script>
+
+<script type="text/javascript">
+  $(function() {
+
+      var start = moment("{% if date_filter is None %}01/01/2023{% else %}{{ start_date }}{% endif %}", 'MM/DD/YYYY');
+      var end = {% if date_filter is None %}moment().add(1, 'days'){% else %}moment("{{ end_date }}", "MM/DD/YYYY"){% endif %};
+  
+      function cb(start, end) {
+          $('#dateRange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      }
+  
+      $('#dateRange').daterangepicker({
+          startDate: start,
+          endDate: end,
+          ranges: {
+             'Today': [moment(), moment()],
+             'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+             'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+             'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+             'This Month': [moment().startOf('month'), moment().endOf('month')],
+             'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          }
+      }, cb);
+  
+      cb(start, end);
+  
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+  <div class="p-2" style="width: fit-content; overflow: hidden; text-align: center; margin-left: auto; margin-right: auto;">
+    <div style="display: inline-block; vertical-align: middle;">
+      <img src="{{ topAgentImage }}" alt="{{ topAgent }}" height="60px" title="Most Played Agent: {{ topAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+    </div>
+    <div style="display: inline-block; vertical-align: middle; white-space: nowrap;">
+      <h1 style="font-weight:bold"
+      title="{{ username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ displayName }}</h1>
+    </div>
+  </div>
+  
+  <div id="buttons" style="text-align:center; margin-top: 1%;">
+    <div style="display: inline-block;">
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_detail' username %}" role="button">Overview</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' username %}" role="button">Splits</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' username %}" role="button">Teammates</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ displayName }}=1" role="button">Matches</a>
+      <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' username %}" role="button">Game Log</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2 style="text-align:center; margin-bottom: 2%; font-weight:normal">Game Log</h2>
+
+  <div style="margin-left:auto; margin-right:auto">
+    <form method="get" action="" id="filter-form">
+      <div class="row mb-2 ">
+  
+        <div class="col-md-2">
+          <label for="map" class="form-label">Map:</label>
+          <select id="map" name="map" class="form-select">
+            <option value="">All</option>
+            {% for map in unique_maps %}
+              <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <div class="col-md-2">
+          <label for="agent" class="form-label">Agent:</label>
+          <select id="agent" name="agent" class="form-select">
+            <option value="">All</option>
+            {% for agent in unique_agents %}
+              <option value="{{ agent }}" {% if agent == agent_filter %}selected{% endif %}>{{ agent }}</option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <div class="col-md-2">
+          <label for="role" class="form-label">Role:</label>
+          <select id="role" name="role" class="form-select">
+            <option value="">All</option>
+            {% for role in unique_roles %}
+              <option value="{{ role }}" {% if role == role_filter %}selected{% endif %}>{{ role }}</option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <div class="col-md-2">
+          <label for="outcome" class="form-label">Outcome:</label>
+          <select id="outcome" name="outcome" class="form-select">
+            <option value="">All</option>
+            <option value="win" {% if outcome_filter == "win" %}selected{% endif %}>Win</option>
+            <option value="loss" {% if outcome_filter == "loss" %}selected{% endif %}>Loss</option>
+            <option value="draw" {% if outcome_filter == "draw" %}selected{% endif %}>Draw</option>
+          </select>
+        </div>
+  
+        <div class="col-md-4">
+          <label for="dateRange" class="form-label">Date Range:</label>
+          <br>
+          <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
+        </div>
+  
+      </div>
+  
+  
+      <button type="submit" class="btn btn-primary" style="margin-bottom:10px;">Filter</button>
+      <button type="button" class="btn btn-secondary" style="margin-bottom:10px;" onclick="resetFilter()">Reset</button>
+    </form>
+    </div>
+
+    <div class="table-responsive-lg">
+        <table id="performances" class=" table table-hover table-striped table-sm" 
+               style="font-size:90%; font-weight:normal; border:1px solid rgb(168, 168, 168)">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th style="text-align:center;border-right:1px solid rgb(222, 226, 230)"></th>
+              <th style="text-align:center;">Date</th>
+              <th style="text-align:center;">Map</th>
+              <th style="text-align:center;border-right:1px solid rgb(222, 226, 230)">Score</th>
+              <th style="text-align:center"></th>
+              <th style="text-align:center" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th style="text-align:center" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th style="text-align:center" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
+              <th style="text-align:center" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
+              <th style="text-align:center" title="Kill/Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
+              <th style="text-align:center" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+              <th style="text-align:center" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th style="text-align:center" title="Headshot Percentage" data-bs-toggle="tooltip" data-bs-placement="top">HS%</th>
+              <th style="text-align:center" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+              <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>      
+              <th style="text-align:center" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+              <th style="text-align:center" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+              <th style="text-align:center" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+              <th style="text-align:center" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>      
+            </tr>
+          </thead>
+          <tbody>
+            {% for player in players %}
+            <tr>
+                <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+                <td style="text-align:center;border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+                <td style="text-align:center"><span style="display:none">{{ player.Match.Date|date:"U" }}</span><a href="{% url 'match_detail' player.Match.MatchID %}">{{ player.Match.Date|date:"n/j/y" }}</a></td>
+                <td style="text-align:center"><a href="{% url 'map_detail' player.Match.Map %}" %}>{{ player.Match.Map }}</a></td>
+                <td style="text-align:center; border-right:1px solid rgb(222, 226, 230); {% if player.Match.TeamOneWon %}color:green{% elif player.Match.MatchDraw %}color:black{% else %}color:red{% endif %} !important;">{{ player.Match.Score }}</td>
+                <td style="text-align:center; color:white; width:0.1%">{{ player.Match.ScoreDifferential }}</td>
+                <td style="text-align:center" >{{ player.Kills }}</td>
+                <td style="text-align:center">{{ player.Deaths }}</td>
+                <td style="text-align:center">{{ player.Assists }}</td>
+                <td style="text-align:center; {% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
+                <td style="text-align:center; {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+                <td style="text-align:center; border-right:1px solid rgb(222, 226, 230); {% if player.DamageDelta > 0 %}color:green{% elif player.DamageDelta == 0 %}{% else %}color:red{% endif %}">{{ player.DamageDelta }}</td>
+                <td style="text-align:center">{{ player.ACS }}</td>
+                <td style="text-align:center">{{ player.ExactADR|floatformat:0 }}</td>
+                <td style="text-align:center">{{ player.HS_Pct|floatformat:2 }}</td>
+                <td style="text-align:center; {% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %};">{{ player.K_Pct|floatformat:2 }}</td>
+                <td style="text-align:center; border-right:1px solid rgb(222, 226, 230)">{{ player.KAST|floatformat:2 }}</td>    
+                <td style="text-align:center">{{ player.FirstBloods }}</td>
+                <td style="text-align:center">{{ player.FirstDeaths }}</td>
+                <td style="text-align:center">{{ player.FB_Pct|floatformat:2 }}</td>
+                <td style="text-align:center">{{ player.FD_Pct|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

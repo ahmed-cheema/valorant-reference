@@ -1,0 +1,9 @@
+<p style="margin-bottom:0px; {% if game.TeamOneScore > game.TeamTwoScore %}color:green{% elif game.TeamOneScore < game.TeamTwoScore %}color:red{% else %}color:black{% endif %}"
+    title="{{ game.Players }}" data-bs-toggle="tooltip" data-bs-placement="top">
+    {{game.Map}} {{ game.Score }}
+    <span>
+        <a href="{% url 'match_detail' game.MatchID %}">
+            ({{ game.Date|date:"n/j/y" }})
+        </a>
+    </span>
+</p>

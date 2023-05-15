@@ -1,0 +1,62 @@
+{% extends 'match/base.html' %}
+
+{% block css %}
+<style>
+    .nav-link {
+        margin-right: 30px;
+    }
+
+    .nav-link#about {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+
+    @media screen and (min-width: 767px) {
+        p {
+            font-size: 18px;
+            padding-right: 20%;
+            padding-bottom: 10px;
+            padding-left: 20%;
+        }
+    }
+
+    @media screen and (max-width: 670px) {
+        p {
+            font-size: 18px;
+            padding-right: 10%;
+            padding-bottom: 10px;
+            padding-left: 10%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<br>
+
+<h2 style="text-align:center">About</h2>
+
+<br>
+
+<p>
+    The sole purpose of this website is to track and analyze Valorant matches played by a single friend group.
+    It is meant to mimic the type of dashboard a coach (in any team competition) might use to draw insights.
+</p>
+
+<p>
+    The inspiration for this site comes from Sports Reference's sports-related websites, 
+    such as pro-football-reference.com and basketball-reference.com. Hence the name.
+</p>
+
+<p>
+    This project was started in an attempt to learn the Python web framework Django. As such, the entire website was
+    built with Django.
+</p>
+
+{% endblock %}

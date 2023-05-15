@@ -1,0 +1,75 @@
+<a class="hidden" href="{% url 'match_detail' Match.MatchID %}">
+<div class="match-box"
+      style="background-color: #f0f0f0;
+              border: 2px solid black;
+              border-radius: 5px;
+              padding: 10px;
+              margin-bottom: 10px;
+              width: 100%;
+              margin-left: auto;
+              margin-right: auto;">
+
+      <h4 style="text-align: center; font-weight:bold">
+        <u>
+          {{ Name }}
+        </u>
+      </h4>
+
+      <h3 style="text-align: center; font-weight:bold;"
+          class="{% if Match.Outcome == 'W' %}text-success{% elif Match.Outcome == 'L' %}text-danger{% endif %}">
+        {{ Match.Score }}
+      </h3>
+
+      <h5 style="text-align: center;">
+        {{ Match.Map }}
+      </h5>
+
+      <h6 style="text-align: center;">
+        
+          {{ Match.Date|date:"n/j/y" }} {{ Match.Date|time:"g:i A" }}
+        
+      </h6>
+
+      <hr style="margin-bottom: 0px">
+
+      <div class="p-2" style="width: fit-content; overflow: hidden; text-align: center; margin-left: auto; margin-right: auto;">
+        <div style="display: inline-block; vertical-align: middle;">
+          <img src="{{ Match.MVP_AgentImage }}" alt="{{ Match.MVP_Agent }}" height="30px" title="{{ Match.MVP_Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+        </div>
+        <div style="display: inline-block; vertical-align: middle; white-space: nowrap;">
+          <h4 
+          title="{{ Match.MVP_Username }}" data-bs-toggle="tooltip" data-bs-placement="top">
+            {{ Match.MVP_DisplayName }}
+          </h4>
+        </div>
+      </div>
+
+      <div class="row justify-content-center" style="text-align:center">
+        
+        <div class="col">
+            <p style="margin-bottom:0; font-weight: bold; border-bottom:solid 1px black"
+               title="Kills - Deaths - Assists" data-bs-toggle="tooltip" data-bs-placement="top">
+              K-D-A
+            </p>
+            {{ Match.MVP_KDA }}
+        </div>
+
+
+        <div class="col">
+            <p style="margin-bottom:0; font-weight: bold; border-bottom:solid 1px black"
+               title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">
+              K/D
+            </p>
+            {{ Match.MVP_KDR|floatformat:2 }}
+        </div>
+
+        <div class="col">
+            <p style="margin-bottom:0; font-weight: bold; border-bottom:solid 1px black"
+               title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">
+              ACS
+            </p>
+            {{ Match.MVP_ACS|floatformat:0 }}
+        </div>
+    </div>
+  </div>
+</a>

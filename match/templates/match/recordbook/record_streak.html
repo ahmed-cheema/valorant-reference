@@ -1,0 +1,484 @@
+{% extends 'match/base.html' %}
+
+{% load record_elements %}
+
+{% block css %}
+<style>
+    .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#streaks {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    .hover-nav:hover {
+        color:red !important;
+        border-bottom: solid 3px red !important;
+    }
+    h2 {
+        text-align:center;
+    }
+
+    h4 {
+        text-align:center;
+    }
+
+    a {
+        text-decoration: none;
+    } 
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+
+    table.dataTable.no-footer > tbody > tr:last-child > td {
+        border-bottom: none;
+    }
+    table {
+        border-radius: 5px;
+    }
+
+    .hiddenLink {
+        color: inherit !important;
+        text-decoration: inherit !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+        }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    p {
+        text-indent: 0px !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+    <h2 style="text-align:center">Record Book</h2>
+
+    <div id="buttons" style="text-align:center; margin-top: 1%;">
+        <div style="display: inline-block;">
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
+        </div>
+    </div>
+
+    <hr>
+
+    <!--
+    <div id="buttons" style="text-align:center;">
+        <div style="display: inline-block;">
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#WinsLosses" role="button">Wins/Losses</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#Kills" role="button">Kills</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#ACS" role="button">ACS</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#KDR" role="button">K/D</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#FB" role="button">First Bloods</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#FD" role="button">First Deaths</a>
+        </div>
+    </div>
+    -->
+
+    <br>
+    <h4 id="WinsLosses">Wins / Losses</h4>
+
+    <div class="row justify-content-center">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games won:</strong></p>
+            {% for streak in WonGameStreak %}
+                <p style="margin-bottom:0;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games lost:</strong></p>
+            {% for streak in LostGameStreak %}
+                <p style="margin-bottom:0;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4 id="Kills">Kills</h4>
+
+    <div class="row">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 10+ kills:</strong></p>
+            {% for streak in Kills_Gr_10_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 15+ kills:</strong></p>
+            {% for streak in Kills_Gr_15_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 20+ kills:</strong></p>
+            {% for streak in Kills_Gr_20_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 25+ kills:</strong></p>
+            {% for streak in Kills_Gr_25_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4 id="ACS">Average Combat Score</h4>
+
+    <div class="row">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 100+ ACS:</strong></p>
+            {% for streak in ACS_Gr_100_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 150+ ACS:</strong></p>
+            {% for streak in ACS_Gr_150_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 200+ ACS:</strong></p>
+            {% for streak in ACS_Gr_200_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 250+ ACS:</strong></p>
+            {% for streak in ACS_Gr_250_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 300+ ACS:</strong></p>
+            {% for streak in ACS_Gr_300_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4 id="KDR">Kill Death Ratio</h4>
+
+    <div class="row">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 1.00+ K/D:</strong></p>
+            {% for streak in KDR_Gr_1_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 1.25+ K/D:</strong></p>
+            {% for streak in KDR_Gr_1d25_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 1.50+ K/D:</strong></p>
+            {% for streak in KDR_Gr_1d5_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 1.75+ K/D:</strong></p>
+            {% for streak in KDR_Gr_1d75_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 2.00+ K/D:</strong></p>
+            {% for streak in KDR_Gr_2_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4 id="FB">First Bloods</h4>
+
+    <div class="row">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 0 FB:</strong></p>
+            {% for streak in FB_Eq_0_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 1+ FB:</strong></p>
+            {% for streak in FB_Gr_1_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 2+ FB:</strong></p>
+            {% for streak in FB_Gr_2_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 3+ FB:</strong></p>
+            {% for streak in FB_Gr_3_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 4+ FB:</strong></p>
+            {% for streak in FB_Gr_4_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 5+ FB:</strong></p>
+            {% for streak in FB_Gr_5_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+    <h4 id="FD">First Deaths</h4>
+
+    <div class="row">
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with 0 FD:</strong></p>
+            {% for streak in FD_Eq_0_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with <= 1 FD:</strong></p>
+            {% for streak in FD_Le_1_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with <= 2 FD:</strong></p>
+            {% for streak in FD_Le_2_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with <= 3 FD:</strong></p>
+            {% for streak in FD_Le_3_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with <= 4 FD:</strong></p>
+            {% for streak in FD_Le_4_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+        <div class="col-md-3">
+            <p style="margin-bottom:0;"><strong>Consecutive games with <= 5 FD:</strong></p>
+            {% for streak in FD_Le_5_Streak %}
+                <p style="margin-bottom:0; text-indent: 30px;">
+                    {% if streak.Active %}
+                        {% active_streak_element streak %}
+                    {% else %}
+                        {% streak_element streak %}
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+
+</div>
+{% endblock %}
