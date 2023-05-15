@@ -1,7 +1,7 @@
 <a class="hidden" href="{% url 'match_detail' Match.MatchID %}">
 <div class="match-box"
-      style="background-color: #f0f0f0;
-              border: 2px solid black;
+      style="background-color: white;
+              border: 1px solid black;
               border-radius: 5px;
               padding: 10px;
               margin-bottom: 10px;
@@ -9,11 +9,11 @@
               margin-left: auto;
               margin-right: auto;">
 
-      <h4 style="text-align: center; font-weight:bold">
+      <h5 style="text-align: center; font-weight:bold">
         <u>
           {{ Name }}
         </u>
-      </h4>
+      </h5>
 
       <h3 style="text-align: center; font-weight:bold;"
           class="{% if Match.Outcome == 'W' %}text-success{% elif Match.Outcome == 'L' %}text-danger{% endif %}">
