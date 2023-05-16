@@ -114,7 +114,7 @@
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
         <th class="right" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
-        <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
         <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
         <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
         <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
@@ -131,9 +131,9 @@
             <td class="right">{{ player.Deaths }}</td>
             <td class="right">{{ player.Assists }}</td>
             <td class="right" style="{% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
             <td class="right">{{ player.ACS }}</td>
-            <td class="right" style="order-right:1px solid rgb(222, 226, 230)">{{ player.ExactADR|floatformat:0 }}</td>
+            <td class="right">{{ player.ExactADR|floatformat:0 }}</td>
             <td class="right">{{ player.FirstBloods }}</td>
             <td class="right">{{ player.FirstDeaths }}</td>
           </tr>
@@ -148,9 +148,9 @@
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
         <th class="right" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
-        <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+        <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
         <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
-        <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+        <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
         <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
         <th class="right" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
       </tr>
@@ -165,9 +165,9 @@
             <td class="right">{{ player.Deaths }}</td>
             <td class="right">{{ player.Assists }}</td>
             <td class="right" style="{% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+            <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
             <td class="right">{{ player.ACS }}</td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ player.ExactADR|floatformat:0 }}</td>
+            <td class="right" >{{ player.ExactADR|floatformat:0 }}</td>
             <td class="right">{{ player.FirstBloods }}</td>
             <td class="right">{{ player.FirstDeaths }}</td>
           </tr>
@@ -265,7 +265,7 @@
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
-        <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
         <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
         <th class="right" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
         <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
@@ -282,7 +282,7 @@
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
-            <td class="right" style="{% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %}; border-right:1px solid rgb(222, 226, 230)">{{ player.K_Pct|floatformat:2 }}</td>
+            <td class="right" style="{% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %};">{{ player.K_Pct|floatformat:2 }}</td>
             <td class="right">{{ player.FirstBloods }}</td>
             <td class="right">{{ player.FirstDeaths }}</td>
             <td class="right">{{ player.FB_Pct|floatformat:2 }}</td>
@@ -299,7 +299,7 @@
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
-        <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+        <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
         <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
         <th class="right" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
         <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
@@ -316,7 +316,7 @@
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
-            <td class="right" style="{% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %}; border-right:1px solid rgb(222, 226, 230)">{{ player.K_Pct|floatformat:2 }}</td>
+            <td class="right" style="{% if player.K_Pct > 0.5 %}color:green{% elif player.K_Pct == 0.5 %}{% else %}color:red{% endif %};">{{ player.K_Pct|floatformat:2 }}</td>
             <td class="right">{{ player.FirstBloods }}</td>
             <td class="right">{{ player.FirstDeaths }}</td>
             <td class="right">{{ player.FB_Pct|floatformat:2 }}</td>
