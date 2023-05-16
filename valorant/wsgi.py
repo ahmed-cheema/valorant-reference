@@ -15,4 +15,4 @@ from whitenoise import WhiteNoise
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'valorant.settings')
 
 application = get_wsgi_application()
-application = WhiteNoise(application, root=os.path.join(valorant.settings.BASE_DIR, 'staticfiles'))
+application = WhiteNoise(application, root=os.path.join(settings.BASE_DIR, 'staticfiles'))
