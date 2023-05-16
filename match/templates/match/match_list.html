@@ -3,6 +3,22 @@
 
 {% block css %}
 <style>
+    table {
+      table-layout: auto !important;
+      width: 1px !important;
+    }
+
+    td, th {
+      max-width:100%;
+      white-space:nowrap;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+    }
+
+    .right {
+      text-align: right !important;
+    }
+    
     .nav-link {
         margin-right: 30px;
     }
@@ -74,6 +90,7 @@
   })
 </script>
 
+<!--
 <script type="text/javascript">
   $(document).ready(function() {
     var table = $('#match-list').DataTable( {
@@ -84,6 +101,7 @@
     });
   });
 </script>
+-->
 
 <script>
   function resetFilter() {
@@ -175,76 +193,76 @@ $(function() {
   <h2 style="text-align: center">Matches</h2>
   <br>
 
-  <div style="width:90%; margin-left:auto; margin-right:auto">
-  <form method="get" action="" id="filter-form">
-    <div class="row mb-2 ">
+  <div>
+    <form method="get" action="" id="filter-form">
+      <div class="row mb-2 ">
 
-      <div class="col-md-2">
-        <label for="map" class="form-label">Map:</label>
-        <select id="map" name="map" class="form-select">
-          <option value="">All</option>
-          {% for map in unique_maps %}
-            <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
+        <div class="col-md-2">
+          <label for="map" class="form-label">Map:</label>
+          <select id="map" name="map" class="form-select">
+            <option value="">All</option>
+            {% for map in unique_maps %}
+              <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2" style="padding-bottom:15px;">
+          <label for="mvp" class="form-label">MVP:</label>
+          <select id="mvp" name="mvp" class="form-select">
+            <option value="">All</option>
+            {% for p in unique_players %}
+              <option value="{{ p }}" {% if p == mvp_filter %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label for="outcome" class="form-label">Outcome:</label>
+          <select id="outcome" name="outcome" class="form-select">
+            <option value="">All</option>
+            <option value="win" {% if outcome_filter == "win" %}selected{% endif %}>Win</option>
+            <option value="loss" {% if outcome_filter == "loss" %}selected{% endif %}>Loss</option>
+            <option value="draw" {% if outcome_filter == "draw" %}selected{% endif %}>Draw</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label for="dateRange" class="form-label">Date Range:</label>
+          <br>
+          <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
+        </div>
+      </div>
+
+      <div class="row mb-2 ">
+        <div class="col">
+          {% for player in unique_players %}
+            <div class="btn-group-toggle d-inline-block" data-toggle="buttons">
+              {% if button_values|default:None %}
+                {% with button_values|get_item:player as value %}
+                  <input type="radio" name="{{ player }}" value="2" {% if value == 2 %}checked{% endif %} hidden>
+                  <input type="radio" name="{{ player }}" value="1" {% if value == 1 %}checked{% endif %} hidden>
+                  <input type="radio" name="{{ player }}" value="0" {% if value == 0 %}checked{% endif %} hidden>
+                  <button type="button" id="toggler-{{ player }}" class="btn {% if value == 0 %}{{ colorClasses.0 }}{% elif value == 1 %}{{ colorClasses.1 }}{% else %}{{ colorClasses.2 }}{% endif %}">{{ player }}</button>
+                {% endwith %}
+              {% else %}
+                <input type="radio" name="{{ player }}" value="2" checked hidden>
+                <input type="radio" name="{{ player }}" value="1" hidden>
+                <input type="radio" name="{{ player }}" value="0" hidden>
+                <button type="button" id="toggler-{{ player }}" class="btn btn-outline-dark">{{ player }}</button>
+              {% endif %}
+            </div>
           {% endfor %}
-        </select>
+        </div>
       </div>
 
-      <div class="col-md-2" style="padding-bottom:15px;">
-        <label for="mvp" class="form-label">Team MVP:</label>
-        <select id="mvp" name="mvp" class="form-select">
-          <option value="">All</option>
-          {% for p in unique_players %}
-            <option value="{{ p }}" {% if p == mvp_filter %}selected{% endif %}>{{ p }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="col-md-2">
-        <label for="outcome" class="form-label">Outcome:</label>
-        <select id="outcome" name="outcome" class="form-select">
-          <option value="">All</option>
-          <option value="win" {% if outcome_filter == "win" %}selected{% endif %}>Win</option>
-          <option value="loss" {% if outcome_filter == "loss" %}selected{% endif %}>Loss</option>
-          <option value="draw" {% if outcome_filter == "draw" %}selected{% endif %}>Draw</option>
-        </select>
-      </div>
-
-      <div class="col-md-4">
-        <label for="dateRange" class="form-label">Date Range:</label>
-        <br>
-        <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
-      </div>
-    </div>
-
-    <div class="row mb-2 ">
-      <div class="col-md-10">
-        {% for player in unique_players %}
-          <div class="btn-group-toggle d-inline-block" data-toggle="buttons">
-            {% if button_values|default:None %}
-              {% with button_values|get_item:player as value %}
-                <input type="radio" name="{{ player }}" value="2" {% if value == 2 %}checked{% endif %} hidden>
-                <input type="radio" name="{{ player }}" value="1" {% if value == 1 %}checked{% endif %} hidden>
-                <input type="radio" name="{{ player }}" value="0" {% if value == 0 %}checked{% endif %} hidden>
-                <button type="button" id="toggler-{{ player }}" class="btn {% if value == 0 %}{{ colorClasses.0 }}{% elif value == 1 %}{{ colorClasses.1 }}{% else %}{{ colorClasses.2 }}{% endif %}">{{ player }}</button>
-              {% endwith %}
-            {% else %}
-              <input type="radio" name="{{ player }}" value="2" checked hidden>
-              <input type="radio" name="{{ player }}" value="1" hidden>
-              <input type="radio" name="{{ player }}" value="0" hidden>
-              <button type="button" id="toggler-{{ player }}" class="btn btn-outline-dark">{{ player }}</button>
-            {% endif %}
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Filter</button>
-    <button type="button" class="btn btn-secondary" onclick="resetFilter()">Reset</button>
-  </form>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <button type="button" class="btn btn-secondary" onclick="resetFilter()">Reset</button>
+    </form>
   </div>
 
 
-  <div style="text-align:center; font-size:120%">
+  <div class="mt-3" style="font-size:120%">
     <div id="info" style="display:inline-block; text-align:center; width:15%; padding-top:7px; border:1px solid black"
         class="col-xl-4 rounded p-2 mb-4 center">
       <div style="display:inline-block; color:green;" title="Wins" data-bs-toggle="tooltip" data-bs-placement="top">
@@ -266,23 +284,23 @@ $(function() {
   </div>
 
   <div class="table-responsive-lg center" style="padding-top: 0px;">
-  <table id="match-list" class=" table table-hover table-sm" 
-      style="font-size:90%; overflow:hidden; width:90%; margin:auto; border: 1px solid rgb(168, 168, 168);">
+  <table id="match-list" class="table table-hover table-sm" 
+      style="font-size:90%; overflow:hidden; width:90%; border: 1px solid rgb(168, 168, 168);">
     <thead>
       <tr class="bg-light">
-        <th style="text-align:center">Date</th>
-        <th style="text-align:center">Map</th>
-        <th style="text-align:center">Score</th>
-        <th style="text-align:center">Team MVP</th>
-        <th style="text-align:center">Most Kills</th>
-        <th style="text-align:center">Best K/D</th>
-        <th style="text-align:center">Players</th>
+        <th>Date</th>
+        <th>Map</th>
+        <th>Score</th>
+        <th>Team MVP</th>
+        <th>Most Kills</th>
+        <th>Best K/D</th>
+        <th>Players</th>
       </tr>
     </thead>
     <tbody>
       {% for match in matches %}
-        <tr class="{% if match.TeamOneWon %}table-success{% elif match.MatchDraw %}table-default{% else %}table-danger{% endif %}" style="text-align:center">
-          <td style="text-align:center; font-weight:bold"><a href="{% url 'match_detail' match.MatchID %}">{{ match.Date|date:"n/j/y" }} {{ match.Date|time:"g:i A" }}</a></td>
+        <tr class="{% if match.TeamOneWon %}table-success{% elif match.MatchDraw %}table-default{% else %}table-danger{% endif %}">
+          <td style="font-weight:bold"><a href="{% url 'match_detail' match.MatchID %}">{{ match.Date|date:"n/j/y" }} {{ match.Date|time:"g:i A" }}</a></td>
           <td><a href="{% url 'map_detail' match.Map %}" %}>{{ match.Map }}</a></td>
           <td>{{ match.Score }}</td>
           <td>{{ match.MVP }} ({{ match.MVP_ACS }})</td>

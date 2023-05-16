@@ -503,6 +503,8 @@ def player_stats(request):
     if mp_filter:
         player_stats = player_stats.filter(Q(num_matches__gte=mp_filter)).all()
 
+    player_stats = player_stats.order_by('-num_matches')
+
     for p in player_stats:
         filtered_players = FilterPlayers(
             Player.objects.filter(Team="Team A", Username=p['Username']), 
@@ -919,10 +921,6 @@ def player_splits(request, username):
 
     for p in agent_splits:
         filtered_players = players.filter(Agent=p['Agent'])
-                                          
-        p['AdjAgent'] = p['Agent']
-        if p['Agent'] == "KAY/O":
-            p['AdjAgent'] = "KAYO"
 
         p['AgentImage'] = AgentImage(p['Agent'])
 
@@ -1488,6 +1486,8 @@ def maps_overview(request):
         max_fd = Max('FirstDeaths')
     )
 
+    maps = maps.order_by('-num_matches')
+
     for m in maps:
         filtered_players = Player.objects.filter(Team="Team A", Match__Map=m['Match__Map'])
 
@@ -1680,11 +1680,6 @@ def agents_overview(request):
         m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
         m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
 
-        if m['Agent'] == "KAY/O":
-            m['AdjAgent'] = "KAYO"
-        else:
-            m['AdjAgent'] = m['Agent']
-
         m['AgentImage'] = AgentImage(m['Agent'])
 
         max_kills = filtered_players.filter(Kills=m['max_kills']).order_by('-ACS','-KillDeathRatio')
@@ -1744,12 +1739,9 @@ def agents_overview(request):
     # Render template
     return render(request, 'match/agents.html', context)
 
-def agent_detail(request, agent, adjAgent=None):
+def agent_detail(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
-        adjAgent = "KAYO"
-    else:
-        adjAgent = agent
 
     players = Player.objects.filter(Team="Team A", Agent=agent).order_by('Match__Date')
 
@@ -1775,7 +1767,6 @@ def agent_detail(request, agent, adjAgent=None):
                 last_twenty_aggregates, all_aggregates],
 
         'agent': agent,
-        'adjAgent': adjAgent,
 
         'agentImage': AgentImage(agent)
     }
@@ -1785,9 +1776,6 @@ def agent_detail(request, agent, adjAgent=None):
 def agent_splits(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
-        adjAgent = "KAYO"
-    else:
-        adjAgent = agent
 
     players = Player.objects.filter(Team="Team A", Agent=agent).order_by('-Match__Date')
 
@@ -2240,7 +2228,6 @@ def agent_splits(request, agent):
         'outcome_splits': outcome_splits,
 
         'agent': agent,
-        'adjAgent': adjAgent,
         'agentImage': agentImage,
     }
 
@@ -2532,10 +2519,6 @@ def map_splits(request, map):
 
     for p in agent_splits:
         filtered_players = players.filter(Agent=p['Agent'])
-
-        p['AdjAgent'] = p['Agent']
-        if p['Agent'] == "KAY/O":
-            p['AdjAgent'] = "KAYO"
 
         p['AgentImage'] = AgentImage(p['Agent'])
 

@@ -3,6 +3,29 @@
 
 {% block css %}
 <style>
+  table {
+    table-layout: auto !important;
+    width: 1px !important;
+  }
+
+  td, th {
+    max-width:100%;
+    white-space:nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  table.sortable tbody tr:nth-child(2n) td {
+    background: white;
+  }
+  table.sortable tbody tr:nth-child(2n+1) td {
+    background: rgba(0,0,0,0.05);
+  }
+
   a {
     text-decoration: none;
   } 
@@ -10,6 +33,10 @@
   table.center {
     margin-left:auto; 
     margin-right:auto;
+  }
+
+  span {
+    font-size:60% !important;
   }
 
   button[aria-selected="true"] {
@@ -110,20 +137,6 @@
 </script>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        var table = $('#table-overview').DataTable( {
-            columnDefs: [{
-                orderable: false, targets: [0] 
-            }],
-            "paging": false,
-            "info": false,
-            "searching": false,
-            order: [[1, 'desc']]
-        });
-    });
-</script>
-
-<script type="text/javascript">
   $(function() {
 
       var start = moment("{% if date_filter is None %}01/01/2023{% else %}{{ start_date }}{% endif %}", 'MM/DD/YYYY');
@@ -206,17 +219,20 @@
         </div>
 
         <div class="col-md-2">
-            <label for="minMP" class="form-label">Minimum Matches:</label>
-            <input type="range" 
-              class="form-control-range" 
-              name="minMP"
-              id="minMP" 
-              onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
-              {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
-              min = 0
-              max = {{ max_matches }}>
-            <span id="rangeval">{% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}</span>
-          </div>
+          <label for="minMP" class="form-label">Minimum Matches: 
+            <span id="rangeval" style="font-size:100% !important;">
+              {% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}
+            </span>
+          </label>
+          <input type="range" 
+            class="form-control-range" 
+            name="minMP"
+            id="minMP" 
+            onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
+            {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
+            min = 0
+            max = {{ max_matches }}>
+        </div>
         
     </div>
 
@@ -247,11 +263,11 @@
   </form>
   </div>
 
-  <div class="table-responsive-lg">
-    <table id="table-overview" class=" table table-hover table-striped table-sm center"
+  <div class="table-responsive-lg mt-4">
+    <table id="table-overview" class="sortable table table-hover table-sm center"
            style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
       <thead>
-        <tr>
+        <tr id="ignore">
             <th style="border-right:1px solid rgb(222, 226, 230)"></th>
             <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Matches</th>
             <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">All Rounds</th>
@@ -259,29 +275,29 @@
             <th colspan="2" style="text-align:center">Defense Rounds</th>
         </tr>
         <tr>
-            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Lineup</th>
-            <th style="text-align:center;" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
-            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-            <th style="text-align:center;" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
-            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-            <th style="text-align:center;" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
-            <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-            <th style="text-align:center;" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
-            <th style="text-align:center;" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th class="sorttable_nosort" style="border-right:1px solid rgb(222, 226, 230)">Lineup</th>
+            <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th class="right" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th class="right" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+            <th class="right" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+            <th class="right" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
         </tr>
       </thead>
       <tbody>
         {% for m in lineups %}
         <tr>
-            <td style="text-align:center; width:10%; border-right:1px solid rgb(222, 226, 230)">{{ m.Match__Players }}</td>
-            <td style="text-align:center; width:1%;"><a href="{% url 'match_list' %}{{m.MatchFilterStr}}">{{ m.num_matches }}</a></td>
-            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
-            <td style="text-align:center; width:1%;">{{ m.rounds_played }}</td>
-            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
-            <td style="text-align:center; width:1%;">{{ m.attack_rounds }}</td>
-            <td style="text-align:center; width:1%; border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
-            <td style="text-align:center; width:1%;">{{ m.defense_rounds }}</td>
-            <td style="text-align:center; width:1%; {% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
+            <td style="border-right:1px solid rgb(222, 226, 230)">{{ m.Match__Players }}</td>
+            <td class="right"><a href="{% url 'match_list' %}{{m.MatchFilterStr}}">{{ m.num_matches }}</a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+            <td class="right">{{ m.rounds_played }}</td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
+            <td class="right">{{ m.attack_rounds }}</td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
+            <td class="right">{{ m.defense_rounds }}</td>
+            <td class="right" style="{% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
           </tr>
         {% endfor %}
       </tbody>

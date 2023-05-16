@@ -3,6 +3,29 @@
 
 {% block css %}
 <style>
+  table {
+    table-layout: auto !important;
+    width: 1px !important;
+  }
+
+  td, th {
+    max-width:100%;
+    white-space:nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  table.sortable tbody tr:nth-child(2n) td {
+    background: white;
+  }
+  table.sortable tbody tr:nth-child(2n+1) td {
+    background: rgba(0,0,0,0.05);
+  }
+
   .nav-link {
       margin-right: 30px;
   }
@@ -45,15 +68,10 @@
 <script type="text/javascript">
   $(document).ready(function() {
       var table = $('#table').DataTable( {
-          columnDefs: [
-                { orderable: false,
-                  targets: [0] },
-          ],
           paging: false,
           searching: false,
           info: false,
-          order: [[1, 'desc']],
-          scrollY: 195,
+          scrollY: 221,
           scrollCollapse: true,
           paging: false,
       });
@@ -71,6 +89,12 @@
 
     <div class="col">
 
+      
+
+    </div>
+
+    <div class="col">
+      
       <div class="match-box"
            style="background-color: white;
                   border: 1px solid black;
@@ -117,41 +141,6 @@
     </div>
 
     <div class="col">
-      
-      <div style="margin-left:auto; margin-right:auto; text-align:center">
-        <img src="https://tr.rbxcdn.com/f9ed653a04ceaf91748949a3ee509d1b/352/352/Avatar/Png" height=250>
-      </div>
-
-    </div>
-
-    <div class="col">
-      
-      <table class="table table-hover table-striped table-sm responsive" id="table"
-             style="border:1px solid black">
-        <thead>
-          <tr>
-            <th style="text-align:left;">Player</th>
-            <th title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
-            <th title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
-            <th title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in Players %}
-            <tr>
-              <td style="text-align:left;">
-                <img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
-                  <a href="{% url 'player_detail' p.Username %}" style="text-decoration: none">
-                    {{ p.DisplayName }}
-                  </a>
-              </td>
-              <td>{{ p.num_matches }}</td>
-              <td>{{ p.kdr|floatformat:2 }}</td>
-              <td>{{ p.acs|floatformat:1 }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
 
     </div>
 
