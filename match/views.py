@@ -1398,7 +1398,7 @@ def player_gamelog(request, username):
 
     return render(request, 'match/player/player_gamelog.html', context)
 
-@cache_page
+@cache_page(None)
 def maps_overview(request):
 
     players = Player.objects.filter(Team="Team A")
@@ -1551,7 +1551,7 @@ def maps_overview(request):
     # Render template
     return render(request, 'match/maps.html', context)
 
-@cache_page
+@cache_page(None)
 def agents_overview(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -1781,7 +1781,7 @@ def agent_detail(request, agent):
 
     return render(request, 'match/agent/agent_detail.html', context)
 
-@cache_page
+@cache_page(None)
 def agent_splits(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
@@ -2271,7 +2271,7 @@ def map_detail(request, map):
 
     return render(request, 'match/map/map_detail.html', context)
 
-@cache_page
+@cache_page(None)
 def map_splits(request, map):
     players = Player.objects.filter(Team="Team A", Match__Map=map).order_by('-Match__Date')
 
@@ -2987,7 +2987,7 @@ def BestGame(field,sort="desc",model="Player"):
 
     return top_games
 
-@cache_page
+@cache_page(None)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -3081,7 +3081,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-@cache_page
+@cache_page(None)
 def record_game(request):
     MostKills = BestGame("Kills")
     LeastKills = BestGame("Kills","asc")
@@ -3165,7 +3165,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-@cache_page
+@cache_page(None)
 def record_streak(request):
     Kills_Gr_10_Streak = BestStreak("Kills", 10, ge)
     Kills_Gr_15_Streak = BestStreak("Kills", 15, ge)
@@ -3238,7 +3238,7 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-@cache_page
+@cache_page(None)
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -3335,7 +3335,7 @@ def record_career(request):
 
 ### 
 
-@cache_page
+@cache_page(None)
 def player_teammates(request, username):
     players = Player.objects.filter(Team="Team A", Username=username)
 
@@ -3586,7 +3586,7 @@ def player_teammates(request, username):
     
     return render(request, 'match/player/player_teammates.html', context)
 
-@cache_page
+@cache_page(None)
 def lineups(request):
 
     players = Player.objects.filter(Team="Team A")
