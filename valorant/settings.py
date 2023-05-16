@@ -137,14 +137,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSIONS_ENGINE='django.contrib.sessions.backends.cache'
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
-        'LOCATION': os.environ.get('MEMCACHIER_SERVERS', '').split(','),
+def get_cache():
+  import os
+  try:
+    servers = os.environ['MEMCACHIER_SERVERS']
+    username = os.environ['MEMCACHIER_USERNAME']
+    password = os.environ['MEMCACHIER_PASSWORD']
+    return {
+      'default': {
+        'BACKEND': 'django_bmemcached.memcached.BMemcached',
+        # TIMEOUT is not the connection timeout! It's the default expiration
+        # timeout that should be applied to keys! Setting it to `None`
+        # disables expiration.
+        'TIMEOUT': None,
+        'LOCATION': servers,
         'OPTIONS': {
-            'binary': True,
-            'username': os.environ.get('MEMCACHIER_USERNAME', ''),
-            'password': os.environ.get('MEMCACHIER_PASSWORD', ''),
+          'username': username,
+          'password': password,
         }
+      }
     }
-}
+  except:
+    return {
+      'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+      }
+    }
+
+CACHES = get_cache()

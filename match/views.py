@@ -330,7 +330,7 @@ def match_list(request):
 
     return render(request, 'match/match_list.html', context)
 
-@cache_page
+@cache_page(None)
 def gamelog(request):
     players = Player.objects.filter(Team="Team A").order_by('-ACS')
 
@@ -375,7 +375,7 @@ def gamelog(request):
 
     return render(request, 'match/game_log.html', context)
 
-@cache_page
+@cache_page(None)
 def player_stats(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -813,7 +813,7 @@ def CalculateAggregates(players, field="Username", agent=None):
 
     return p
 
-@cache_page
+@cache_page(None)
 def player_splits(request, username):
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
 
@@ -1333,7 +1333,7 @@ def player_splits(request, username):
 
     return render(request, 'match/player/player_splits.html', context)
 
-@cache_page
+@cache_page(None)
 def player_gamelog(request, username):
 
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
