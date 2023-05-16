@@ -117,9 +117,6 @@ def FilterPlayerParticipation(matches, button_values):
     return filtered_matches
 
 def homepage(request):
-    print(finders.find('admin/img/Png.png'))
-    print(finders.searched_locations)
-
     def GetMatchSummary(match):
         matchMap = match['Map']
         matchOutcome = "W" if match['TeamOneWon'] else "L" if match['TeamOneLost'] else "D"
