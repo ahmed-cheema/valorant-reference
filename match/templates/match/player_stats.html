@@ -5,6 +5,7 @@
   table {
     table-layout: auto !important;
     width: 1px !important;
+    overflow: visible !important;
   }
 
   td, th {
@@ -12,6 +13,10 @@
     white-space:nowrap;
     padding-left: 10px !important;
     padding-right: 10px !important;
+  }
+
+  td {
+    background-clip: padding-box !important;
   }
 
   .right {
@@ -263,7 +268,7 @@
 
     <div id="tab-basic" class="tab-pane active table-responsive-lg">
       <table id="table-basic" class="sortable table table-hover table-sm center"
-            style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+            style="width:75%; border:1px solid rgb(168, 168, 168)">
         <thead>
           <tr>
               <th>Player</th>

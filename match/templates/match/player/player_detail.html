@@ -6,6 +6,7 @@
   table {
     table-layout: auto !important;
     width: 1px !important;
+    overflow: visible !important;
   }
 
   td, th {
@@ -201,7 +202,7 @@
               <th class="right" title="Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
               <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
-              <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
+              <th class="right" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
               <th class="right" title="First Bloods per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
               <th class="right" title="First Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
               <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
@@ -218,7 +219,7 @@
               <td class="right">{{ p.deaths_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
               <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
-              <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ p.d_pct|floatformat:2 }}</td>
+              <td class="right">{{ p.d_pct|floatformat:2 }}</td>
               <td class="right">{{ p.fb_per_20|floatformat:1 }}</td>
               <td class="right">{{ p.fd_per_20|floatformat:1 }}</td>
               <td class="right">{{ p.fb_pct|floatformat:2 }}</td>
@@ -241,7 +242,7 @@
             <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
             <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
             <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
-            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
+            <th class="right" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
             <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
             <th class="right" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
             <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
@@ -258,7 +259,7 @@
               <td class="right">{{ p.total_deaths }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
               <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
-              <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ p.d_pct|floatformat:2 }}</td>
+              <td class="right">{{ p.d_pct|floatformat:2 }}</td>
               <td class="right">{{ p.first_bloods }}</td>
               <td class="right">{{ p.first_deaths }}</td>
               <td class="right">{{ p.fb_pct|floatformat:2 }}</td>
@@ -400,7 +401,7 @@
         <thead>
           <tr>
             <th></th>
-            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th> 
+            <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th> 
             <th class="right" title="Zero Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">0K</th>
             <th class="right" title="One Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">1K</th>
             <th class="right" title="Two Kill Rounds per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">2K</th>
@@ -414,7 +415,7 @@
           {% for p in lst %}
             <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
               <td>{{ p.Label }}</td>
-              <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ p.num_matches }}</td>
+              <td class="right">{{ p.num_matches }}</td>
               <td class="right">{{ p.zero_kills_p20|floatformat:2 }}</td>
               <td class="right">{{ p.one_kills_p20|floatformat:2 }}</td>
               <td class="right">{{ p.two_kills_p20|floatformat:2 }}</td>
@@ -434,7 +435,7 @@
         <thead>
           <tr>
             <th></th>
-            <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th> 
+            <th class="right" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th> 
             <th class="right" title="Zero Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">0K</th>
             <th class="right" title="One Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">1K</th>
             <th class="right" title="Two Kill Rounds" data-bs-toggle="tooltip" data-bs-placement="top">2K</th>
@@ -448,7 +449,7 @@
           {% for p in lst %}
             <tr style="{% if p.Label == "All Matches" %}font-weight:bold{% endif %}">
               <td>{{ p.Label }}</td>
-              <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ p.rounds }}</td>
+              <td class="right">{{ p.rounds }}</td>
               <td class="right">{{ p.zero_kills }}</td>
               <td class="right">{{ p.one_kills }}</td>
               <td class="right">{{ p.two_kills }}</td>
