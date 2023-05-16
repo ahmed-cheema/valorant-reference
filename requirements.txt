@@ -24,6 +24,5 @@ trio==0.22.0
 trio-websocket==0.10.2
 tzdata==2023.3
 urllib3==2.0.2
-whitenoise==6.4.0
 wsproto==1.2.0
 zope.interface==6.0
