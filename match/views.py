@@ -116,6 +116,7 @@ def FilterPlayerParticipation(matches, button_values):
 
     return filtered_matches
 
+@cache_page(60 * 5)
 def homepage(request):
     def GetMatchSummary(match):
         matchMap = match['Map']
@@ -262,6 +263,7 @@ def match_detail(request, match_id):
     players = Player.objects.filter(Match=match)
     return render(request, 'match/match_detail.html', {'match': match, 'players': players})
 
+@cache_page(None)
 def match_list(request):
     matches = Match.objects.all().order_by('-Date')
 
