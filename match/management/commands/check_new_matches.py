@@ -6,6 +6,8 @@ from match.models import Match, Player
 from match.scraper import GetNewMatches, ScrapeMatch
 from match.views import match_detail
 
+from django.core.cache import cache
+
 class Command(BaseCommand):
     help = 'Scrape newest matches for player(s)'
 
@@ -24,6 +26,7 @@ class Command(BaseCommand):
 
                     try:
                         ScrapeMatch(match_id)
+                        cache.clear()
                     except SystemExit as e:
                         print(e)
                         continue

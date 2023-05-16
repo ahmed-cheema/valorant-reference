@@ -138,11 +138,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSIONS_ENGINE='django.contrib.sessions.backends.cache'
 
 CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+        'LOCATION': os.environ.get('MEMCACHIER_SERVERS', '').split(','),
+        'OPTIONS': {
+            'binary': True,
+            'username': os.environ.get('MEMCACHIER_USERNAME', ''),
+            'password': os.environ.get('MEMCACHIER_PASSWORD', ''),
         }
     }
 }

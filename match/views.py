@@ -11,7 +11,7 @@ from datetime import datetime
 
 from django.contrib.staticfiles import finders
 
-#from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_page
 #from django.core.cache import cache
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver
@@ -330,6 +330,7 @@ def match_list(request):
 
     return render(request, 'match/match_list.html', context)
 
+@cache_page
 def gamelog(request):
     players = Player.objects.filter(Team="Team A").order_by('-ACS')
 
@@ -374,6 +375,7 @@ def gamelog(request):
 
     return render(request, 'match/game_log.html', context)
 
+@cache_page
 def player_stats(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -811,6 +813,7 @@ def CalculateAggregates(players, field="Username", agent=None):
 
     return p
 
+@cache_page
 def player_splits(request, username):
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
 
@@ -1330,6 +1333,7 @@ def player_splits(request, username):
 
     return render(request, 'match/player/player_splits.html', context)
 
+@cache_page
 def player_gamelog(request, username):
 
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
@@ -1394,6 +1398,7 @@ def player_gamelog(request, username):
 
     return render(request, 'match/player/player_gamelog.html', context)
 
+@cache_page
 def maps_overview(request):
 
     players = Player.objects.filter(Team="Team A")
@@ -1546,6 +1551,7 @@ def maps_overview(request):
     # Render template
     return render(request, 'match/maps.html', context)
 
+@cache_page
 def agents_overview(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -1775,6 +1781,7 @@ def agent_detail(request, agent):
 
     return render(request, 'match/agent/agent_detail.html', context)
 
+@cache_page
 def agent_splits(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
@@ -2264,6 +2271,7 @@ def map_detail(request, map):
 
     return render(request, 'match/map/map_detail.html', context)
 
+@cache_page
 def map_splits(request, map):
     players = Player.objects.filter(Team="Team A", Match__Map=map).order_by('-Match__Date')
 
@@ -2979,6 +2987,7 @@ def BestGame(field,sort="desc",model="Player"):
 
     return top_games
 
+@cache_page
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -3072,6 +3081,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
+@cache_page
 def record_game(request):
     MostKills = BestGame("Kills")
     LeastKills = BestGame("Kills","asc")
@@ -3155,6 +3165,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
+@cache_page
 def record_streak(request):
     Kills_Gr_10_Streak = BestStreak("Kills", 10, ge)
     Kills_Gr_15_Streak = BestStreak("Kills", 15, ge)
@@ -3227,6 +3238,7 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
+@cache_page
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -3323,6 +3335,7 @@ def record_career(request):
 
 ### 
 
+@cache_page
 def player_teammates(request, username):
     players = Player.objects.filter(Team="Team A", Username=username)
 
@@ -3573,6 +3586,7 @@ def player_teammates(request, username):
     
     return render(request, 'match/player/player_teammates.html', context)
 
+@cache_page
 def lineups(request):
 
     players = Player.objects.filter(Team="Team A")

@@ -5,6 +5,8 @@ from match.models import Match, Player
 from match.scraper import ScrapeMatch
 from match.views import match_detail
 
+from django.core.cache import cache
+
 class Command(BaseCommand):
     help = 'Scrape match data and add it to the database'
 
@@ -28,3 +30,5 @@ class Command(BaseCommand):
             #players = Player.objects.filter(Match=match)
 
             self.stdout.write(self.style.SUCCESS(f'Successfully scraped data for match {match_id}!'))
+
+        cache.clear()

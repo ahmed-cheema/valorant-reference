@@ -3,6 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from match.models import Match, Player
 import json
 
+from django.core.cache import cache
+
 class Command(BaseCommand):
     help = 'Change a player\'s name in the database'
 
@@ -81,5 +83,5 @@ class Command(BaseCommand):
 
         print("Username update was successful:")
         print("{} -> {}".format(old_name, new_name))
-
-        for m in Match.objects.all():
+        
+        cache.clear()
