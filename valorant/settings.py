@@ -16,6 +16,7 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -25,11 +26,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['valorant-reference.herokuapp.com',
-                 'www.valorant-reference.com',
-                 'valorant-reference.com',
-                 #'127.0.0.1'
-                ]
+ALLOWED_HOSTS = [
+    'valorant-reference.herokuapp.com',
+    'www.valorant-reference.com',
+    'valorant-reference.com',
+    '127.0.0.1'
+    ]
 
 # Application definition
 
