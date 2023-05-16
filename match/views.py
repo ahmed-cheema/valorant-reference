@@ -9,6 +9,8 @@ from django.http import Http404
 from collections import Counter
 from datetime import datetime
 
+from django.contrib.staticfiles import finders
+
 #from django.views.decorators.cache import cache_page
 #from django.core.cache import cache
 #from django.db.models.signals import post_save, post_delete
@@ -115,6 +117,9 @@ def FilterPlayerParticipation(matches, button_values):
     return filtered_matches
 
 def homepage(request):
+    print(finders.find('admin/img/Png.png'))
+    print(finders.searched_locations)
+
     def GetMatchSummary(match):
         matchMap = match['Map']
         matchOutcome = "W" if match['TeamOneWon'] else "L" if match['TeamOneLost'] else "D"

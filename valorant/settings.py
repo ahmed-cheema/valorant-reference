@@ -30,7 +30,7 @@ ALLOWED_HOSTS = [
     'valorant-reference.herokuapp.com',
     'www.valorant-reference.com',
     'valorant-reference.com',
-    '127.0.0.1'
+    '127.0.0.1',
 ]
 
 # Application definition
