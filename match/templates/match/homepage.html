@@ -7,6 +7,10 @@ Valorant Reference
 
 {% block css %}
 <style>
+
+  .navbar {
+    display:none;
+  }
   
   table {
     table-layout: auto !important;
@@ -36,13 +40,13 @@ Valorant Reference
   }
 
   .nav-link#None {
-      color:red !important;
-      border-bottom: solid 3px red !important;
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
   }
 
   .hover-nav:hover {
-      color:red !important;
-      border-bottom: solid 3px red !important;
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
   }
 
   a.hidden {
@@ -88,87 +92,37 @@ Valorant Reference
 
 <div class="container">
 
-  <h1 class="text-center pt-2"></h1>
+  <br>
+
+  <img src="https://i.imgur.com/Kwqwuvv.png" height="80px" style="margin-left:auto; margin-right:auto; display:block;">
   
-  <div class="row justify-content-center">
+  <br>
 
-    <div class="col-12 col-md">
+  <h4 style="text-align:center; color:black">An interactive dashboard for Valorant statistics.</h4>
 
-      
+  <br>
 
-    </div>
+  <div style="text-align:center">
 
-    <div class="col-12 col-md">
-      
-      <div class="match-box"
-           style="background-color: white;
-                  border: 1px solid black;
-                  border-radius: 5px;
-                  padding: 10px;
-                  margin-bottom: 10px;
-                  margin-left: auto;
-                  margin-right: auto;">
+    <a href="{% url 'match_list' %}"><button type="button" class="btn btn-danger m-2">Matches</button></a>
+    <a href="{% url 'player_stats' %}"><button type="button" class="btn btn-danger m-2">Player Stats</button></a>
+    <a href="{% url 'gamelog' %}"><button type="button" class="btn btn-danger m-2">Game Log</button></a>
+    <a href="{% url 'agents_overview' %}"><button type="button" class="btn btn-danger m-2">Agents</button></a>
+    <a href="{% url 'maps_overview' %}"><button type="button" class="btn btn-danger m-2">Maps</button></a>
+    <a href="{% url 'lineups' %}"><button type="button" class="btn btn-danger m-2">Lineups</button></a>
+    <a href="{% url 'record_overview' %}"><button type="button" class="btn btn-danger m-2">Records</button></a>
 
-        <h4 style="text-align:center; font-weight:bold">
-          {{ History.Matches }} Matches
-        </h4>
+  </div>
 
-        <h5 class="text-success" style="text-align:center;">
-          {{ History.Wins }} Wins
-        </h5>
-        <h5 class="text-danger" style="text-align:center;">
-          {{ History.Losses }} Losses
-        </h5>
-        <h5 style="text-align:center;;">
-          {{ History.Draws }} Draws
-        </h5>
-        <h5 class="{% if History.WinPct > 0.5 %} text-success {% elif History.WinPct < 0.5 %} text-danger {% endif %}" style="text-align:center;">
-          {{ History.WinPctStr }} Win Pct
-        </h5>
-
-        <h5 style="text-align:center; margin-bottom:0px; font-weight:bold;">
-          {% with w_class="text-success" l_class="text-danger" t_class="text-black" %}
-            <span class="{{ t_class }}">...</span>
-            {% for letter in History.Form %}
-              {% if letter == "W" %}
-                <span class="{{ w_class }}">W</span>
-              {% elif letter == "L" %}
-                <span class="{{ l_class }}">L</span>
-              {% elif letter == "T" %}
-                <span class="{{ t_class }}">T</span>
-              {% endif %}
-            {% endfor %}
-          {% endwith %}
-        </h5>
-
-      </div>
-
-    </div>
-
-    <div class="col-12 col-md">
-
-    </div>
+  <div style="text-align:center">
+  
+    <a href="{% url 'blog' %}"><button type="button" class="btn btn-outline-danger m-2">Blog</button></a>
+    <a href="{% url 'about' %}"><button type="button" class="btn btn-outline-danger m-2">About</button></a>
 
   </div>
 
   <br>
 
-  <div class="row justify-content-center">
-
-    <div class="col-12 col-md">
-      {% match_box FirstMatch "First Match" %}
-    </div>
-
-    <div class="col-12 col-md">
-      {% match_box RandomMatch "Random" %}
-    </div>
-
-    <div class="col-12 col-md">
-      {% match_box LastMatch "Last Match" %}
-    </div>
-
-  </div>
-
-</div>
+  <p style="text-align:center; color:black;">Last match: <a href="{% url 'match_detail' LastMatchID %}" style="text-decoration:none">{{ LastMatchDate }}</a></p>
 
 {% endblock %}
