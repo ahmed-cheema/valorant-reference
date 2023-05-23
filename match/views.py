@@ -116,7 +116,6 @@ def FilterPlayerParticipation(matches, button_values):
 
     return filtered_matches
 
-#@cache_page(60 * 5)
 def homepage(request):
     LastMatch = Match.objects.order_by('-Date').values().first()
 
@@ -2769,6 +2768,64 @@ from datetime import timedelta
 #def invalidate_cache(sender, **kwargs):
 #    cache.delete('my_view_cache_key')
 
+def BestActiveStreak(field, value, op):
+    players = Player.objects.filter(Team="Team A").order_by('Username', '-Match__Date')
+    active_streaks = []
+    for username, user_group in groupby(players, lambda x: x.Username):
+        user_group = list(user_group)
+        streak = 0
+        end_date = None
+        agents = []
+        for i, player in enumerate(user_group):
+            if op(getattr(player,field),value):
+                if streak == 0:
+                    end_date = player.Match.Date
+                streak += 1
+                agents.append(player.Agent)
+                if i == len(user_group) - 1 and streak > 0:  # end of the list
+                    most_common_agent = max(set(agents), key=agents.count)
+                    active_streaks.append({
+                        'Username': username,
+                        'DisplayName': player.DisplayName,
+                        'UserTag': player.UserTag,
+                        'Agent': most_common_agent,
+                        'AgentImage': AgentImage(most_common_agent),
+                        'Streak': streak,
+                        'StartDate': player.Match.Date,
+                        'EndDate': end_date,
+                        'EndDateHidden': end_date + timedelta(days=1),
+                        'Active': True
+                    })
+                    agents = []
+            else:
+                if streak > 0:
+                    most_common_agent = max(set(agents), key=agents.count)
+                    active_streaks.append({
+                        'Username': username,
+                        'DisplayName': player.DisplayName,
+                        'UserTag': player.UserTag,
+                        'Agent': most_common_agent,
+                        'AgentImage': AgentImage(most_common_agent),
+                        'Streak': streak,
+                        'StartDate': player.Match.Date,
+                        'EndDate': end_date,
+                        'EndDateHidden': end_date + timedelta(days=1),
+                        'Active': True
+                    })
+                streak = 0
+                end_date = None
+                agents = []
+                break
+
+    # Sort by streak
+    active_streaks.sort(key=lambda x: x['Streak'], reverse=True)
+    top_active_streak = active_streaks[0]['Streak'] if active_streaks else None
+    top_active_streaks = [streak for streak in active_streaks if streak['Streak'] == top_active_streak]
+
+    top_active_streaks.sort(key=lambda x: x['StartDate'])
+
+    return top_active_streaks
+
 def BestStreak(field, value, op):
     players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date')
     all_streaks = []
@@ -3044,73 +3101,93 @@ def record_game(request):
 
 @cache_page(None)
 def record_streak(request):
-    Kills_Gr_10_Streak = BestStreak("Kills", 10, ge)
-    Kills_Gr_15_Streak = BestStreak("Kills", 15, ge)
-    Kills_Gr_20_Streak = BestStreak("Kills", 20, ge)
-    Kills_Gr_25_Streak = BestStreak("Kills", 25, ge)
-    #Kills_Gr_30_Streak = BestStreak("Kills", 30, ge)
 
-    WonGameStreak = BestStreak("MatchWon", 1, ge)
-    LostGameStreak = BestStreak("MatchLost", 1, ge)
+    streaks = {
+        "Kills_Gr_10_Streak": BestStreak("Kills", 10, ge),
+        "Kills_Gr_15_Streak": BestStreak("Kills", 15, ge),
+        "Kills_Gr_20_Streak": BestStreak("Kills", 20, ge),
+        "Kills_Gr_25_Streak": BestStreak("Kills", 25, ge),
+        #"Kills_Gr_30_Streak": BestStreak("Kills", 30, ge),
+        "WonGameStreak": BestStreak("MatchWon", 1, ge),
+        "LostGameStreak": BestStreak("MatchLost", 1, ge),
+        "ACS_Gr_100_Streak": BestStreak("ACS", 100, ge),
+        "ACS_Gr_150_Streak": BestStreak("ACS", 150, ge),
+        "ACS_Gr_200_Streak": BestStreak("ACS", 200, ge),
+        "ACS_Gr_250_Streak": BestStreak("ACS", 250, ge),
+        "ACS_Gr_300_Streak": BestStreak("ACS", 300, ge),
+        #"ACS_Gr_350_Streak": BestStreak("ACS", 350, ge),
+        "KDR_Gr_1_Streak": BestStreak("KillDeathRatio", 1, ge),
+        "KDR_Gr_1d25_Streak": BestStreak("KillDeathRatio", 1.25, ge),
+        "KDR_Gr_1d5_Streak": BestStreak("KillDeathRatio", 1.5, ge),
+        "KDR_Gr_1d75_Streak": BestStreak("KillDeathRatio", 1.75, ge),
+        "KDR_Gr_2_Streak": BestStreak("KillDeathRatio", 2.00, ge),
+        "FB_Eq_0_Streak": BestStreak("FirstBloods", 1, lt),
+        "FB_Gr_1_Streak": BestStreak("FirstBloods", 1, ge),
+        "FB_Gr_2_Streak": BestStreak("FirstBloods", 2, ge),
+        "FB_Gr_3_Streak": BestStreak("FirstBloods", 3, ge),
+        "FB_Gr_4_Streak": BestStreak("FirstBloods", 4, ge),
+        "FB_Gr_5_Streak": BestStreak("FirstBloods", 5, ge),
+        "FD_Eq_0_Streak": BestStreak("FirstDeaths", 1, lt),
+        "FD_Le_1_Streak": BestStreak("FirstDeaths", 1, le),
+        "FD_Le_2_Streak": BestStreak("FirstDeaths", 2, le),
+        "FD_Le_3_Streak": BestStreak("FirstDeaths", 3, le),
+        "FD_Le_4_Streak": BestStreak("FirstDeaths", 4, le),
+        "FD_Le_5_Streak": BestStreak("FirstDeaths", 5, le),
+    }
 
-    ACS_Gr_100_Streak = BestStreak("ACS", 100, ge)
-    ACS_Gr_150_Streak = BestStreak("ACS", 150, ge)
-    ACS_Gr_200_Streak = BestStreak("ACS", 200, ge)
-    ACS_Gr_250_Streak = BestStreak("ACS", 250, ge)
-    ACS_Gr_300_Streak = BestStreak("ACS", 300, ge)
-    #ACS_Gr_350_Streak = BestStreak("ACS", 350, ge)
+    print(BestActiveStreak("KillDeathRatio", 1, ge))
 
-    KDR_Gr_1_Streak = BestStreak("KillDeathRatio", 1, ge)
-    KDR_Gr_1d25_Streak = BestStreak("KillDeathRatio", 1.25, ge)
-    KDR_Gr_1d5_Streak = BestStreak("KillDeathRatio", 1.5, ge)
-    KDR_Gr_1d75_Streak = BestStreak("KillDeathRatio", 1.75, ge)
-    KDR_Gr_2_Streak = BestStreak("KillDeathRatio", 2.00, ge)
+    streaks_active = {
+        "Kills_Gr_10_Streak": BestActiveStreak("Kills", 10, ge),
+        "Kills_Gr_15_Streak": BestActiveStreak("Kills", 15, ge),
+        "Kills_Gr_20_Streak": BestActiveStreak("Kills", 20, ge),
+        "Kills_Gr_25_Streak": BestActiveStreak("Kills", 25, ge),
+        #"Kills_Gr_30_Streak": BestActiveStreak("Kills", 30, ge),
+        "WonGameStreak": BestActiveStreak("MatchWon", 1, ge),
+        "LostGameStreak": BestActiveStreak("MatchLost", 1, ge),
+        "ACS_Gr_100_Streak": BestActiveStreak("ACS", 100, ge),
+        "ACS_Gr_150_Streak": BestActiveStreak("ACS", 150, ge),
+        "ACS_Gr_200_Streak": BestActiveStreak("ACS", 200, ge),
+        "ACS_Gr_250_Streak": BestActiveStreak("ACS", 250, ge),
+        "ACS_Gr_300_Streak": BestActiveStreak("ACS", 300, ge),
+        #"ACS_Gr_350_Streak": BestActiveStreak("ACS", 350, ge),
+        "KDR_Gr_1_Streak": BestActiveStreak("KillDeathRatio", 1, ge),
+        "KDR_Gr_1d25_Streak": BestActiveStreak("KillDeathRatio", 1.25, ge),
+        "KDR_Gr_1d5_Streak": BestActiveStreak("KillDeathRatio", 1.5, ge),
+        "KDR_Gr_1d75_Streak": BestActiveStreak("KillDeathRatio", 1.75, ge),
+        "KDR_Gr_2_Streak": BestActiveStreak("KillDeathRatio", 2.00, ge),
+        "FB_Eq_0_Streak": BestActiveStreak("FirstBloods", 1, lt),
+        "FB_Gr_1_Streak": BestActiveStreak("FirstBloods", 1, ge),
+        "FB_Gr_2_Streak": BestActiveStreak("FirstBloods", 2, ge),
+        "FB_Gr_3_Streak": BestActiveStreak("FirstBloods", 3, ge),
+        "FB_Gr_4_Streak": BestActiveStreak("FirstBloods", 4, ge),
+        "FB_Gr_5_Streak": BestActiveStreak("FirstBloods", 5, ge),
+        "FD_Eq_0_Streak": BestActiveStreak("FirstDeaths", 1, lt),
+        "FD_Le_1_Streak": BestActiveStreak("FirstDeaths", 1, le),
+        "FD_Le_2_Streak": BestActiveStreak("FirstDeaths", 2, le),
+        "FD_Le_3_Streak": BestActiveStreak("FirstDeaths", 3, le),
+        "FD_Le_4_Streak": BestActiveStreak("FirstDeaths", 4, le),
+        "FD_Le_5_Streak": BestActiveStreak("FirstDeaths", 5, le),
+    }
 
-    FB_Eq_0_Streak = BestStreak("FirstBloods", 1, lt)
-    FB_Gr_1_Streak = BestStreak("FirstBloods", 1, ge)
-    FB_Gr_2_Streak = BestStreak("FirstBloods", 2, ge)
-    FB_Gr_3_Streak = BestStreak("FirstBloods", 3, ge)
-    FB_Gr_4_Streak = BestStreak("FirstBloods", 4, ge)
-    FB_Gr_5_Streak = BestStreak("FirstBloods", 5, ge)
+    for active_streak_name, active_streak in streaks_active.items():
+        streak_name = active_streak_name.replace('Active', '')
+        streak = streaks[streak_name]
 
-    FD_Eq_0_Streak = BestStreak("FirstDeaths", 1, lt)
-    FD_Le_1_Streak = BestStreak("FirstDeaths", 1, le)
-    FD_Le_2_Streak = BestStreak("FirstDeaths", 2, le)
-    FD_Le_3_Streak = BestStreak("FirstDeaths", 3, le)
-    FD_Le_4_Streak = BestStreak("FirstDeaths", 4, le)
-    FD_Le_5_Streak = BestStreak("FirstDeaths", 5, le)
+        if not active_streak or not streak:
+            continue
+
+        if active_streak[0]['Streak'] == streak[0]['Streak']:
+            for dic in active_streak:
+                dic['BestStreak'] = True
+        else:
+            for dic in active_streak:
+                dic['BestStreak'] = False
+
 
     context = {
-        "Kills_Gr_10_Streak": Kills_Gr_10_Streak,
-        "Kills_Gr_15_Streak": Kills_Gr_15_Streak,
-        "Kills_Gr_20_Streak": Kills_Gr_20_Streak,
-        "Kills_Gr_25_Streak": Kills_Gr_25_Streak,
-        #"Kills_Gr_30_Streak": Kills_Gr_30_Streak,
-        "WonGameStreak": WonGameStreak,
-        "LostGameStreak": LostGameStreak,
-        "ACS_Gr_100_Streak": ACS_Gr_100_Streak,
-        "ACS_Gr_150_Streak": ACS_Gr_150_Streak,
-        "ACS_Gr_200_Streak": ACS_Gr_200_Streak,
-        "ACS_Gr_250_Streak": ACS_Gr_250_Streak,
-        "ACS_Gr_300_Streak": ACS_Gr_300_Streak,
-        #"ACS_Gr_350_Streak": ACS_Gr_350_Streak,
-        "KDR_Gr_1_Streak": KDR_Gr_1_Streak,
-        "KDR_Gr_1d25_Streak": KDR_Gr_1d25_Streak,
-        "KDR_Gr_1d5_Streak": KDR_Gr_1d5_Streak,
-        "KDR_Gr_1d75_Streak": KDR_Gr_1d75_Streak,
-        "KDR_Gr_2_Streak": KDR_Gr_2_Streak,
-        "FB_Eq_0_Streak": FB_Eq_0_Streak,
-        "FB_Gr_1_Streak": FB_Gr_1_Streak,
-        "FB_Gr_2_Streak": FB_Gr_2_Streak,
-        "FB_Gr_3_Streak": FB_Gr_3_Streak,
-        "FB_Gr_4_Streak": FB_Gr_4_Streak,
-        "FB_Gr_5_Streak": FB_Gr_5_Streak,
-        "FD_Eq_0_Streak": FD_Eq_0_Streak,
-        "FD_Le_1_Streak": FD_Le_1_Streak,
-        "FD_Le_2_Streak": FD_Le_2_Streak,
-        "FD_Le_3_Streak": FD_Le_3_Streak,
-        "FD_Le_4_Streak": FD_Le_4_Streak,
-        "FD_Le_5_Streak": FD_Le_5_Streak
+        "streaks": streaks,
+        "streaks_active": streaks_active,
     }
 
     return render(request, "match/recordbook/record_streak.html", context)
