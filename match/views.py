@@ -2601,7 +2601,7 @@ def map_splits(request, map):
         p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
 
     outcome_splits = players.values('MatchWon','MatchLost','MatchDraw').annotate(
-        num_matches=Count('Match'),
+        num_matches=Count('Match')/5,
 
         matches_won=Sum('MatchWon'),
         matches_lost=Sum('MatchLost'),

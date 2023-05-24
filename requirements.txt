@@ -1,6 +1,7 @@
 asgiref==3.6.0
 async-generator==1.10
 attrs==23.1.0
+bs4==0.0.1
 certifi==2023.5.7
 cffi==1.15.1
 DateTime==5.1
@@ -24,6 +25,6 @@ trio==0.22.0
 trio-websocket==0.10.2
 tzdata==2023.3
 urllib3==2.0.2
+whitenoise==6.4.0
 wsproto==1.2.0
 zope.interface==6.0
-whitenoise==6.4.0
