@@ -85,7 +85,7 @@ Match
   <div id="info" style="width:75%; text-align:center;">
     <div class="col-xl-4 rounded p-2 mb-4" 
     style="display:inline-block; border: 1px solid black; {% if match.TeamOneWon %}background-color:rgb(195, 230, 203){% elif match.MatchDraw %}background-color:white{% else %}background-color:rgb(245,198,203){% endif %}">
-      <h3 style="text-align:center"> {{ match.Map }}</h3>
+      <h3 style="text-align:center"><a class="hiddenLink" href="{% url 'map_detail' match.Map %}"> {{ match.Map }} </a></h3>
       <h2 class="" style="font-weight:bold; text-align:center">{{ match.Score }}</h2>
       <p style="text-align:center;">{{ match.Date }}</p>
     </div>
