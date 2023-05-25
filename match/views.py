@@ -3879,7 +3879,7 @@ def BestGame(field,sort="desc",model="Player"):
 
     return top_games
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -3973,7 +3973,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_game(request):
     MostKills = BestGame("Kills")
     LeastKills = BestGame("Kills","asc")
@@ -4057,7 +4057,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_streak(request):
 
     streaks = {
@@ -4148,7 +4148,7 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_career(request):
 
     def GetTopBot(agg, field):
