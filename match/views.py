@@ -137,7 +137,7 @@ def match_detail(request, match_id):
     players = Player.objects.filter(Match=match)
     return render(request, 'match/match_detail.html', {'match': match, 'players': players})
 
-@cache_page(None)
+#@cache_page(None)
 def match_list(request):
     matches = Match.objects.all().order_by('-Date')
 
@@ -206,7 +206,7 @@ def match_list(request):
 
     return render(request, 'match/match_list.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def gamelog(request):
     players = Player.objects.filter(Team="Team A").order_by('-ACS')
 
@@ -251,7 +251,7 @@ def gamelog(request):
 
     return render(request, 'match/game_log.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def player_stats(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -497,124 +497,250 @@ def CalculateAggregates(players, field="Username", agent=None):
         max_adr=ExpressionWrapper(F('TotalDamage') / Cast(F('RoundsPlayed'), output_field=FloatField()), output_field=FloatField())
     ).aggregate(max_adr=Max('max_adr'))['max_adr']
 
-    dict_players = players.values(field).aggregate(
-        num_matches=Count('Match__MatchID', distinct=True),
+    if field == "Role":
+                
+        dict_players = players.values(field).aggregate(
+            num_matches=Count('Match', distinct=True),
+            num_performances=Count('Match'),
 
-        matches_won=Sum('MatchWon'),
-        matches_lost=Sum('MatchLost'),
-        matches_draw=Sum('MatchDraw'),
+            perf_per_match=Cast(Count('Match'), FloatField())/len(players),
 
-        total_kills=Sum('Kills'),
-        total_deaths=Sum('Deaths'),
-        total_assists=Sum('Assists'),
+            matches_won=Sum('MatchWon'),
+            matches_lost=Sum('MatchLost'),
+            matches_draw=Sum('MatchDraw'),
 
-        total_score=Sum('CombatScore'),
-        total_damage=Sum('TotalDamage'),
+            total_kills=Sum('Kills'),
+            total_deaths=Sum('Deaths'),
+            total_assists=Sum('Assists'),
 
-        first_bloods=Sum('FirstBloods'),
-        first_deaths=Sum('FirstDeaths'),
-        fb_fd_ratio=Sum('FirstBloods')/Cast(Sum('FirstDeaths'), output_field=FloatField()),
+            total_score=Sum('CombatScore'),
+            total_damage=Sum('TotalDamage'),
 
-        kast_rounds=Sum('KASTRounds'),
+            first_bloods=Sum('FirstBloods'),
+            first_deaths=Sum('FirstDeaths'),
+            fb_fd_ratio=Sum('FirstBloods')/Cast(Sum('FirstDeaths'), output_field=FloatField()),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+            kast_rounds=Sum('KASTRounds'),
 
-        zero_kills=Sum('ZeroKillRounds'),
-        one_kills=Sum('OneKillRounds'),
-        two_kills=Sum('TwoKillRounds'),
-        three_kills=Sum('ThreeKillRounds'),
-        four_kills=Sum('FourKillRounds'),
-        five_kills=Sum('FiveKillRounds'),
-        six_kills=Sum('SixKillRounds'),
+            hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+            damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
 
-        zero_kills_p20=Sum('ZeroKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        one_kills_p20=Sum('OneKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        two_kills_p20=Sum('TwoKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        three_kills_p20=Sum('ThreeKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        four_kills_p20=Sum('FourKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        five_kills_p20=Sum('FiveKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
-        six_kills_p20=Sum('SixKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            zero_kills=Sum('ZeroKillRounds'),
+            one_kills=Sum('OneKillRounds'),
+            two_kills=Sum('TwoKillRounds'),
+            three_kills=Sum('ThreeKillRounds'),
+            four_kills=Sum('FourKillRounds'),
+            five_kills=Sum('FiveKillRounds'),
+            six_kills=Sum('SixKillRounds'),
 
-        attack_kills=Sum('AttackKills'),
-        attack_deaths=Sum('AttackDeaths'),
-        attack_damage=Sum('AttackDamage'),
-        defense_kills=Sum('DefenseKills'),
-        defense_deaths=Sum('DefenseDeaths'),
-        defense_damage=Sum('DefenseDamage'),
-        
-        win_kills=Sum('WinKills'),
-        win_deaths=Sum('WinDeaths'),
-        win_damage=Sum('WinDamage'),
-        loss_kills=Sum('LossKills'),
-        loss_deaths=Sum('LossDeaths'),
-        loss_damage=Sum('LossDamage'),
-        
-        win_kills_avg=Sum('WinKills')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
-        win_deaths_avg=Sum('WinDeaths')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
-        loss_kills_avg=Sum('LossKills')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
-        loss_deaths_avg=Sum('LossDeaths')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+            zero_kills_p20=Sum('ZeroKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            one_kills_p20=Sum('OneKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            two_kills_p20=Sum('TwoKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            three_kills_p20=Sum('ThreeKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            four_kills_p20=Sum('FourKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            five_kills_p20=Sum('FiveKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            six_kills_p20=Sum('SixKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
 
-        win_kdr = Sum('WinKills')/Cast(Sum('WinDeaths'), output_field=FloatField()),
-        loss_kdr = Sum('LossKills')/Cast(Sum('LossDeaths'), output_field=FloatField()),
-        win_adr = Sum('WinDamage')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
-        loss_adr = Sum('LossDamage')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+            attack_kills=Sum('AttackKills'),
+            attack_deaths=Sum('AttackDeaths'),
+            attack_damage=Sum('AttackDamage'),
+            defense_kills=Sum('DefenseKills'),
+            defense_deaths=Sum('DefenseDeaths'),
+            defense_damage=Sum('DefenseDamage'),
+            
+            win_kills=Sum('WinKills'),
+            win_deaths=Sum('WinDeaths'),
+            win_damage=Sum('WinDamage'),
+            loss_kills=Sum('LossKills'),
+            loss_deaths=Sum('LossDeaths'),
+            loss_damage=Sum('LossDamage'),
+            
+            win_kills_avg=Sum('WinKills')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            win_deaths_avg=Sum('WinDeaths')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            loss_kills_avg=Sum('LossKills')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+            loss_deaths_avg=Sum('LossDeaths')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
 
-        attack_rounds=Sum('AttackRounds'),
-        attack_wins=Sum('AttackWins'),
-        attack_losses=Sum('AttackLosses'),
+            win_kdr = Sum('WinKills')/Cast(Sum('WinDeaths'), output_field=FloatField()),
+            loss_kdr = Sum('LossKills')/Cast(Sum('LossDeaths'), output_field=FloatField()),
+            win_adr = Sum('WinDamage')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            loss_adr = Sum('LossDamage')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
 
-        defense_rounds=Sum('DefenseRounds'),
-        defense_wins=Sum('DefenseWins'),
-        defense_losses=Sum('DefenseLosses'),
+            attack_rounds=Sum('AttackRounds'),
+            attack_wins=Sum('AttackWins'),
+            attack_losses=Sum('AttackLosses'),
 
-        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
-        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+            defense_rounds=Sum('DefenseRounds'),
+            defense_wins=Sum('DefenseWins'),
+            defense_losses=Sum('DefenseLosses'),
 
-        avg_rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Count('Match'), output_field=FloatField()),
-        avg_rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/Cast(Count('Match'), output_field=FloatField()),
+            rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+            rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
 
-        rounds=Sum('RoundsPlayed'),
+            avg_rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Count('Match'), output_field=FloatField()),
+            avg_rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/Cast(Count('Match'), output_field=FloatField()),
 
-        kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
-        acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
-        adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            rounds=Sum('RoundsPlayed'),
 
-        kast=Sum('KASTRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
-        k_pct=(Sum('RoundsPlayed')-Sum('ZeroKillRounds'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
-        d_pct=Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+            acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
-        win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
-        round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
-        attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
-        defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+            kast=Sum('KASTRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            k_pct=(Sum('RoundsPlayed')-Sum('ZeroKillRounds'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            d_pct=Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
-        kills_per_20=(Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
-        deaths_per_20=(Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
-        assists_per_20=(Sum('Assists')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
+            round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+            defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
-        fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
-        fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
-                   
-        fb_per_20=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
-        fd_per_20=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            kills_per_20=(Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            deaths_per_20=(Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            assists_per_20=(Sum('Assists')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
 
-        attack_kdr=Sum('AttackKills')/Cast(Sum('AttackDeaths'), output_field=FloatField()),
-        attack_adr=Sum('AttackDamage')/Cast(Sum('AttackRounds'), output_field=FloatField()),
-        defense_kdr=Sum('DefenseKills')/Cast(Sum('DefenseDeaths'), output_field=FloatField()),
-        defense_adr=Sum('DefenseDamage')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+            fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
+            fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
+                    
+            fb_per_20=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            fd_per_20=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
 
-        attack_kp12=(Sum('AttackKills')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
-        attack_dp12=(Sum('AttackDeaths')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
-        defense_kp12=(Sum('DefenseKills')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
-        defense_dp12=(Sum('DefenseDeaths')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
+            attack_kdr=Sum('AttackKills')/Cast(Sum('AttackDeaths'), output_field=FloatField()),
+            attack_adr=Sum('AttackDamage')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+            defense_kdr=Sum('DefenseKills')/Cast(Sum('DefenseDeaths'), output_field=FloatField()),
+            defense_adr=Sum('DefenseDamage')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
-        max_kills=Max('Kills'),
-        max_deaths=Max('Deaths'),
-        max_assists=Max('Assists'),
-        max_fb=Max('FirstBloods'),
-        max_fd=Max('FirstDeaths')
-    )
+            attack_kp12=(Sum('AttackKills')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
+            attack_dp12=(Sum('AttackDeaths')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
+            defense_kp12=(Sum('DefenseKills')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
+            defense_dp12=(Sum('DefenseDeaths')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
+
+            max_kills=Max('Kills'),
+            max_deaths=Max('Deaths'),
+            max_assists=Max('Assists'),
+            max_fb=Max('FirstBloods'),
+            max_fd=Max('FirstDeaths')
+        )
+
+    else:
+
+        dict_players = players.values(field).aggregate(
+            num_matches=Count('Match__MatchID', distinct=True),
+
+            matches_won=Sum('MatchWon'),
+            matches_lost=Sum('MatchLost'),
+            matches_draw=Sum('MatchDraw'),
+
+            total_kills=Sum('Kills'),
+            total_deaths=Sum('Deaths'),
+            total_assists=Sum('Assists'),
+
+            total_score=Sum('CombatScore'),
+            total_damage=Sum('TotalDamage'),
+
+            first_bloods=Sum('FirstBloods'),
+            first_deaths=Sum('FirstDeaths'),
+            fb_fd_ratio=Sum('FirstBloods')/Cast(Sum('FirstDeaths'), output_field=FloatField()),
+
+            kast_rounds=Sum('KASTRounds'),
+
+            hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+            damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+            zero_kills=Sum('ZeroKillRounds'),
+            one_kills=Sum('OneKillRounds'),
+            two_kills=Sum('TwoKillRounds'),
+            three_kills=Sum('ThreeKillRounds'),
+            four_kills=Sum('FourKillRounds'),
+            five_kills=Sum('FiveKillRounds'),
+            six_kills=Sum('SixKillRounds'),
+
+            zero_kills_p20=Sum('ZeroKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            one_kills_p20=Sum('OneKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            two_kills_p20=Sum('TwoKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            three_kills_p20=Sum('ThreeKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            four_kills_p20=Sum('FourKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            five_kills_p20=Sum('FiveKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+            six_kills_p20=Sum('SixKillRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField())*20,
+
+            attack_kills=Sum('AttackKills'),
+            attack_deaths=Sum('AttackDeaths'),
+            attack_damage=Sum('AttackDamage'),
+            defense_kills=Sum('DefenseKills'),
+            defense_deaths=Sum('DefenseDeaths'),
+            defense_damage=Sum('DefenseDamage'),
+            
+            win_kills=Sum('WinKills'),
+            win_deaths=Sum('WinDeaths'),
+            win_damage=Sum('WinDamage'),
+            loss_kills=Sum('LossKills'),
+            loss_deaths=Sum('LossDeaths'),
+            loss_damage=Sum('LossDamage'),
+            
+            win_kills_avg=Sum('WinKills')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            win_deaths_avg=Sum('WinDeaths')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            loss_kills_avg=Sum('LossKills')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+            loss_deaths_avg=Sum('LossDeaths')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+
+            win_kdr = Sum('WinKills')/Cast(Sum('WinDeaths'), output_field=FloatField()),
+            loss_kdr = Sum('LossKills')/Cast(Sum('LossDeaths'), output_field=FloatField()),
+            win_adr = Sum('WinDamage')/Cast(Sum('AttackWins')+Sum('DefenseWins'), output_field=FloatField()),
+            loss_adr = Sum('LossDamage')/Cast(Sum('AttackLosses')+Sum('DefenseLosses'), output_field=FloatField()),
+
+            attack_rounds=Sum('AttackRounds'),
+            attack_wins=Sum('AttackWins'),
+            attack_losses=Sum('AttackLosses'),
+
+            defense_rounds=Sum('DefenseRounds'),
+            defense_wins=Sum('DefenseWins'),
+            defense_losses=Sum('DefenseLosses'),
+
+            rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+            rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+            avg_rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Count('Match'), output_field=FloatField()),
+            avg_rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/Cast(Count('Match'), output_field=FloatField()),
+
+            rounds=Sum('RoundsPlayed'),
+
+            kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+            acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+            kast=Sum('KASTRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            k_pct=(Sum('RoundsPlayed')-Sum('ZeroKillRounds'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            d_pct=Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+            win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
+            round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+            attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+            defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+            kills_per_20=(Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            deaths_per_20=(Sum('Deaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            assists_per_20=(Sum('Assists')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+
+            fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
+            fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField())),
+                    
+            fb_per_20=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+            fd_per_20=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed'), output_field=FloatField()))*20,
+
+            attack_kdr=Sum('AttackKills')/Cast(Sum('AttackDeaths'), output_field=FloatField()),
+            attack_adr=Sum('AttackDamage')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+            defense_kdr=Sum('DefenseKills')/Cast(Sum('DefenseDeaths'), output_field=FloatField()),
+            defense_adr=Sum('DefenseDamage')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+            attack_kp12=(Sum('AttackKills')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
+            attack_dp12=(Sum('AttackDeaths')/Cast(Sum('AttackRounds'), output_field=FloatField()))*12,
+            defense_kp12=(Sum('DefenseKills')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
+            defense_dp12=(Sum('DefenseDeaths')/Cast(Sum('DefenseRounds'), output_field=FloatField()))*12,
+
+            max_kills=Max('Kills'),
+            max_deaths=Max('Deaths'),
+            max_assists=Max('Assists'),
+            max_fb=Max('FirstBloods'),
+            max_fd=Max('FirstDeaths')
+        )
 
     dict_players['max_kdr'] = max_kdr
     dict_players['max_acs'] = max_acs
@@ -629,6 +755,10 @@ def CalculateAggregates(players, field="Username", agent=None):
         filtered_players = Player.objects.filter(Match__MatchID__in=matching_match_ids,
                                                  Team="Team A",
                                                  Agent=username)
+    elif field == "Role":
+        filtered_players = Player.objects.filter(Match__MatchID__in=matching_match_ids,
+                                                 Team="Team A",
+                                                 Role=username)
     else: 
         filtered_players = Player.objects.filter(Match__MatchID__in=matching_match_ids,
                                                  Team="Team A",
@@ -689,7 +819,7 @@ def CalculateAggregates(players, field="Username", agent=None):
 
     return p
 
-@cache_page(None)
+#@cache_page(None)
 def player_splits(request, username):
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
 
@@ -1209,7 +1339,7 @@ def player_splits(request, username):
 
     return render(request, 'match/player/player_splits.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def player_gamelog(request, username):
 
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
@@ -1274,7 +1404,7 @@ def player_gamelog(request, username):
 
     return render(request, 'match/player/player_gamelog.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def maps_overview(request):
 
     players = Player.objects.filter(Team="Team A")
@@ -1427,7 +1557,7 @@ def maps_overview(request):
     # Render template
     return render(request, 'match/maps.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def agents_overview(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -1657,7 +1787,839 @@ def agent_detail(request, agent):
 
     return render(request, 'match/agent/agent_detail.html', context)
 
-@cache_page(None)
+#@cache_page(None)
+def roles_overview(request):
+    # Get all players
+    players = Player.objects.filter(Team="Team A")
+
+    unique_maps = sorted(list(Match.objects.values_list("Map", flat=True).distinct()))
+    unique_roles = sorted(list(Player.objects.values_list("Role", flat=True).distinct()))
+
+    start_date = None
+    end_date = None
+
+    # Apply filters based on user input
+    map_filter = request.GET.get('map')
+    outcome_filter = request.GET.get('outcome')
+    date_filter = request.GET.get('dateRange')
+    if date_filter is not None:
+        start_date = date_filter.split(' - ')[0]
+        end_date = date_filter.split(' - ')[1]
+    
+    players = FilterPlayers(players, 
+                            map_filter, outcome_filter, None, None, date_filter)
+    
+    n_matches = len(players)/5
+
+    roles = players.values('Role').annotate(
+        num_matches=Count('Match', distinct=True),
+        num_performances=Count('Match'),
+
+        perf_per_match=Cast(Count('Match'), FloatField())/n_matches,
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_performances', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    ).order_by('-Role')
+
+    for m in roles:
+        filtered_players = Player.objects.filter(Team="Team A", Role=m['Role'])
+
+        m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
+        m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
+        m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
+        m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            m['TopAgent'] = agent_counter.most_common(1)[0][0]
+            m['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+        m['TopAgentImage'] = AgentImage(m['TopAgent'])
+
+        max_kills = filtered_players.filter(Kills=m['max_kills']).order_by('-ACS','-KillDeathRatio')
+        max_deaths = filtered_players.filter(Deaths=m['max_deaths']).order_by('Kills','ACS')
+        max_assists = filtered_players.filter(Assists=m['max_assists']).order_by('-Kills','-ACS','-KillDeathRatio')
+        max_kdr = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                  .filter(kdr=m['max_kdr']).order_by('-Kills','-ACS')
+        max_acs = filtered_players.filter(ACS=m['max_acs']).order_by('-Kills','-KillDeathRatio')
+        max_adr = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                  .filter(adr=m['max_adr']).order_by('-ACS','-Kills','-KillDeathRatio')
+        max_fb = filtered_players.annotate(fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstBloods=m['max_fb']).order_by('-fb_pct','FirstDeaths','-ACS','-Kills','-KillDeathRatio')
+        max_fd = filtered_players.annotate(fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstDeaths=m['max_fd']).order_by('-fd_pct','FirstBloods','ACS','Kills','KillDeathRatio')
+
+        m['max_kills_id'] = max_kills.values('Match__MatchID').first()['Match__MatchID']
+        m['max_kills_player'] = max_kills.values('DisplayName').first()['DisplayName']
+
+        m['max_deaths_id'] = max_deaths.values('Match__MatchID').first()['Match__MatchID']
+        m['max_deaths_player'] = max_deaths.values('DisplayName').first()['DisplayName']
+
+        m['max_assists_id'] = max_assists.values('Match__MatchID').first()['Match__MatchID']
+        m['max_assists_player'] = max_assists.values('DisplayName').first()['DisplayName']
+
+        m['max_kdr_id'] = max_kdr.values('Match__MatchID').first()['Match__MatchID']
+        m['max_kdr_player'] = max_kdr.values('DisplayName').first()['DisplayName']
+
+        m['max_acs_id'] = max_acs.values('Match__MatchID').first()['Match__MatchID']
+        m['max_acs_player'] = max_acs.values('DisplayName').first()['DisplayName']
+
+        m['max_adr_id'] = max_adr.values('Match__MatchID').first()['Match__MatchID']
+        m['max_adr_player'] = max_adr.values('DisplayName').first()['DisplayName']
+
+        m['max_fb_id'] = max_fb.values('Match__MatchID').first()['Match__MatchID']
+        m['max_fb_player'] = max_fb.values('DisplayName').first()['DisplayName']
+
+        m['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
+        m['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
+
+    context = {
+        'roles': roles,
+
+        'unique_maps': unique_maps,
+        'unique_roles': unique_roles,
+
+        'map_filter': map_filter,
+        'outcome_filter': outcome_filter,
+        'date_filter': date_filter,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+
+    # Render template
+    return render(request, 'match/roles.html', context)
+
+def role_detail(request, role):
+    players = Player.objects.filter(Team="Team A", Role=role).order_by('Match__Date')
+
+    if (players.count() == 0):
+        raise Http404
+    
+    last_five = players.order_by('-Match__Date')[:5]
+    last_ten = players.order_by('-Match__Date')[:10]
+    last_twenty = players.order_by('-Match__Date')[:20]
+
+    last_five_aggregates = CalculateAggregates(last_five,"Role",role)
+    last_ten_aggregates = CalculateAggregates(last_ten,"Role",role)
+    last_twenty_aggregates = CalculateAggregates(last_twenty,"Role",role)
+    all_aggregates = CalculateAggregates(players,"Role",role)
+
+    last_five_aggregates["Label"] = "Last 5 Performances"
+    last_ten_aggregates["Label"] = "Last 10 Performances"
+    last_twenty_aggregates["Label"] = "Last 20 Performances"
+    all_aggregates["Label"] = "All Performances"
+    
+    context = {
+        'lst': [last_five_aggregates, last_ten_aggregates, 
+                last_twenty_aggregates, all_aggregates],
+        'role': role,
+    }
+
+    return render(request, 'match/role/role_detail.html', context)
+
+def role_splits(request, role):
+    players = Player.objects.filter(Team="Team A", Role=role).order_by('-Match__Date')
+
+    if (players.count() == 0):
+        raise Http404
+
+    player_splits = players.values('Username').annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_matches', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    ).order_by('-num_matches')
+
+    for p in player_splits:
+        filtered_players = players.filter(Username=p['Username'])
+
+        UserSplit = p['Username'].split('#')
+        p['DisplayName'] = UserSplit[0]
+        p['UserTag'] = "#"+UserSplit[1]
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+            p['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+        p['RoundRecord'] = "{}-{}".format(p["rounds_won"],p["rounds_lost"])
+        p['AttackRecord'] = "{}-{}".format(p["attack_wins"],p["attack_losses"])
+        p['DefenseRecord'] = "{}-{}".format(p["defense_wins"],p["defense_losses"])
+
+        max_kills = filtered_players.filter(Kills=p['max_kills']).order_by('-ACS','-KillDeathRatio')
+        max_deaths = filtered_players.filter(Deaths=p['max_deaths']).order_by('Kills','ACS')
+        max_assists = filtered_players.filter(Assists=p['max_assists']).order_by('-Kills','-ACS','-KillDeathRatio')
+        max_kdr = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                  .filter(kdr=p['max_kdr']).order_by('-Kills','-ACS')
+        max_acs = filtered_players.filter(ACS=p['max_acs']).order_by('-Kills','-KillDeathRatio')
+        max_adr = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                  .filter(adr=p['max_adr']).order_by('-ACS','-Kills','-KillDeathRatio')
+        max_fb = filtered_players.annotate(fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstBloods=p['max_fb']).order_by('-fb_pct','FirstDeaths','-ACS','-Kills','-KillDeathRatio')
+        max_fd = filtered_players.annotate(fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstDeaths=p['max_fd']).order_by('-fd_pct','FirstBloods','ACS','Kills','KillDeathRatio')
+
+        p['max_kills_id'] = max_kills.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kills_player'] = max_kills.values('DisplayName').first()['DisplayName']
+
+        p['max_deaths_id'] = max_deaths.values('Match__MatchID').first()['Match__MatchID']
+        p['max_deaths_player'] = max_deaths.values('DisplayName').first()['DisplayName']
+
+        p['max_assists_id'] = max_assists.values('Match__MatchID').first()['Match__MatchID']
+        p['max_assists_player'] = max_assists.values('DisplayName').first()['DisplayName']
+
+        p['max_kdr_id'] = max_kdr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kdr_player'] = max_kdr.values('DisplayName').first()['DisplayName']
+
+        p['max_acs_id'] = max_acs.values('Match__MatchID').first()['Match__MatchID']
+        p['max_acs_player'] = max_acs.values('DisplayName').first()['DisplayName']
+
+        p['max_adr_id'] = max_adr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_adr_player'] = max_adr.values('DisplayName').first()['DisplayName']
+
+        p['max_fb_id'] = max_fb.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fb_player'] = max_fb.values('DisplayName').first()['DisplayName']
+
+        p['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
+
+    agent_splits = players.values('Agent').annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_matches', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    ).order_by('-num_matches')
+
+    for p in agent_splits:
+        filtered_players = players.filter(Agent=p['Agent'])
+
+        p['AgentImage'] = AgentImage(p['Agent'])
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+        p['RoundRecord'] = "{}-{}".format(p["rounds_won"],p["rounds_lost"])
+        p['AttackRecord'] = "{}-{}".format(p["attack_wins"],p["attack_losses"])
+        p['DefenseRecord'] = "{}-{}".format(p["defense_wins"],p["defense_losses"])
+
+        max_kills = filtered_players.filter(Kills=p['max_kills']).order_by('-ACS','-KillDeathRatio')
+        max_deaths = filtered_players.filter(Deaths=p['max_deaths']).order_by('Kills','ACS')
+        max_assists = filtered_players.filter(Assists=p['max_assists']).order_by('-Kills','-ACS','-KillDeathRatio')
+        max_kdr = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                    .filter(kdr=p['max_kdr']).order_by('-Kills','-ACS')
+        max_acs = filtered_players.filter(ACS=p['max_acs']).order_by('-Kills','-KillDeathRatio')
+        max_adr = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                    .filter(adr=p['max_adr']).order_by('-ACS','-Kills','-KillDeathRatio')
+        max_fb = filtered_players.annotate(fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                    .filter(FirstBloods=p['max_fb']).order_by('-fb_pct','FirstDeaths','-ACS','-Kills','-KillDeathRatio')
+        max_fd = filtered_players.annotate(fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                    .filter(FirstDeaths=p['max_fd']).order_by('-fd_pct','FirstBloods','ACS','Kills','KillDeathRatio')
+        
+
+        p['max_kills_id'] = max_kills.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kills_player'] = max_kills.values('DisplayName').first()['DisplayName']
+
+        p['max_deaths_id'] = max_deaths.values('Match__MatchID').first()['Match__MatchID']
+        p['max_deaths_player'] = max_deaths.values('DisplayName').first()['DisplayName']
+
+        p['max_assists_id'] = max_assists.values('Match__MatchID').first()['Match__MatchID']
+        p['max_assists_player'] = max_assists.values('DisplayName').first()['DisplayName']
+
+        p['max_kdr_id'] = max_kdr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kdr_player'] = max_kdr.values('DisplayName').first()['DisplayName']
+
+        p['max_acs_id'] = max_acs.values('Match__MatchID').first()['Match__MatchID']
+        p['max_acs_player'] = max_acs.values('DisplayName').first()['DisplayName']
+
+        p['max_adr_id'] = max_adr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_adr_player'] = max_adr.values('DisplayName').first()['DisplayName']
+
+        p['max_fb_id'] = max_fb.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fb_player'] = max_fb.values('DisplayName').first()['DisplayName']
+
+        p['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
+
+    map_splits = players.values('Match__Map').annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_matches', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    ).order_by('-num_matches')
+
+    for p in map_splits:
+        filtered_players = players.filter(Match__Map=p['Match__Map'])
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+        p['RoundRecord'] = "{}-{}".format(p["rounds_won"],p["rounds_lost"])
+        p['AttackRecord'] = "{}-{}".format(p["attack_wins"],p["attack_losses"])
+        p['DefenseRecord'] = "{}-{}".format(p["defense_wins"],p["defense_losses"])
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+            p['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+        max_kills = filtered_players.filter(Kills=p['max_kills']).order_by('-ACS','-KillDeathRatio')
+        max_deaths = filtered_players.filter(Deaths=p['max_deaths']).order_by('Kills','ACS')
+        max_assists = filtered_players.filter(Assists=p['max_assists']).order_by('-Kills','-ACS','-KillDeathRatio')
+        max_kdr = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                  .filter(kdr=p['max_kdr']).order_by('-Kills','-ACS')
+        max_acs = filtered_players.filter(ACS=p['max_acs']).order_by('-Kills','-KillDeathRatio')
+        max_adr = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                  .filter(adr=p['max_adr']).order_by('-ACS','-Kills','-KillDeathRatio')
+        max_fb = filtered_players.annotate(fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstBloods=p['max_fb']).order_by('-fb_pct','FirstDeaths','-ACS','-Kills','-KillDeathRatio')
+        max_fd = filtered_players.annotate(fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstDeaths=p['max_fd']).order_by('-fd_pct','FirstBloods','ACS','Kills','KillDeathRatio')
+
+        p['max_kills_id'] = max_kills.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kills_player'] = max_kills.values('DisplayName').first()['DisplayName']
+
+        p['max_deaths_id'] = max_deaths.values('Match__MatchID').first()['Match__MatchID']
+        p['max_deaths_player'] = max_deaths.values('DisplayName').first()['DisplayName']
+
+        p['max_assists_id'] = max_assists.values('Match__MatchID').first()['Match__MatchID']
+        p['max_assists_player'] = max_assists.values('DisplayName').first()['DisplayName']
+
+        p['max_kdr_id'] = max_kdr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kdr_player'] = max_kdr.values('DisplayName').first()['DisplayName']
+
+        p['max_acs_id'] = max_acs.values('Match__MatchID').first()['Match__MatchID']
+        p['max_acs_player'] = max_acs.values('DisplayName').first()['DisplayName']
+
+        p['max_adr_id'] = max_adr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_adr_player'] = max_adr.values('DisplayName').first()['DisplayName']
+
+        p['max_fb_id'] = max_fb.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fb_player'] = max_fb.values('DisplayName').first()['DisplayName']
+
+        p['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
+
+    outcome_splits = players.values('MatchWon','MatchLost','MatchDraw').annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
+        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_matches', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    ).order_by('-MatchWon')
+
+    for p in outcome_splits:
+        filtered_players = players.filter(MatchWon=p['MatchWon'])
+
+        p['Outcome'] = "Win" if p['MatchWon'] == 1 else "Loss" if p['MatchLost'] == 1 else "Draw"\
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+        p['RoundRecord'] = "{}-{}".format(p["rounds_won"],p["rounds_lost"])
+        p['AttackRecord'] = "{}-{}".format(p["attack_wins"],p["attack_losses"])
+        p['DefenseRecord'] = "{}-{}".format(p["defense_wins"],p["defense_losses"])
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+            p['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+        max_kills = filtered_players.filter(Kills=p['max_kills']).order_by('-ACS','-KillDeathRatio')
+        max_deaths = filtered_players.filter(Deaths=p['max_deaths']).order_by('Kills','ACS')
+        max_assists = filtered_players.filter(Assists=p['max_assists']).order_by('-Kills','-ACS','-KillDeathRatio')
+        max_kdr = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                  .filter(kdr=p['max_kdr']).order_by('-Kills','-ACS')
+        max_acs = filtered_players.filter(ACS=p['max_acs']).order_by('-Kills','-KillDeathRatio')
+        max_adr = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                  .filter(adr=p['max_adr']).order_by('-ACS','-Kills','-KillDeathRatio')
+        max_fb = filtered_players.annotate(fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstBloods=p['max_fb']).order_by('-fb_pct','FirstDeaths','-ACS','-Kills','-KillDeathRatio')
+        max_fd = filtered_players.annotate(fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())))\
+                                 .filter(FirstDeaths=p['max_fd']).order_by('-fd_pct','FirstBloods','ACS','Kills','KillDeathRatio')
+
+        p['max_kills_id'] = max_kills.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kills_player'] = max_kills.values('DisplayName').first()['DisplayName']
+
+        p['max_deaths_id'] = max_deaths.values('Match__MatchID').first()['Match__MatchID']
+        p['max_deaths_player'] = max_deaths.values('DisplayName').first()['DisplayName']
+
+        p['max_assists_id'] = max_assists.values('Match__MatchID').first()['Match__MatchID']
+        p['max_assists_player'] = max_assists.values('DisplayName').first()['DisplayName']
+
+        p['max_kdr_id'] = max_kdr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_kdr_player'] = max_kdr.values('DisplayName').first()['DisplayName']
+
+        p['max_acs_id'] = max_acs.values('Match__MatchID').first()['Match__MatchID']
+        p['max_acs_player'] = max_acs.values('DisplayName').first()['DisplayName']
+
+        p['max_adr_id'] = max_adr.values('Match__MatchID').first()['Match__MatchID']
+        p['max_adr_player'] = max_adr.values('DisplayName').first()['DisplayName']
+
+        p['max_fb_id'] = max_fb.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fb_player'] = max_fb.values('DisplayName').first()['DisplayName']
+
+        p['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
+        p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
+    
+    context = {
+        'player_splits': player_splits,
+        'agent_splits': agent_splits,
+        'map_splits': map_splits,
+        'outcome_splits': outcome_splits,
+
+        'role': role,
+    }
+
+    return render(request, 'match/role/role_splits.html', context)
+
+
+#@cache_page(None)
 def agent_splits(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
@@ -2147,7 +3109,7 @@ def map_detail(request, map):
 
     return render(request, 'match/map/map_detail.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def map_splits(request, map):
     players = Player.objects.filter(Team="Team A", Match__Map=map).order_by('-Match__Date')
 
@@ -2763,11 +3725,6 @@ from operator import itemgetter
 from operator import lt, gt, le, ge
 from datetime import timedelta
 
-#@receiver(post_save, sender=Match)
-#@receiver(post_delete, sender=Match)
-#def invalidate_cache(sender, **kwargs):
-#    cache.delete('my_view_cache_key')
-
 def BestActiveStreak(field, value, op):
     players = Player.objects.filter(Team="Team A").order_by('Username', '-Match__Date')
     active_streaks = []
@@ -2921,7 +3878,7 @@ def BestGame(field,sort="desc",model="Player"):
 
     return top_games
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -3015,7 +3972,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_game(request):
     MostKills = BestGame("Kills")
     LeastKills = BestGame("Kills","asc")
@@ -3099,7 +4056,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_streak(request):
 
     streaks = {
@@ -3134,8 +4091,6 @@ def record_streak(request):
         "FD_Le_4_Streak": BestStreak("FirstDeaths", 4, le),
         "FD_Le_5_Streak": BestStreak("FirstDeaths", 5, le),
     }
-
-    print(BestActiveStreak("KillDeathRatio", 1, ge))
 
     streaks_active = {
         "Kills_Gr_10_Streak": BestActiveStreak("Kills", 10, ge),
@@ -3192,7 +4147,7 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -3289,7 +4244,7 @@ def record_career(request):
 
 ### 
 
-@cache_page(None)
+#@cache_page(None)
 def player_teammates(request, username):
     players = Player.objects.filter(Team="Team A", Username=username)
 
@@ -3540,7 +4495,7 @@ def player_teammates(request, username):
     
     return render(request, 'match/player/player_teammates.html', context)
 
-@cache_page(None)
+#@cache_page(None)
 def lineups(request):
 
     players = Player.objects.filter(Team="Team A")

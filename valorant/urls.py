@@ -36,9 +36,9 @@ urlpatterns = [
     path('map/<str:map>/', views.map_detail, name='map_detail'),
     path('map/<str:map>/splits/', views.map_splits, name='map_splits'),
 
-    #path('roles/', views.roles_overview, name='roles_overview'),
-    #path('role/<str:role>/', views.role_detail, name='role_detail'),
-    #path('role/<str:role>/splits/', views.role_splits, name='role_splits'),
+    path('roles/', views.roles_overview, name='roles_overview'),
+    path('role/<str:role>/', views.role_detail, name='role_detail'),
+    path('role/<str:role>/splits/', views.role_splits, name='role_splits'),
 
     path('agents/', views.agents_overview, name='agents_overview'),
     path('agent/<str:agent>/', views.agent_detail, name='agent_detail'),

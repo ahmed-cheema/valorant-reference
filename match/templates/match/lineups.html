@@ -35,10 +35,12 @@ Lineups
     text-decoration: none;
   } 
 
-  table.center {
-    margin-left:auto; 
-    margin-right:auto;
-  }
+  /*
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+  */
 
   span {
     font-size:60% !important;
@@ -200,45 +202,45 @@ Lineups
 
 <div class="container">
 
-  <h2 style="text-align:center">Lineups</h2>
+  <h2>Lineups</h2>
+  <br>
 
-  <div style="width:75%; margin-left:auto; margin-right:auto">
+  <div style="width:75%;">
   <form method="get" action="" id="filter-form">
 
     <div class="row mb-4">
 
-        <div class="col-md-2">
-            <label for="map" class="form-label">Map:</label>
-            <select id="map" name="map" class="form-select">
-                <option value="">All</option>
-                {% for map in unique_maps %}
-                <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
-                {% endfor %}
-            </select>
-        </div>
+      <div class="col-md-2">
+        <label for="map" class="form-label">Map:</label>
+        <select id="map" name="map" class="form-select">
+            <option value="">All</option>
+            {% for map in unique_maps %}
+            <option value="{{ map }}" {% if map == map_filter %}selected{% endif %}>{{ map }}</option>
+            {% endfor %}
+        </select>
+      </div>
 
-        <div class="col-md-4">
-            <label for="dateRange" class="form-label">Date Range:</label>
-            <br>
-            <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
-        </div>
-
-        <div class="col-md-2">
-          <label for="minMP" class="form-label">Minimum Matches: 
-            <span id="rangeval" style="font-size:100% !important;">
-              {% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}
-            </span>
-          </label>
-          <input type="range" 
-            class="form-control-range" 
-            name="minMP"
-            id="minMP" 
-            onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
-            {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
-            min = 0
-            max = {{ max_matches }}>
-        </div>
-        
+      <div class="col-md-4">
+        <label for="dateRange" class="form-label">Date Range:</label>
+        <br>
+        <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
+      </div>
+      
+      <div class="col-md-2">
+        <label for="minMP" class="form-label">Minimum Matches: 
+          <span id="rangeval" style="font-size:100% !important;">
+            {% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}
+          </span>
+        </label>
+        <input type="range" 
+          class="form-control-range" 
+          name="minMP"
+          id="minMP" 
+          onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
+          {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
+          min = 0
+          max = {{ max_matches }}>
+      </div>
     </div>
 
     <div class="row mb-2 ">
@@ -264,7 +266,7 @@ Lineups
     </div>
 
     <button type="submit" class="btn btn-primary">Filter</button>
-    <button type="button" class="btn btn-secondary" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
+    <button type="button" class="btn btn-secondary" href="{% url 'lineups' %}" onclick="resetFilter()">Reset</button>
   </form>
   </div>
 
@@ -295,7 +297,7 @@ Lineups
         {% for m in lineups %}
         <tr>
             <td style="border-right:1px solid rgb(222, 226, 230)">{{ m.Match__Players }}</td>
-            <td class="right"><a href="{% url 'match_list' %}{{m.MatchFilterStr}}">{{ m.num_matches }}</a></td>
+            <td class="right"><a href="{% url 'match_list' %}{{m.MatchFilterStr}}&map={{ map_filter }}&dateRange={{ date_filter }}">{{ m.num_matches }}</a></td>
             <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
             <td class="right">{{ m.rounds_played }}</td>
             <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>

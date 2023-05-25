@@ -37,10 +37,12 @@ Maps
   a {
     text-decoration: none;
   } 
-  table.center {
-      margin-left:auto; 
-      margin-right:auto;
-  }
+  /*
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+  */
   button[aria-selected="true"] {
       color: white !important;
   }
@@ -163,11 +165,12 @@ Maps
 
 <div class="container">
 
-  <h2 style="text-align:center">Map Statistics</h2>
+  <h2>Map Statistics</h2>
+  <br>
 
-  <div style="width:75%; margin-left:auto; margin-right: auto;">
+  <div style="width:75%;">
   <form method="get" action="" id="filter-form">
-    <div class="row mb-4">
+    <div class="row mb-2">
 
       <div class="col-md-4">
         <label for="dateRange" class="form-label">Date Range:</label>
@@ -178,11 +181,13 @@ Maps
     </div>
 
     <button type="submit" class="btn btn-primary">Filter</button>
-    <button type="button" class="btn btn-secondary" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
+    <button type="button" class="btn btn-secondary" href="{% url 'maps_overview' %}" onclick="resetFilter()">Reset</button>
   </form>
   </div>
 
-  <ul class="nav justify-content-center" style="margin-top:1%">
+  <br>
+
+  <ul class="nav" style="margin-top:1%">
     <li class="nav-item">
         <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-overview">Summary</button>
     </li>
@@ -225,7 +230,7 @@ Maps
           {% for m in maps %}
             <tr>
               <td style="border-right:1px solid rgb(222, 226, 230);"><a href="{% url 'map_detail' m.Match__Map %}">{{ m.Match__Map }}</a></td>
-              <td class="right"><a href="{% url 'match_list' %}?map={{ m.Match__Map }}">{{ m.num_matches }}</a></td>
+              <td class="right"><a href="{% url 'match_list' %}?map={{ m.Match__Map }}&dateRange={{ date_filter }}">{{ m.num_matches }}</a></td>
               <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
               <td class="right">{{ m.rounds_played }}</td>
               <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
@@ -261,7 +266,7 @@ Maps
           {% for m in maps %}
             <tr>
               <td><a href="{% url 'map_detail' m.Match__Map %}">{{ m.Match__Map }}</a></td>
-              <td class="right"><a href="{% url 'gamelog' %}?map={{ m.Match__Map }}">{{ m.num_matches }}</a></td>
+              <td class="right"><a href="{% url 'gamelog' %}?map={{ m.Match__Map }}&dateRange={{ date_filter }}">{{ m.num_matches }}</a></td>
               <td class="right" style="{% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
               <td class="right" style="{% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
               <td class="right">{{ m.acs|floatformat:1 }}</td>
@@ -309,7 +314,7 @@ Maps
           {% for p in maps %}
             <tr>
               <td><a href="{% url 'map_detail' p.Match__Map %}">{{ p.Match__Map }}</a></td>
-              <td class="right"><a href="{% url 'gamelog' %}?map={{ p.Match__Map }}">{{ p.num_matches }}</a></td>
+              <td class="right"><a href="{% url 'gamelog' %}?map={{ p.Match__Map }}&dateRange={{ date_filter }}">{{ p.num_matches }}</a></td>
               <td class="right" sorttable_customkey="{{ p.max_kills }}"><a href="{% url 'match_detail' p.max_kills_id %}">{{ p.max_kills_player }} ({{ p.max_kills }})</a></td>
               <td class="right" sorttable_customkey="{{ p.max_acs }}"><a href="{% url 'match_detail' p.max_acs_id %}">{{ p.max_acs_player }} ({{ p.max_acs }})</a></td>
               <td class="right" sorttable_customkey="{{ p.max_adr }}"><a href="{% url 'match_detail' p.max_adr_id %}">{{ p.max_adr_player }} ({{ p.max_adr|floatformat:0 }})</a></td>
