@@ -34,7 +34,25 @@ Player Statistics
     background: rgba(0,0,0,0.05);
   }
 
-  .nav-link {
+  .nav-tabs {
+    width: 75%;
+    border-bottom: none;
+  }
+
+  .nav-custom {
+    color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+  a.active, .nav-custom:hover {
+    color: white !important;
+    background-color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:not(.nav-custom) {
       margin-right: 30px;
   }
   .nav-link#stats {
@@ -253,24 +271,20 @@ Player Statistics
   </form>
   </div>
 
-  <br>
-
-  <ul class="nav" style="margin-top:1%">
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-basic">Basic</button>
+  <ul class="nav nav-tabs table-tabs" style="margin-top:2%; font-size:80%" id="roleTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link nav-custom active" id="basic-tab" data-bs-toggle="tab" href="#tab-basic" role="tab">Basic</a>
     </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-rate">Rate</button>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link nav-custom" id="rate-tab" data-bs-toggle="tab" href="#tab-rate" role="tab">Rate</a>
     </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-side">Side</button>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" id="side-tab" data-bs-toggle="tab" href="#tab-side" role="tab">Side</a>
     </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-highs">Highs</button>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link nav-custom" id="highs-tab" data-bs-toggle="tab" href="#tab-highs" role="tab">Highs</a>
     </li>
   </ul>
-
-  <br>
 
   <div class="tab-content">
 
@@ -386,9 +400,8 @@ Player Statistics
             style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
         <thead>
           <tr id="ignore">
-            <th></th>
-            <th></th>
-            <th colspan="5" style="text-align:center">Attack</th>
+            <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
             <th colspan="5" style="text-align:center">Defense</th>
           </tr>
           <tr>

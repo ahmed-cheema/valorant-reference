@@ -279,7 +279,7 @@
           <tbody>
             {% for player in players %}
             <tr>
-              <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+              <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a>{% if player.MVP == 1 %}<span class="badge" style="color:black; font-size:100% !important;" title="MVP" data-bs-toggle="tooltip" data-bs-placement="top">★</span>{% endif %}</td>
               <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
               <td><span style="display:none">{{ player.Match.Date|date:"U" }}</span><a href="{% url 'match_detail' player.Match.MatchID %}">{{ player.Match.Date|date:"n/j/y" }}</a></td>
               <td><a href="{% url 'map_detail' player.Match.Map %}" %}>{{ player.Match.Map }}</a></td>

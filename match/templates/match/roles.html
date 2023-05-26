@@ -7,94 +7,102 @@ Roles
 
 {% block css %}
 <style>
-    table {
-        table-layout: auto !important;
-        width: 1px !important;
-        overflow: visible !important;
-    }
-
-    span {
-        font-size:60% !important;
-    }
-
-    td, th {
-        max-width:100%;
-        white-space:nowrap;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-    }
-
-    .right {
-        text-align: right;
-    }
-
-    table.sortable tbody tr:nth-child(2n) td {
-        background: white;
-    }
-    table.sortable tbody tr:nth-child(2n+1) td {
-        background: rgba(0,0,0,0.05);
-    }
-
-    .nav-link {
-        margin-right: 30px;
-    }
-    .nav-link#roles {
-        color:rgb(220,53,69) !important;
-        border-bottom: solid 3px rgb(220,53,69) !important;
-    }
-    .hover-nav:hover {
-        color:rgb(220,53,69) !important;
-        border-bottom: solid 3px rgb(220,53,69) !important;
-    }
-    a {
-      text-decoration: none;
-    } 
-    /*
-    table.center {
-        margin-left:auto; 
-        margin-right:auto;
-    }
-    */
-    button[aria-selected="true"] {
-        color: white !important;
-    }
-    .btn-outline-dark {
-        color: black !important;
-    }
-    .btn-outline-dark:hover {
-        color: white !important;
-    }
-
-    .form-select-clone {
-      display:block !important;
-      padding:.375rem .75rem .375rem .75rem !important;
-      width:95%;
-      font-size:1rem !important;
-      font-weight:400 !important;
-      line-height:1.5 !important;
-      color:#212529 !important;
-      background-color:#fff !important;
-      background-repeat:no-repeat;
-      background-position:right .75rem center;
-      background-size:16px 12px !important;
-      border:1px solid #ced4da !important;
-      border-radius:.375rem !important;
-      transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-      appearance:none;
-  }
-
-  table.dataTable.no-footer > tbody > tr:last-child > td {
-    border-bottom: none;
-  }
   table {
-    border-radius: 5px;
+    table-layout: auto !important;
+    width: 1px !important;
+    overflow: visible !important;
+  }
+
+  td, th {
+    max-width:100%;
+    white-space:nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  table.sortable tbody tr:nth-child(2n) td {
+    background: white;
+  }
+  table.sortable tbody tr:nth-child(2n+1) td {
+    background: rgba(0,0,0,0.05);
+  }
+
+  span {
+    font-size:60% !important;
+  }
+
+  @media screen and (max-width: 768px) {
+    .nav-tabs {
+      width: 100% !important;
+    }
+  }
+
+  a {
+      text-decoration: none;
   }
 
   .hiddenLink {
-        color: inherit !important;
-        text-decoration: inherit !important;
+    text-decoration: inherit !important;
+  }
+
+  hr {
+    background-color: black !important;
+    color: black !important;
+    border: solid 1px black !important;
+  }
+
+  .nav-tabs {
+    width: 75%;
+    border-bottom: none;
+  }
+
+  .nav-custom {
+    color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+  a.active, .nav-custom:hover {
+    color: white !important;
+    background-color: black !important;
+    border: solid 1px rgb(168, 168, 168) !important;
+    border-bottom: none !important;
+  }
+
+  .nav-link:not(.nav-custom) {
+      margin-right: 30px;
+  }
+  .nav-link#roles {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
+  .hover-nav:hover {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
+
+  .form-select-clone {
+    display:block !important;
+    padding:.375rem .75rem .375rem .75rem !important;
+    width:68%;
+    font-size:1rem !important;
+    font-weight:400 !important;
+    line-height:1.5 !important;
+    color:#212529 !important;
+    background-color:#fff !important;
+    background-repeat:no-repeat;
+    background-position:right .75rem center;
+    background-size:16px 12px !important;
+    border:1px solid #ced4da !important;
+    border-radius:.375rem !important;
+    transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
   }
 </style>
 {% endblock %}
@@ -171,7 +179,7 @@ Roles
     <br>
 
     <form method="get" action="" id="filter-form">
-        <div style="width:75%">
+        <div>
             
                 <div class="row mb-2">
                     <div class="col-md-2">
@@ -208,22 +216,22 @@ Roles
 
     <br>
 
-    <ul class="nav" style="margin-top:1%">
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-basic">Basic</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-rate">Rate</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-side">Side</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-highs">Highs</button>
-    </li>
-    </ul>
+    <h4 style="font-weight:normal">Overview</h4>
 
-    <br>
+    <ul class="nav nav-tabs table-tabs" style="margin-top:1%; font-size:80%" id="roleTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom active" id="basic-tab" data-bs-toggle="tab" href="#tab-basic" role="tab">Basic</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom" id="rate-tab" data-bs-toggle="tab" href="#tab-rate" role="tab">Rate</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom" id="side-tab" data-bs-toggle="tab" href="#tab-side" role="tab">Side</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom" id="highs-tab" data-bs-toggle="tab" href="#tab-highs" role="tab">Highs</a>
+        </li>
+    </ul>
 
     <div class="tab-content">
 
@@ -383,6 +391,113 @@ Roles
         </table>
         </div>
 
+
+    </div>
+
+    <br>
+    <h4 style="font-weight:normal">Combinations</h4>
+
+    <ul class="nav nav-tabs table-tabs" style="margin-top:1%; font-size:80%" id="roleTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom active" id="basic-tab" data-bs-toggle="tab" href="#tab-overview" role="tab">Overview</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link nav-custom" id="rate-tab" data-bs-toggle="tab" href="#tab-combat" role="tab">Combat</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <div id="tab-overview" class="tab-pane active table-responsive-lg">
+          <table id="table-overview" class="sortable table table-hover table-sm center"
+                style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+            <thead>
+              <tr id="ignore">
+                    <th colspan="4" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Role Count</th>
+                    <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Matches</th>
+                    <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">All Rounds</th>
+                    <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack Rounds</th>
+                    <th colspan="2" style="text-align:center">Defense Rounds</th>
+              </tr>
+              <tr>
+                    <th title="Number of Controllers" data-bs-toggle="tooltip" data-bs-placement="top">CONT</th>
+                    <th title="Number of Duelists" data-bs-toggle="tooltip" data-bs-placement="top">DUEL</th>
+                    <th title="Number of Initiators" data-bs-toggle="tooltip" data-bs-placement="top">INIT</th>
+                    <th style="border-right:1px solid rgb(222, 226, 230);" title="Number of Sentinels" data-bs-toggle="tooltip" data-bs-placement="top">SENT</th>
+                    <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                    <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                    <th class="right" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                    <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                    <th class="right" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                    <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                    <th class="right" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                    <th class="right" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in combinations %}
+                <tr>
+                    <td class="right">{{ m.Match__N_Controllers }}</a></td>
+                    <td class="right">{{ m.Match__N_Duelists }}</a></td>
+                    <td class="right">{{ m.Match__N_Initiators }}</a></td>
+                    <td class="right" style="border-right:1px solid rgb(222, 226, 230);">{{ m.Match__N_Sentinels }}</a></td>
+                    <td class="right">{{ m.num_matches }}</td>
+                    <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+                    <td class="right">{{ m.rounds_played }}</td>
+                    <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
+                    <td class="right">{{ m.attack_rounds }}</td>
+                    <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
+                    <td class="right">{{ m.defense_rounds }}</td>
+                    <td class="right" style="{% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    
+        <div id="tab-combat" class="tab-pane table-responsive-lg">
+          <table id="table-combat" class="sortable table table-hover table-sm center"
+                style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+            <thead>
+              <tr>
+                    <th title="Number of Controllers" data-bs-toggle="tooltip" data-bs-placement="top">CONT</th>
+                    <th title="Number of Duelists" data-bs-toggle="tooltip" data-bs-placement="top">DUEL</th>
+                    <th title="Number of Initiators" data-bs-toggle="tooltip" data-bs-placement="top">INIT</th>
+                    <th style="border-right:1px solid rgb(222, 226, 230);" title="Number of Sentinels" data-bs-toggle="tooltip" data-bs-placement="top">SENT</th>
+                    <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                    <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                    <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                    <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                    <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+                    <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+                    <th class="right" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+                    <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+                    <th class="right" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+                    <th class="right" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in combinations %}
+                <tr>
+                    <td class="right">{{ m.Match__N_Controllers }}</a></td>
+                    <td class="right">{{ m.Match__N_Duelists }}</a></td>
+                    <td class="right">{{ m.Match__N_Initiators }}</a></td>
+                    <td class="right" style="border-right:1px solid rgb(222, 226, 230);">{{ m.Match__N_Sentinels }}</a></td>
+                    <td class="right"><a href="{% url 'gamelog' %}?map={{ m.Match__Map }}&dateRange={{ date_filter }}">{{ m.num_matches }}</a></td>
+                    <td class="right" style="{% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+                    <td class="right" style="{% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
+                    <td class="right">{{ m.acs|floatformat:1 }}</td>
+                    <td class="right">{{ m.adr|floatformat:1 }}</td>
+                    <td class="right" style="{% if m.k_pct > 0.5 %}color:green{% elif m.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ m.k_pct|floatformat:3 }}</td>
+                    <td class="right">{{ m.kast|floatformat:3 }}</td>
+                    <td class="right">{{ m.fb_pct|floatformat:2 }}</td>
+                    <td class="right">{{ m.fd_pct|floatformat:2 }}</td>
+                    <td class="right" style="{% if m.fb_fd_ratio > 1 %}color:green{% elif m.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ m.fb_fd_ratio|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
 
     </div>
 

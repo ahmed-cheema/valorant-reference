@@ -125,6 +125,102 @@
   <h2 style="text-align:center; font-weight:normal">Splits</h2>
 
   <br>
+  <h4 style="font-weight:normal">Frequency</h4>
+
+  <ul class="nav nav-tabs table-tabs" style="margin-top:1%; font-size:80%" id="roleTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link nav-custom active" id="basic-tab" data-bs-toggle="tab" href="#count-overview" role="tab">Overview</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link nav-custom" id="rate-tab" data-bs-toggle="tab" href="#count-combat" role="tab">Combat</a>
+    </li>
+  </ul>
+
+
+  <div id="count-tabs" class="tab-content">
+
+    <div id="count-overview" class="tab-pane active table-responsive-lg">
+      <table id="table-overview" class="sortable table table-hover table-sm center"
+            style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr id="ignore">
+                <th style="text-align:center; border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Matches</th>
+                <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">All Rounds</th>
+                <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack Rounds</th>
+                <th colspan="2" style="text-align:center">Defense Rounds</th>
+          </tr>
+          <tr>
+                <th style="border-right:1px solid rgb(222, 226, 230);" title="Number of {{ role }}s" data-bs-toggle="tooltip" data-bs-placement="top">#</th>
+                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Attack Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Defense Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                <th class="right" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in count_splits %}
+            <tr>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230);">{{ m.Count }}</a></td>
+                <td class="right">{{ m.num_matches }}</td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+                <td class="right">{{ m.rounds_played }}</td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
+                <td class="right">{{ m.attack_rounds }}</td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.attack_win_pct > 0.5 %}color:green{% elif m.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.attack_win_pct|floatformat:3 }}</td>
+                <td class="right">{{ m.defense_rounds }}</td>
+                <td class="right" style="{% if m.defense_win_pct > 0.5 %}color:green{% elif m.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.defense_win_pct|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="count-combat" class="tab-pane table-responsive-lg">
+      <table id="table-combat" class="sortable table table-hover table-sm center"
+            style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th style="border-right:1px solid rgb(222, 226, 230);" title="Number of {{ role }}s" data-bs-toggle="tooltip" data-bs-placement="top">#</th>
+                <th class="right" title="Individual Performances" data-bs-toggle="tooltip" data-bs-placement="top">P</th>
+                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+                <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+                <th class="right" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+                <th class="right" title="Percent of Rounds with First Blood" data-bs-toggle="tooltip" data-bs-placement="top">FB%</th>
+                <th class="right" title="Percent of Rounds with First Death" data-bs-toggle="tooltip" data-bs-placement="top">FD%</th>
+                <th class="right" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in count_splits_combat %}
+            <tr>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230);">{{ m.Count }}</a></td>
+                <td class="right">{{ m.num_matches }}</td>
+                <td class="right" style="{% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
+                <td class="right" style="{% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
+                <td class="right">{{ m.acs|floatformat:1 }}</td>
+                <td class="right">{{ m.adr|floatformat:1 }}</td>
+                <td class="right" style="{% if m.k_pct > 0.5 %}color:green{% elif m.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ m.k_pct|floatformat:3 }}</td>
+                <td class="right">{{ m.kast|floatformat:3 }}</td>
+                <td class="right">{{ m.fb_pct|floatformat:2 }}</td>
+                <td class="right">{{ m.fd_pct|floatformat:2 }}</td>
+                <td class="right" style="{% if m.fb_fd_ratio > 1 %}color:green{% elif m.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ m.fb_fd_ratio|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <br>
   <h4 style="font-weight:normal">Player</h4>
 
   <ul class="nav nav-tabs table-tabs" id="playerTabs" role="tablist">

@@ -302,8 +302,8 @@ def player_stats(request):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -468,6 +468,10 @@ def player_detail(request, username):
     last_ten_aggregates["Label"] = "Last 10 Matches"
     last_twenty_aggregates["Label"] = "Last 20 Matches"
     all_aggregates["Label"] = "All Matches"
+
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
     
     context = {
         'lst': [last_five_aggregates, last_ten_aggregates, 
@@ -477,7 +481,9 @@ def player_detail(request, username):
         'displayName': displayName,
         'userTag': userTag,
         'topAgent': topAgent,
-        'topAgentImage': topAgentImage
+        'topAgentImage': topAgentImage,
+
+        'mvps': mvps
     }
 
     return render(request, 'match/player/player_detail.html', context)
@@ -522,8 +528,8 @@ def CalculateAggregates(players, field="Username", agent=None):
 
             kast_rounds=Sum('KASTRounds'),
 
-            hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-            damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+            hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+            damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
             zero_kills=Sum('ZeroKillRounds'),
             one_kills=Sum('OneKillRounds'),
@@ -643,8 +649,8 @@ def CalculateAggregates(players, field="Username", agent=None):
 
             kast_rounds=Sum('KASTRounds'),
 
-            hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-            damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+            hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+            damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
             zero_kills=Sum('ZeroKillRounds'),
             one_kills=Sum('OneKillRounds'),
@@ -853,8 +859,8 @@ def player_splits(request, username):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -971,8 +977,8 @@ def player_splits(request, username):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -1095,8 +1101,8 @@ def player_splits(request, username):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -1219,8 +1225,8 @@ def player_splits(request, username):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -1502,7 +1508,7 @@ def maps_overview(request):
     maps = maps.order_by('-num_matches')
 
     for m in maps:
-        filtered_players = Player.objects.filter(Team="Team A", Match__Map=m['Match__Map'])
+        filtered_players = players.filter(Team="Team A", Match__Map=m['Match__Map'])
 
         m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
         m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
@@ -1605,8 +1611,8 @@ def agents_overview(request):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -1687,7 +1693,7 @@ def agents_overview(request):
         agents = agents.filter(Q(num_matches__gte=mp_filter)).all()
 
     for m in agents:
-        filtered_players = Player.objects.filter(Team="Team A", Agent=m['Agent'])
+        filtered_players = players.filter(Agent=m['Agent'])
 
         m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
         m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
@@ -1834,8 +1840,8 @@ def roles_overview(request):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -1909,10 +1915,10 @@ def roles_overview(request):
         max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
         max_fb = Max('FirstBloods'),
         max_fd = Max('FirstDeaths')
-    ).order_by('-Role')
+    ).order_by('Role')
 
     for m in roles:
-        filtered_players = Player.objects.filter(Team="Team A", Role=m['Role'])
+        filtered_players = players.filter(Role=m['Role'])
 
         m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
         m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
@@ -1962,8 +1968,99 @@ def roles_overview(request):
         m['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
         m['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
 
+    combinations = players.values("Match__N_Controllers","Match__N_Duelists","Match__N_Initiators","Match__N_Sentinels").annotate(
+        num_matches=Count('Match')/5,
+
+        matches_won=Sum('MatchWon')/5,
+        matches_lost=Sum('MatchLost')/5,
+        matches_draw=Sum('MatchDraw')/5,
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=Sum('FirstBloods')/Cast(Sum('FirstDeaths'), output_field=FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        kast=Sum('KASTRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        k_pct=(Sum('RoundsPlayed')-Sum('ZeroKillRounds'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+        win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
+        round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+        defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+        kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+        attack_rounds=Sum('AttackRounds')/5,
+        attack_wins=Sum('AttackWins')/5,
+        attack_losses=Sum('AttackLosses')/5,
+
+        defense_rounds=Sum('DefenseRounds')/5,
+        defense_wins=Sum('DefenseWins')/5,
+        defense_losses=Sum('DefenseLosses')/5,
+
+        rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/5,
+        rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/5,
+        rounds_played=Sum('RoundsPlayed')/5,
+
+        fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())),
+        fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())),
+
+        attack_kdr=Sum('AttackKills')/Cast(Sum('AttackDeaths'), output_field=FloatField()),
+        attack_adr=Sum('AttackDamage')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+        defense_kdr=Sum('DefenseKills')/Cast(Sum('DefenseDeaths'), output_field=FloatField()),
+        defense_adr=Sum('DefenseDamage')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    )
+
+    combinations = combinations.order_by('-num_matches')
+
+    for m in combinations:
+        filtered_players = players.filter(Team="Team A",
+                                          Match__N_Controllers=m['Match__N_Controllers'],
+                                          Match__N_Duelists=m['Match__N_Duelists'],
+                                          Match__N_Initiators=m['Match__N_Initiators'],
+                                          Match__N_Sentinels=m['Match__N_Sentinels'])
+
+        m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
+        m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
+        m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
+        m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
+
     context = {
         'roles': roles,
+        'combinations': combinations,
 
         'unique_maps': unique_maps,
         'unique_roles': unique_roles,
@@ -2012,6 +2109,131 @@ def role_splits(request, role):
 
     if (players.count() == 0):
         raise Http404
+    
+    count_splits = Player.objects.filter(Team="Team A").values('Match__N_{}s'.format(role)).annotate(
+        num_matches=Count('Match')/5,
+
+        matches_won=Sum('MatchWon')/5,
+        matches_lost=Sum('MatchLost')/5,
+        matches_draw=Sum('MatchDraw')/5,
+
+        win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
+        round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+        defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+        attack_rounds=Sum('AttackRounds')/5,
+        attack_wins=Sum('AttackWins')/5,
+        attack_losses=Sum('AttackLosses')/5,
+
+        defense_rounds=Sum('DefenseRounds')/5,
+        defense_wins=Sum('DefenseWins')/5,
+        defense_losses=Sum('DefenseLosses')/5,
+
+        rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/5,
+        rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/5,
+        rounds_played=Sum('RoundsPlayed')/5,
+    )
+
+    count_splits = count_splits.order_by('Match__N_{}s'.format(role))
+
+    for m in count_splits:
+        filter_dict = {'Match__N_{}s'.format(role): m['Match__N_{}s'.format(role)]}
+        filtered_players = players.filter(**filter_dict)
+
+        m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
+        m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
+        m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
+        m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
+
+        m['Count'] = m['Match__N_{}s'.format(role)]
+
+    count_splits_combat = Player.objects.filter(Team="Team A", Role=role).values('Match__N_{}s'.format(role)).annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio=Sum('FirstBloods')/Cast(Sum('FirstDeaths'), output_field=FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        kast=Sum('KASTRounds')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        k_pct=(Sum('RoundsPlayed')-Sum('ZeroKillRounds'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+        win_pct=(Sum('MatchWon')+0.5*Sum('MatchDraw'))/Cast(Count('Match'), FloatField()),
+        round_win_pct=(Sum('AttackWins')+Sum('DefenseWins'))/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        attack_win_pct=Sum('AttackWins')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+        defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+        kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+        adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
+
+        attack_rounds=Sum('AttackRounds')/5,
+        attack_wins=Sum('AttackWins')/5,
+        attack_losses=Sum('AttackLosses')/5,
+
+        defense_rounds=Sum('DefenseRounds')/5,
+        defense_wins=Sum('DefenseWins')/5,
+        defense_losses=Sum('DefenseLosses')/5,
+
+        rounds_won=(Sum('AttackWins')+Sum('DefenseWins'))/5,
+        rounds_lost=(Sum('AttackLosses')+Sum('DefenseLosses'))/5,
+        rounds_played=Sum('RoundsPlayed')/5,
+
+        fb_pct=(Sum('FirstBloods')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())),
+        fd_pct=(Sum('FirstDeaths')/Cast(Sum('RoundsPlayed')/5, output_field=FloatField())),
+
+        attack_kdr=Sum('AttackKills')/Cast(Sum('AttackDeaths'), output_field=FloatField()),
+        attack_adr=Sum('AttackDamage')/Cast(Sum('AttackRounds'), output_field=FloatField()),
+        defense_kdr=Sum('DefenseKills')/Cast(Sum('DefenseDeaths'), output_field=FloatField()),
+        defense_adr=Sum('DefenseDamage')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    )
+
+    for m in count_splits_combat:
+        filter_dict = {'Match__N_{}s'.format(role): m['Match__N_{}s'.format(role)]}
+        filtered_players = players.filter(**filter_dict)
+
+        m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
+        m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
+        m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
+        m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
+
+        m['Count'] = m['Match__N_{}s'.format(role)]
 
     player_splits = players.values('Username').annotate(
         num_matches=Count('Match'),
@@ -2033,8 +2255,8 @@ def role_splits(request, role):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -2185,9 +2407,9 @@ def role_splits(request, role):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
-
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
         two_kills=Sum('TwoKillRounds'),
@@ -2330,8 +2552,8 @@ def role_splits(request, role):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -2478,8 +2700,8 @@ def role_splits(request, role):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -2607,8 +2829,10 @@ def role_splits(request, role):
 
         p['max_fd_id'] = max_fd.values('Match__MatchID').first()['Match__MatchID']
         p['max_fd_player'] = max_fd.values('DisplayName').first()['DisplayName']
-    
+
     context = {
+        'count_splits': count_splits,
+        'count_splits_combat': count_splits_combat,
         'player_splits': player_splits,
         'agent_splits': agent_splits,
         'map_splits': map_splits,
@@ -2618,7 +2842,6 @@ def role_splits(request, role):
     }
 
     return render(request, 'match/role/role_splits.html', context)
-
 
 @cache_page(60*10)
 def agent_splits(request, agent):
@@ -2652,8 +2875,8 @@ def agent_splits(request, agent):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -2800,8 +3023,8 @@ def agent_splits(request, agent):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -2944,8 +3167,8 @@ def agent_splits(request, agent):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -3137,8 +3360,8 @@ def map_splits(request, map):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -3289,8 +3512,8 @@ def map_splits(request, map):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -3434,8 +3657,8 @@ def map_splits(request, map):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -3583,8 +3806,8 @@ def map_splits(request, map):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),
@@ -3723,14 +3946,21 @@ def map_splits(request, map):
 from itertools import groupby
 from operator import itemgetter
 
-from operator import lt, gt, le, ge
+from operator import lt, gt, le, ge, eq
 from datetime import timedelta
+from collections import defaultdict
 
 def BestActiveStreak(field, value, op):
-    players = Player.objects.filter(Team="Team A").order_by('Username', '-Match__Date')
+    players = Player.objects.filter(Team="Team A").order_by('Username', '-Match__Date').select_related('Match')
+
+    # Use defaultdict to group users and their matches.
+    user_groups = defaultdict(list)
+    for player in players:
+        user_groups[player.Username].append(player)
+
     active_streaks = []
-    for username, user_group in groupby(players, lambda x: x.Username):
-        user_group = list(user_group)
+
+    for username, user_group in user_groups.items():
         streak = 0
         end_date = None
         agents = []
@@ -3740,6 +3970,7 @@ def BestActiveStreak(field, value, op):
                     end_date = player.Match.Date
                 streak += 1
                 agents.append(player.Agent)
+
                 if i == len(user_group) - 1 and streak > 0:  # end of the list
                     most_common_agent = max(set(agents), key=agents.count)
                     active_streaks.append({
@@ -3754,7 +3985,6 @@ def BestActiveStreak(field, value, op):
                         'EndDateHidden': end_date + timedelta(days=1),
                         'Active': True
                     })
-                    agents = []
             else:
                 if streak > 0:
                     most_common_agent = max(set(agents), key=agents.count)
@@ -3770,25 +4000,27 @@ def BestActiveStreak(field, value, op):
                         'EndDateHidden': end_date + timedelta(days=1),
                         'Active': True
                     })
-                streak = 0
-                end_date = None
-                agents = []
                 break
 
     # Sort by streak
-    active_streaks.sort(key=lambda x: x['Streak'], reverse=True)
+    active_streaks.sort(key=itemgetter('Streak'), reverse=True)
     top_active_streak = active_streaks[0]['Streak'] if active_streaks else None
     top_active_streaks = [streak for streak in active_streaks if streak['Streak'] == top_active_streak]
-
-    top_active_streaks.sort(key=lambda x: x['StartDate'])
+    top_active_streaks.sort(key=itemgetter('StartDate'))
 
     return top_active_streaks
 
 def BestStreak(field, value, op):
-    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date')
+    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+
+    # Use defaultdict to group users and their matches.
+    user_groups = defaultdict(list)
+    for player in players:
+        user_groups[player.Username].append(player)
+
     all_streaks = []
-    for username, user_group in groupby(players, lambda x: x.Username):
-        user_group = list(user_group)
+
+    for username, user_group in user_groups.items():
         streak = 0
         start_date = None
         agents = []
@@ -3798,21 +4030,6 @@ def BestStreak(field, value, op):
                     start_date = player.Match.Date
                 streak += 1
                 agents.append(player.Agent)
-                if i == len(user_group) - 1 and streak > 0:  # end of the list
-                    most_common_agent = max(set(agents), key=agents.count)
-                    all_streaks.append({
-                        'Username': username,
-                        'DisplayName': player.DisplayName,
-                        'UserTag': player.UserTag,
-                        'Agent': most_common_agent,
-                        'AgentImage': AgentImage(most_common_agent),
-                        'Streak': streak,
-                        'StartDate': start_date,
-                        'EndDate': player.Match.Date,
-                        'EndDateHidden': player.Match.Date + timedelta(days=1),
-                        'Active': True
-                    })
-                    agents = []
             else:
                 if streak > 0:
                     most_common_agent = max(set(agents), key=agents.count)
@@ -3832,12 +4049,27 @@ def BestStreak(field, value, op):
                 start_date = None
                 agents = []
 
+            # Handle the case when the streak is at the end of the list.
+            if i == len(user_group) - 1 and streak > 0:  
+                most_common_agent = max(set(agents), key=agents.count)
+                all_streaks.append({
+                    'Username': username,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': most_common_agent,
+                    'AgentImage': AgentImage(most_common_agent),
+                    'Streak': streak,
+                    'StartDate': start_date,
+                    'EndDate': player.Match.Date,
+                    'EndDateHidden': player.Match.Date + timedelta(days=1),
+                    'Active': True
+                })
+
     # Sort by streak
-    all_streaks.sort(key=lambda x: x['Streak'], reverse=True)
+    all_streaks.sort(key=itemgetter('Streak'), reverse=True)
     top_streak = all_streaks[0]['Streak'] if all_streaks else None
     top_streaks = [streak for streak in all_streaks if streak['Streak'] == top_streak]
-
-    top_streaks.sort(key=lambda x: x['StartDate'])
+    top_streaks.sort(key=itemgetter('StartDate'))
 
     return top_streaks
 
@@ -4068,13 +4300,18 @@ def record_streak(request):
         #"Kills_Gr_30_Streak": BestStreak("Kills", 30, ge),
         "WonGameStreak": BestStreak("MatchWon", 1, ge),
         "LostGameStreak": BestStreak("MatchLost", 1, ge),
+        "MVPStreak": BestStreak("MVP", 1, eq),
+        "TopTwoStreak": BestStreak("ACS_Rank", 2, le),
+        "TopThreeStreak": BestStreak("ACS_Rank", 3, le),
+        "TopFourStreak": BestStreak("ACS_Rank", 4, le),
         "ACS_Gr_100_Streak": BestStreak("ACS", 100, ge),
         "ACS_Gr_150_Streak": BestStreak("ACS", 150, ge),
         "ACS_Gr_200_Streak": BestStreak("ACS", 200, ge),
         "ACS_Gr_250_Streak": BestStreak("ACS", 250, ge),
         "ACS_Gr_300_Streak": BestStreak("ACS", 300, ge),
         #"ACS_Gr_350_Streak": BestStreak("ACS", 350, ge),
-        "KDR_Gr_1_Streak": BestStreak("KillDeathRatio", 1, ge),
+        "KDR_Greq_1_Streak": BestStreak("KillDeathRatio", 1, ge),
+        "KDR_Gr_1_Streak": BestStreak("KillDeathRatio", 1, gt),
         "KDR_Gr_1d25_Streak": BestStreak("KillDeathRatio", 1.25, ge),
         "KDR_Gr_1d5_Streak": BestStreak("KillDeathRatio", 1.5, ge),
         "KDR_Gr_1d75_Streak": BestStreak("KillDeathRatio", 1.75, ge),
@@ -4101,13 +4338,18 @@ def record_streak(request):
         #"Kills_Gr_30_Streak": BestActiveStreak("Kills", 30, ge),
         "WonGameStreak": BestActiveStreak("MatchWon", 1, ge),
         "LostGameStreak": BestActiveStreak("MatchLost", 1, ge),
+        "MVPStreak": BestActiveStreak("MVP", 1, eq),
+        "TopTwoStreak": BestActiveStreak("ACS_Rank", 2, le),
+        "TopThreeStreak": BestActiveStreak("ACS_Rank", 3, le),
+        "TopFourStreak": BestActiveStreak("ACS_Rank", 4, le),
         "ACS_Gr_100_Streak": BestActiveStreak("ACS", 100, ge),
         "ACS_Gr_150_Streak": BestActiveStreak("ACS", 150, ge),
         "ACS_Gr_200_Streak": BestActiveStreak("ACS", 200, ge),
         "ACS_Gr_250_Streak": BestActiveStreak("ACS", 250, ge),
         "ACS_Gr_300_Streak": BestActiveStreak("ACS", 300, ge),
         #"ACS_Gr_350_Streak": BestActiveStreak("ACS", 350, ge),
-        "KDR_Gr_1_Streak": BestActiveStreak("KillDeathRatio", 1, ge),
+        "KDR_Greq_1_Streak": BestActiveStreak("KillDeathRatio", 1, ge),
+        "KDR_Gr_1_Streak": BestActiveStreak("KillDeathRatio", 1, gt),
         "KDR_Gr_1d25_Streak": BestActiveStreak("KillDeathRatio", 1.25, ge),
         "KDR_Gr_1d5_Streak": BestActiveStreak("KillDeathRatio", 1.5, ge),
         "KDR_Gr_1d75_Streak": BestActiveStreak("KillDeathRatio", 1.75, ge),
@@ -4217,9 +4459,15 @@ def record_career(request):
             attack_win_pct = Sum('AttackWins') / Cast((Sum('AttackWins') + Sum('AttackLosses')), FloatField()),
             defense_win_pct = Sum('DefenseWins') / Cast((Sum('DefenseWins') + Sum('DefenseLosses')), FloatField()),
 
-            hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-            damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+            hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+            damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+
+            mvps=Sum('MVP'),
+            mvp_pct=Avg('MVP'),
+            adj_mvp_pct=Sum(F('MVP') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField())
         )
+    
+    print(agg_players)
 
     context = {
         "kpr": GetTopBot(agg_players, "kpr"),
@@ -4239,6 +4487,8 @@ def record_career(request):
         "defense_win_pct": GetTopBot(agg_players, "defense_win_pct"),
         "hs_pct": GetTopBot(agg_players, "hs_pct"),
         "damage_delta": GetTopBot(agg_players, "damage_delta"),
+        "mvps": GetTopBot(agg_players, "mvps"),
+        "mvp_pct": GetTopBot(agg_players, "mvp_pct"),
     }
 
     return render(request, "match/recordbook/record_career.html", context)
@@ -4294,8 +4544,8 @@ def player_teammates(request, username):
 
         kast_rounds=Sum('KASTRounds'),
 
-        hs_pct=Avg('HS_Pct', weight='RoundsPlayed'),
-        damage_delta=Avg('DamageDelta', weight='RoundsPlayed'),
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
 
         zero_kills=Sum('ZeroKillRounds'),
         one_kills=Sum('OneKillRounds'),

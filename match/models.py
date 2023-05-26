@@ -41,9 +41,13 @@ class Match(models.Model):
     MostKills = models.IntegerField()
     TopKDR = models.CharField(max_length=200)
     TopKDRValue = models.FloatField()
+    N_Duelists = models.IntegerField()
+    N_Sentinels = models.IntegerField()
+    N_Initiators = models.IntegerField()
+    N_Controllers = models.IntegerField()
     
     def __str__(self):
-        return self.MatchID
+        return ', '.join(f'{field.name}={getattr(self, field.name)}' for field in self._meta.fields)
     
     @property
     def Outcome(self):
@@ -65,6 +69,9 @@ class Player(models.Model):
     Rank = models.CharField(max_length=200)
     Agent = models.CharField(max_length=200)
     Role = models.CharField(max_length=200)
+
+    MVP = models.IntegerField()
+    ACS_Rank = models.IntegerField()
 
     TRS = models.IntegerField()
     ACS = models.IntegerField()
@@ -139,7 +146,7 @@ class Player(models.Model):
     RoundsPlayed = models.IntegerField()
 
     def __str__(self):
-        return self.Username
+        return ', '.join(f'{field.name}={getattr(self, field.name)}' for field in self._meta.fields)
     
     @property
     def ExactADR(self):

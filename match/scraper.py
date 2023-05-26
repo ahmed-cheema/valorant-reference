@@ -9,8 +9,9 @@ import pandas as pd
 import numpy as np
 import bs4 as bs
 import json
+import time
 
-#import undetected_chromedriver as uc
+import undetected_chromedriver as uc
 
 from .models import Match, Player
 
@@ -195,7 +196,7 @@ def ScrapeMatch(match_id):
 
     s = Service(executable_path="C:/Users/cheem/chromedriver.exe")
 
-    browser = webdriver.Chrome(service=s, options=options)
+    browser = uc.Chrome(service=s, options=options)
     browser.get(url)
 
     while(True):
@@ -206,6 +207,8 @@ def ScrapeMatch(match_id):
             continue
         else:
             break
+
+    time.sleep(0.5)
 
     if len(soup.find_all("div", {"id": "closeIconHit"})) != 0:
         closeVideo = soup.select("div[id='closeIconHit']")[0]
@@ -427,6 +430,7 @@ def ScrapeMatch(match_id):
     browser.quit()
 
     teamA_df = db[db.Team == "Team A"].reset_index(drop=True)
+    role_vc = teamA_df.Role.value_counts()
     
     teamA_score = teamA_df.RoundsWon.max()
     teamB_score = db[db.Team == "Team B"].RoundsWon.max()
@@ -455,71 +459,145 @@ def ScrapeMatch(match_id):
                   TopKiller = K_Leaders.DisplayName[0],
                   MostKills = K_Leaders.Kills[0],
                   TopKDR = KDR_Leaders.DisplayName[0],
-                  TopKDRValue = KDR_Leaders.KillDeathRatio[0])
+                  TopKDRValue = KDR_Leaders.KillDeathRatio[0],
+                  N_Duelists = role_vc.get("Duelist",0),
+                  N_Sentinels = role_vc.get("Sentinel",0),
+                  N_Initiators = role_vc.get("Initiator",0),
+                  N_Controllers = role_vc.get("Controller",0))
     match.save()
 
     for idx, row in db.iterrows():
-        player = Player(Match = match,
-                        Username = row["Username"],
-                        DisplayName = row["DisplayName"],
-                        Team = row["Team"],
-                        Rank = row["Rank"],
-                        Agent = row["Agent"],
-                        Role = row["Role"],
-                        TRS = row["TRS"],
-                        ACS = row["ACS"],
-                        CombatScore = row["CombatScore"],
-                        AverageDamage = row["AverageDamage"],
-                        TotalDamage = row["TotalDamage"],
-                        Kills = row["Kills"],
-                        Deaths = row["Deaths"],
-                        Assists = row["Assists"],
-                        KillDifferential = row["KillDifferential"],
-                        KillDeathRatio = row["KillDeathRatio"],
-                        DamageDelta = row["DamageDelta"],
-                        HS_Pct = row["HS_Pct"],
-                        KAST = row["KAST"],
-                        KASTRounds = row["KASTRounds"],
-                        FirstBloods = row["FirstBloods"],
-                        FirstDeaths = row["FirstDeaths"],
-                        MultiKills = row["MultiKills"],
-                        AttackKills = row["AttackKills"],
-                        AttackDeaths = row["AttackDeaths"],
-                        AttackAssists = row["AttackAssists"],
-                        AttackKillDeathRatio = row["AttackKillDeathRatio"],
-                        DefenseKills = row["DefenseKills"],
-                        DefenseDeaths = row["DefenseDeaths"],
-                        DefenseAssists = row["DefenseAssists"],
-                        DefenseKillDeathRatio = row["DefenseKillDeathRatio"],
-                        WinKills = row["WinKills"],
-                        WinDeaths = row["WinDeaths"],
-                        WinKillDeathRatio = row["WinKillDeathRatio"],
-                        LossKills = row["LossKills"],
-                        LossDeaths = row["LossDeaths"],
-                        LossKillDeathRatio = row["LossKillDeathRatio"],
-                        AttackRounds = row["AttackRounds"],
-                        AttackDamage = row["AttackDamage"],
-                        AttackAverageDamage = row["AttackAverageDamage"],
-                        DefenseRounds = row["DefenseRounds"],
-                        DefenseDamage = row["DefenseDamage"],
-                        DefenseAverageDamage = row["DefenseAverageDamage"],
-                        WinDamage = row["WinDamage"],
-                        WinAverageDamage = row["WinAverageDamage"],
-                        LossDamage = row["LossDamage"],
-                        LossAverageDamage = row["LossAverageDamage"],
-                        ZeroKillRounds = row["ZeroKillRounds"],
-                        OneKillRounds = row["OneKillRounds"],
-                        TwoKillRounds = row["TwoKillRounds"],
-                        ThreeKillRounds = row["ThreeKillRounds"],
-                        FourKillRounds = row["FourKillRounds"],
-                        FiveKillRounds = row["FiveKillRounds"],
-                        SixKillRounds = row["SixKillRounds"],
-                        AttackWins = row["AttackWins"],
-                        AttackLosses = row["AttackLosses"],
-                        DefenseWins = row["DefenseWins"],
-                        DefenseLosses = row["DefenseLosses"],
-                        MatchWon = row["MatchWon"],
-                        MatchLost = row["MatchLost"],
-                        MatchDraw = row["MatchDraw"],
-                        RoundsPlayed = row["RoundsPlayed"])
-        player.save()
+        if row["Team"] == "Team A":
+            player = Player(Match = match,
+                            Username = row["Username"],
+                            DisplayName = row["DisplayName"],
+                            Team = row["Team"],
+                            Rank = row["Rank"],
+                            Agent = row["Agent"],
+                            Role = row["Role"],
+                            TRS = row["TRS"],
+                            ACS = row["ACS"],
+                            CombatScore = row["CombatScore"],
+                            AverageDamage = row["AverageDamage"],
+                            TotalDamage = row["TotalDamage"],
+                            Kills = row["Kills"],
+                            Deaths = row["Deaths"],
+                            Assists = row["Assists"],
+                            KillDifferential = row["KillDifferential"],
+                            KillDeathRatio = row["KillDeathRatio"],
+                            DamageDelta = row["DamageDelta"],
+                            HS_Pct = row["HS_Pct"],
+                            KAST = row["KAST"],
+                            KASTRounds = row["KASTRounds"],
+                            FirstBloods = row["FirstBloods"],
+                            FirstDeaths = row["FirstDeaths"],
+                            MultiKills = row["MultiKills"],
+                            AttackKills = row["AttackKills"],
+                            AttackDeaths = row["AttackDeaths"],
+                            AttackAssists = row["AttackAssists"],
+                            AttackKillDeathRatio = row["AttackKillDeathRatio"],
+                            DefenseKills = row["DefenseKills"],
+                            DefenseDeaths = row["DefenseDeaths"],
+                            DefenseAssists = row["DefenseAssists"],
+                            DefenseKillDeathRatio = row["DefenseKillDeathRatio"],
+                            WinKills = row["WinKills"],
+                            WinDeaths = row["WinDeaths"],
+                            WinKillDeathRatio = row["WinKillDeathRatio"],
+                            LossKills = row["LossKills"],
+                            LossDeaths = row["LossDeaths"],
+                            LossKillDeathRatio = row["LossKillDeathRatio"],
+                            AttackRounds = row["AttackRounds"],
+                            AttackDamage = row["AttackDamage"],
+                            AttackAverageDamage = row["AttackAverageDamage"],
+                            DefenseRounds = row["DefenseRounds"],
+                            DefenseDamage = row["DefenseDamage"],
+                            DefenseAverageDamage = row["DefenseAverageDamage"],
+                            WinDamage = row["WinDamage"],
+                            WinAverageDamage = row["WinAverageDamage"],
+                            LossDamage = row["LossDamage"],
+                            LossAverageDamage = row["LossAverageDamage"],
+                            ZeroKillRounds = row["ZeroKillRounds"],
+                            OneKillRounds = row["OneKillRounds"],
+                            TwoKillRounds = row["TwoKillRounds"],
+                            ThreeKillRounds = row["ThreeKillRounds"],
+                            FourKillRounds = row["FourKillRounds"],
+                            FiveKillRounds = row["FiveKillRounds"],
+                            SixKillRounds = row["SixKillRounds"],
+                            AttackWins = row["AttackWins"],
+                            AttackLosses = row["AttackLosses"],
+                            DefenseWins = row["DefenseWins"],
+                            DefenseLosses = row["DefenseLosses"],
+                            MatchWon = row["MatchWon"],
+                            MatchLost = row["MatchLost"],
+                            MatchDraw = row["MatchDraw"],
+                            RoundsPlayed = row["RoundsPlayed"],
+                            MVP=int(ACS_Leaders.Username[0] == row["Username"]),
+                            ACS_Rank=ACS_Leaders[ACS_Leaders.Username == row["Username"]].index.item()+1)
+            player.save()
+        else:
+            player = Player(Match = match,
+                            Username = row["Username"],
+                            DisplayName = row["DisplayName"],
+                            Team = row["Team"],
+                            Rank = row["Rank"],
+                            Agent = row["Agent"],
+                            Role = row["Role"],
+                            TRS = row["TRS"],
+                            ACS = row["ACS"],
+                            CombatScore = row["CombatScore"],
+                            AverageDamage = row["AverageDamage"],
+                            TotalDamage = row["TotalDamage"],
+                            Kills = row["Kills"],
+                            Deaths = row["Deaths"],
+                            Assists = row["Assists"],
+                            KillDifferential = row["KillDifferential"],
+                            KillDeathRatio = row["KillDeathRatio"],
+                            DamageDelta = row["DamageDelta"],
+                            HS_Pct = row["HS_Pct"],
+                            KAST = row["KAST"],
+                            KASTRounds = row["KASTRounds"],
+                            FirstBloods = row["FirstBloods"],
+                            FirstDeaths = row["FirstDeaths"],
+                            MultiKills = row["MultiKills"],
+                            AttackKills = row["AttackKills"],
+                            AttackDeaths = row["AttackDeaths"],
+                            AttackAssists = row["AttackAssists"],
+                            AttackKillDeathRatio = row["AttackKillDeathRatio"],
+                            DefenseKills = row["DefenseKills"],
+                            DefenseDeaths = row["DefenseDeaths"],
+                            DefenseAssists = row["DefenseAssists"],
+                            DefenseKillDeathRatio = row["DefenseKillDeathRatio"],
+                            WinKills = row["WinKills"],
+                            WinDeaths = row["WinDeaths"],
+                            WinKillDeathRatio = row["WinKillDeathRatio"],
+                            LossKills = row["LossKills"],
+                            LossDeaths = row["LossDeaths"],
+                            LossKillDeathRatio = row["LossKillDeathRatio"],
+                            AttackRounds = row["AttackRounds"],
+                            AttackDamage = row["AttackDamage"],
+                            AttackAverageDamage = row["AttackAverageDamage"],
+                            DefenseRounds = row["DefenseRounds"],
+                            DefenseDamage = row["DefenseDamage"],
+                            DefenseAverageDamage = row["DefenseAverageDamage"],
+                            WinDamage = row["WinDamage"],
+                            WinAverageDamage = row["WinAverageDamage"],
+                            LossDamage = row["LossDamage"],
+                            LossAverageDamage = row["LossAverageDamage"],
+                            ZeroKillRounds = row["ZeroKillRounds"],
+                            OneKillRounds = row["OneKillRounds"],
+                            TwoKillRounds = row["TwoKillRounds"],
+                            ThreeKillRounds = row["ThreeKillRounds"],
+                            FourKillRounds = row["FourKillRounds"],
+                            FiveKillRounds = row["FiveKillRounds"],
+                            SixKillRounds = row["SixKillRounds"],
+                            AttackWins = row["AttackWins"],
+                            AttackLosses = row["AttackLosses"],
+                            DefenseWins = row["DefenseWins"],
+                            DefenseLosses = row["DefenseLosses"],
+                            MatchWon = row["MatchWon"],
+                            MatchLost = row["MatchLost"],
+                            MatchDraw = row["MatchDraw"],
+                            RoundsPlayed = row["RoundsPlayed"],
+                            MVP=-1,
+                            ACS_Rank=-1)
+            player.save()

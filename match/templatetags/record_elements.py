@@ -24,7 +24,8 @@ def match_element(context, game):
     return render_to_string('match/recordbook/match_element.html', {'game': game})
 
 @register.simple_tag
-def career_element(record, FloatCount, varName):
+def career_element(record, FloatCount, superlative, varName):
     return render_to_string('match/recordbook/career_element.html', {'record': record,
                                                                      'FloatCount': FloatCount,
+                                                                     'superlative': superlative,
                                                                      'varName': varName})

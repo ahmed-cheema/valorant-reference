@@ -167,6 +167,61 @@ Records · Streaks
             </div>
 
             <br>
+            <h4 id="Kills">Performance</h4>
+            <p style="text-align:center;"><i>Refers to post-game leaderboard sorted by ACS</i></p>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games as MVP:</strong></p>
+                    {% for streak in streaks.MVPStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top two:</strong></p>
+                    {% for streak in streaks.TopTwoStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top three:</strong></p>
+                    {% for streak in streaks.TopThreeStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top four:</strong></p>
+                    {% for streak in streaks.TopFourStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <br>
             <h4 id="Kills">Kills</h4>
 
             <div class="row">
@@ -292,6 +347,18 @@ Records · Streaks
             <div class="row">
                 <div class="col-md-3">
                     <p style="margin-bottom:0;"><strong>Consecutive games with 1.00+ K/D:</strong></p>
+                    {% for streak in streaks.KDR_Greq_1_Streak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.Active %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games with >1.00 K/D:</strong></p>
                     {% for streak in streaks.KDR_Gr_1_Streak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
                             {% if streak.Active %}
@@ -543,6 +610,61 @@ Records · Streaks
             </div>
 
             <br>
+            <h4 id="Kills">Performance</h4>
+            <p style="text-align:center;"><i>Refers to post-game leaderboard sorted by ACS</i></p>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games as MVP:</strong></p>
+                    {% for streak in streaks_active.MVPStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top two:</strong></p>
+                    {% for streak in streaks_active.TopTwoStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top three:</strong></p>
+                    {% for streak in streaks_active.TopThreeStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games in top four:</strong></p>
+                    {% for streak in streaks_active.TopFourStreak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <br>
             <h4 id="Kills">Kills</h4>
 
             <div class="row">
@@ -668,6 +790,18 @@ Records · Streaks
             <div class="row">
                 <div class="col-md-3">
                     <p style="margin-bottom:0;"><strong>Consecutive games with 1.00+ K/D:</strong></p>
+                    {% for streak in streaks_active.KDR_Greq_1_Streak %}
+                        <p style="margin-bottom:0; text-indent: 30px;">
+                            {% if streak.BestStreak %}
+                                {% active_streak_element streak %}
+                            {% else %}
+                                {% streak_element streak %}
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <p style="margin-bottom:0;"><strong>Consecutive games with >1.00 K/D:</strong></p>
                     {% for streak in streaks_active.KDR_Gr_1_Streak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
                             {% if streak.BestStreak %}

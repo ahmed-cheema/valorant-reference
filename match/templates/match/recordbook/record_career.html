@@ -96,22 +96,38 @@ Records · Career
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p>
-                {% career_element win_pct 3 'Match Win Pct'%}
+                {% career_element win_pct 3 'Highest' 'Match Win Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element round_win_pct 3 'Round Win Pct'%}
+                {% career_element round_win_pct 3 'Highest' 'Round Win Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element attack_win_pct 3 'Attack Win Pct'%}
+                {% career_element attack_win_pct 3 'Highest' 'Attack Win Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element defense_win_pct 3 'Defense Win Pct'%}
+                {% career_element defense_win_pct 3 'Highest' 'Defense Win Pct'%}
+            </p>
+        </div>
+    </div>
+
+    <br>
+    <h4 style="text-align:center">Performance</h4>
+
+    <div class="row justify-content-center" >
+        <div class="col-md-3">
+            <p>
+                {% career_element mvps 0 'Most' 'MVPs'%}
+            </p>
+        </div>
+        <div class="col-md-3">
+            <p>
+                {% career_element mvp_pct 3 'Highest' 'MVP%'%}
             </p>
         </div>
     </div>
@@ -122,17 +138,17 @@ Records · Career
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p>
-                {% career_element kpr 3 'Kills Per Round'%}
+                {% career_element kpr 3 'Most' 'Kills Per Round'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element dpr 3 'Deaths Per Round'%}
+                {% career_element dpr 3 'Most' 'Deaths Per Round'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element apr 3 'Assists Per Round'%}
+                {% career_element apr 3 'Most' 'Assists Per Round'%}
             </p>
         </div>
     </div>
@@ -143,17 +159,17 @@ Records · Career
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p>
-                {% career_element kdr 3 'K/D'%}
+                {% career_element kdr 3 'Highest' 'K/D'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element acs 3 'ACS'%}
+                {% career_element acs 3 'Highest' 'ACS'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element adr 3 'ADR'%}
+                {% career_element adr 3 'Highest' 'ADR'%}
             </p>
         </div>
     </div>
@@ -164,17 +180,17 @@ Records · Career
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p>
-                {% career_element fb_pct 3 'First Blood Pct'%}
+                {% career_element fb_pct 3 'Highest' 'First Blood Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element fd_pct 3 'First Death Pct'%}
+                {% career_element fd_pct 3 'Highest' 'First Death Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element fb_fd_ratio 3 'FB/FD Ratio'%}
+                {% career_element fb_fd_ratio 3 'Highest' 'FB/FD Ratio'%}
             </p>
         </div>
     </div>
@@ -185,22 +201,22 @@ Records · Career
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p>
-                {% career_element k_pct 3 'Kill Pct'%}
+                {% career_element k_pct 3 'Highest' 'Kill Pct'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element kast 3 'KAST%'%}
+                {% career_element kast 3 'Highest' 'KAST%'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element hs_pct 3 'HS%'%}
+                {% career_element hs_pct 3 'Highest' 'HS%'%}
             </p>
         </div>
         <div class="col-md-3">
             <p>
-                {% career_element damage_delta 3 'Damage Delta'%}
+                {% career_element damage_delta 3 'Highest' 'Damage Delta'%}
             </p>
         </div>
     </div>
