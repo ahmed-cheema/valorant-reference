@@ -1351,6 +1351,10 @@ def player_splits(request, username):
         p['max_fb_id'] = filtered_players.filter(FirstBloods=p['max_fb']).values('Match__MatchID').first()['Match__MatchID']
         p['max_fd_id'] = filtered_players.filter(FirstDeaths=p['max_fd']).values('Match__MatchID').first()['Match__MatchID']
 
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
+
     context = {
         'role_splits': role_splits,
         'agent_splits': agent_splits,
@@ -1361,6 +1365,8 @@ def player_splits(request, username):
         'displayName': displayName,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
+
+        'mvps': mvps,
     }
 
     return render(request, 'match/player/player_splits.html', context)
@@ -4754,6 +4760,10 @@ def player_teammates(request, username):
 
     UserPerformances = sorted(UserPerformances, key=lambda d: d['num_matches'], reverse=True) 
 
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
+
     context = {
         "PlayerPerformances": UserPerformances,
         "TeammatePerformances": anno,
@@ -4762,6 +4772,8 @@ def player_teammates(request, username):
         'displayName': displayName,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
+        
+        'mvps': mvps,
     }
     
     return render(request, 'match/player/player_teammates.html', context)
