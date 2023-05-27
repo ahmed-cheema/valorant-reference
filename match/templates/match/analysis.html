@@ -1,0 +1,90 @@
+{% extends 'match/base.html' %}
+
+{% block title %}
+Analysis
+{% endblock %}
+
+{% block css %}
+<style>
+    .nav-link {
+        margin-right: 30px;
+    }
+
+    .nav-link#analysis {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2 style="text-align: center;">Analysis</h2>
+    <p style="text-align: center;">Leveraging data for further insights</p>
+
+    <hr>
+
+    <div class="row g-4 py-2 row-cols-1 row-cols-lg-3">
+
+        <div class="col d-flex align-items-start">
+            <div>
+                <h4>
+                    Time of Day
+                </h4>
+                <p>
+                    What time do games usually occur? Does the time of day affect the team's success? 
+                    It's often theorized that the team is more likely to lose late night games - what does the data say? 
+                </p>
+                <a href="#" class="btn btn-danger">
+                    More
+                </a>
+            </div>
+        </div>
+
+        <div class="col d-flex align-items-start">
+            <div>
+                <h4>
+                    Sessions
+                </h4>
+                <p>
+                    A session refers to a sequence of games played in the same sitting. 
+                    What factors contribute to a session's birth and what keeps it going? 
+                    Which philosophy is adhered to: "can't end on a win" or "can't end on a loss"?
+                </p>
+                <a href="#" class="btn btn-danger">
+                    More
+                </a>
+            </div>
+        </div>
+
+        <div class="col d-flex align-items-start">
+            <div>
+                <h4>
+                    Solo Duelists
+                </h4>
+                <p>
+                    Roughly 50-60% of games are played with a single duelist team composition,
+                    which puts a greater burden on the sole duelist to create attacking opportunities.
+                    Who thrives in these situations?
+                </p>
+                <a href="{% url 'solo_duelists' %}" class="btn btn-danger">
+                    More
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <hr>
+
+</div>
+
+{% endblock %}

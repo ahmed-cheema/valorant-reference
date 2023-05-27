@@ -51,7 +51,8 @@ urlpatterns = [
 
     path('lineups/', views.lineups, name='lineups'),
 
-    path('blog/', views.blog, name='blog'),
+    path('analysis/', views.analysis, name='analysis'),
+    path('analysis/solo-duelists/', views.solo_duelists, name='solo_duelists'),
     
     path('about/', views.about, name='about')
 ]
