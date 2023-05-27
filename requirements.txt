@@ -13,6 +13,7 @@ h11==0.14.0
 idna==3.4
 outcome==1.2.0
 pathlib==1.0.1
+plotly==5.14.1
 pycparser==2.21
 PySocks==1.7.1
 python-decouple==3.8
