@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Match, Player
 
+from django.db import models
 from django.db.models import Sum, Count, Max, Case, When, Avg, F, FloatField, ExpressionWrapper, Value, Q
 from django.db.models.functions import Cast, Round
 
@@ -15,6 +16,11 @@ from django.views.decorators.cache import cache_page
 #from django.core.cache import cache
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver
+
+#import pandas as pd
+#import plotly.graph_objects as go
+#from plotly.subplots import make_subplots
+#import plotly.io as pio
 
 agent_map = {"41fb69c1-4189-7b37-f117-bcaf1e96f1bf":"Astra",
              "5f8d3a7f-467b-97f3-062c-13acf203c006":"Breach",
@@ -51,7 +57,7 @@ def AgentImage(agent):
 def AgentPortrait(agent):
         return f"https://trackercdn.com/cdn/tracker.gg/valorant/db/agents/{agent.lower()}_portrait.png"
 
-def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter, date_filter):
+def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter=None):
     if map_filter:
         players = players.filter(Match__Map=map_filter)
     if outcome_filter:
@@ -70,6 +76,8 @@ def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter
         start = datetime.strptime(date_split[0], '%m/%d/%Y')
         end = datetime.strptime(date_split[1], '%m/%d/%Y')
         players = players.filter(Match__Date__range=(start, end))
+    if mvp_filter:
+        players = players.filter(MVP=mvp_filter)
     return players
 
 def FilterMatches(matches, map_filter, outcome_filter, date_filter, mvp_filter):
@@ -1379,6 +1387,16 @@ def player_gamelog(request, username):
     if (players.count() == 0):
         raise Http404
     
+    firstRow = players.values().first()
+
+    tagSplit = firstRow['Username'].split("#")
+    displayName = tagSplit[0]
+    userTag = "#" + tagSplit[1]
+
+    agent_counter = Counter(players.values_list('Agent', flat=True))
+    topAgent = agent_counter.most_common(1)[0][0]
+    topAgentImage = AgentImage(topAgent)
+
     unique_maps = sorted(list(Match.objects.values_list("Map", flat=True).distinct()))
     unique_agents = sorted(list(Player.objects.values_list("Agent", flat=True).distinct()))
     unique_roles = sorted(list(Player.objects.values_list("Role", flat=True).distinct()))
@@ -1395,22 +1413,18 @@ def player_gamelog(request, username):
 
     date_filter = request.GET.get('dateRange')
 
+    mvp_filter = request.GET.get('mvp')
+
     if date_filter is not None:
         start_date = date_filter.split(' - ')[0]
         end_date = date_filter.split(' - ')[1]
 
     players = FilterPlayers(players, 
-                            map_filter, outcome_filter, agent_filter, role_filter, date_filter)
+                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter)
     
-    firstRow = players.values().first()
-
-    tagSplit = firstRow['Username'].split("#")
-    displayName = tagSplit[0]
-    userTag = "#" + tagSplit[1]
-
-    agent_counter = Counter(players.values_list('Agent', flat=True))
-    topAgent = agent_counter.most_common(1)[0][0]
-    topAgentImage = AgentImage(topAgent)
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
 
     context = {
         'players': players,
@@ -1432,6 +1446,8 @@ def player_gamelog(request, username):
         'date_filter': date_filter,
         'start_date': start_date,
         'end_date': end_date,
+
+        'mvps': mvps,
     }
 
     return render(request, 'match/player/player_gamelog.html', context)
@@ -5267,6 +5283,190 @@ def solo_duelists(request):
 
     return render(request, 'match/analysis/solo_duelists.html', context)
 
+def leaderboard_analysis(request):
+    players = Player.objects.filter(Team="Team A")
+    
+    player_stats = players.values('Username').annotate(
+        num_matches=Count('Match'),
 
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
 
+        mvps=Sum('MVP'),
+        mvp_pct=Avg('MVP'),
+        avg_rank=Avg('ACS_Rank'),
+    ).order_by('-Username')
 
+    for p in player_stats:
+        filtered_players = Player.objects.filter(Team="Team A", 
+                                                 Username=p['Username'])
+
+        tagSplit = p['Username'].split("#")
+
+        p['DisplayName'] = tagSplit[0]
+        p['UserTag'] = "#" + tagSplit[1]
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+    win = players.filter(MatchWon=1).values('Username').annotate(
+        num_matches=Count('Match'),
+
+        mvps=Sum('MVP'),
+        mvp_pct=Avg('MVP'),
+        avg_rank=Avg('ACS_Rank'),
+    ).order_by('-Username')
+
+    loss = players.filter(MatchLost=1).values('Username').annotate(
+        num_matches=Count('Match'),
+
+        mvps=Sum('MVP'),
+        mvp_pct=Avg('MVP'),
+        avg_rank=Avg('ACS_Rank'),
+    ).order_by('-Username')
+
+    mvp_stats = players.filter(MVP=1).values('Username').annotate(
+        num_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        total_kills=Sum('Kills'),
+        total_deaths=Sum('Deaths'),
+        total_assists=Sum('Assists'),
+
+        total_score=Sum('CombatScore'),
+        total_damage=Sum('TotalDamage'),
+
+        first_bloods=Sum('FirstBloods'),
+        first_deaths=Sum('FirstDeaths'),
+        fb_fd_ratio = F('first_bloods')/Cast('first_deaths', FloatField()),
+
+        kast_rounds=Sum('KASTRounds'),
+
+        hs_pct=Sum(F('HS_Pct') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+        damage_delta=Sum(F('DamageDelta') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField()),
+
+        zero_kills=Sum('ZeroKillRounds'),
+        one_kills=Sum('OneKillRounds'),
+        two_kills=Sum('TwoKillRounds'),
+        three_kills=Sum('ThreeKillRounds'),
+        four_kills=Sum('FourKillRounds'),
+        five_kills=Sum('FiveKillRounds'),
+        six_kills=Sum('SixKillRounds'),
+
+        attack_kills=Sum('AttackKills'),
+        attack_deaths=Sum('AttackDeaths'),
+        attack_damage=Sum('AttackDamage'),
+        defense_kills=Sum('DefenseKills'),
+        defense_deaths=Sum('DefenseDeaths'),
+        defense_damage=Sum('DefenseDamage'),
+        
+        win_kills=Sum('WinKills'),
+        win_deaths=Sum('WinDeaths'),
+        win_damage=Sum('WinDamage'),
+        loss_kills=Sum('LossKills'),
+        loss_deaths=Sum('LossDeaths'),
+        loss_damage=Sum('LossDamage'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+
+        rounds_won=Sum('AttackWins')+Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses')+Sum('DefenseLosses'),
+
+        rounds = Sum('RoundsPlayed'),
+
+        kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        acs=F('total_score')/Cast('rounds', FloatField()),
+        adr=F('total_damage')/Cast('rounds', FloatField()),
+
+        kast=F('kast_rounds')/Cast('rounds', FloatField()),
+        k_pct=(F('rounds')-F('zero_kills'))/Cast('rounds', FloatField()),
+
+        win_pct=(F('matches_won')+0.5*F('matches_draw'))/Cast('num_matches', FloatField()),
+        round_win_pct=F('rounds_won')/Cast('rounds', FloatField()),
+        attack_win_pct=F('attack_wins')/Cast('attack_rounds', FloatField()),
+        defense_win_pct=F('defense_wins')/Cast('defense_rounds', FloatField()),
+
+        kills_per_20 = (F('total_kills')/Cast('rounds', FloatField()))*20,
+        deaths_per_20 = (F('total_deaths')/Cast('rounds', FloatField()))*20,
+        assists_per_20 = (F('total_assists')/Cast('rounds', FloatField()))*20,
+
+        fb_per_20 = (F('first_bloods')/Cast('rounds', FloatField()))*20,
+        fd_per_20 = (F('first_deaths')/Cast('rounds', FloatField()))*20,
+
+        attack_kdr = F('attack_kills')/Cast('attack_deaths', FloatField()), 
+        attack_adr = F('attack_damage')/Cast('attack_rounds', FloatField()), 
+        defense_kdr = F('defense_kills')/Cast('defense_deaths', FloatField()), 
+        defense_adr = F('defense_damage')/Cast('defense_rounds', FloatField()),
+
+        attack_kp12 = (F('attack_kills')/Cast('attack_rounds', FloatField()))*12,
+        attack_dp12 = (F('attack_deaths')/Cast('attack_rounds', FloatField()))*12,
+        defense_kp12 = (F('defense_kills')/Cast('defense_rounds', FloatField()))*12,
+        defense_dp12 = (F('defense_deaths')/Cast('defense_rounds', FloatField()))*12,
+
+        max_kills = Max('Kills'),
+        max_deaths = Max('Deaths'),
+        max_assists = Max('Assists'),
+        max_kdr = Max(F('Kills') / Cast('Deaths', FloatField())),
+        max_acs = Max(F('CombatScore') / F('RoundsPlayed')),
+        max_adr = Max(F('TotalDamage') / Cast('RoundsPlayed', FloatField())),
+        max_fb = Max('FirstBloods'),
+        max_fd = Max('FirstDeaths')
+    )
+
+    mvp_stats = mvp_stats.order_by('-num_matches')
+
+    for p in mvp_stats:
+        filtered_players = Player.objects.filter(Team="Team A", 
+                                                 Username=p['Username'],
+                                                 MVP=1)
+
+        tagSplit = p['Username'].split("#")
+
+        p['DisplayName'] = tagSplit[0]
+        p['UserTag'] = "#" + tagSplit[1]
+
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+        p['RoundRecord'] = "{}-{}".format(p["rounds_won"],p["rounds_lost"])
+        p['AttackRecord'] = "{}-{}".format(p["attack_wins"],p["attack_losses"])
+        p['DefenseRecord'] = "{}-{}".format(p["defense_wins"],p["defense_losses"])
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+        p['max_kills_id'] = filtered_players.filter(Kills=p['max_kills']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_deaths_id'] = filtered_players.filter(Deaths=p['max_deaths']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_assists_id'] = filtered_players.filter(Assists=p['max_assists']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_kdr_id'] = filtered_players.annotate(kdr=F('Kills') / Cast('Deaths', FloatField()))\
+                                     .filter(kdr=p['max_kdr']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_acs_id'] = filtered_players.filter(ACS=p['max_acs']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_adr_id'] = filtered_players.annotate(adr=F('TotalDamage') / Cast('RoundsPlayed', FloatField()))\
+                                     .filter(adr=p['max_adr']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_fb_id'] = filtered_players.filter(FirstBloods=p['max_fb']).values('Match__MatchID').first()['Match__MatchID']
+        p['max_fd_id'] = filtered_players.filter(FirstDeaths=p['max_fd']).values('Match__MatchID').first()['Match__MatchID']
+
+    context = {
+        'players': player_stats,
+        'win': win,
+        'loss': loss,
+        'zipped': zip(player_stats,win,loss),
+
+        'mvp_stats': mvp_stats
+    }
+    
+    return render(request, 'match/analysis/leaderboard_analysis.html', context)
