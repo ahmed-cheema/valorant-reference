@@ -145,7 +145,6 @@ def match_detail(request, match_id):
     players = Player.objects.filter(Match=match)
     return render(request, 'match/match_detail.html', {'match': match, 'players': players})
 
-@cache_page(60*10)
 def match_list(request):
     matches = Match.objects.all().order_by('-Date')
 
@@ -223,7 +222,6 @@ def match_list(request):
 
     return render(request, 'match/match_list.html', context)
 
-@cache_page(60*10)
 def gamelog(request):
     players = Player.objects.filter(Team="Team A").order_by('-ACS')
 
@@ -279,7 +277,6 @@ def gamelog(request):
 
     return render(request, 'match/game_log.html', context)
 
-@cache_page(60*10)
 def player_stats(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -853,7 +850,6 @@ def CalculateAggregates(players, field="Username", agent=None):
 
     return p
 
-@cache_page(60*10)
 def player_splits(request, username):
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
 
@@ -1379,7 +1375,6 @@ def player_splits(request, username):
 
     return render(request, 'match/player/player_splits.html', context)
 
-@cache_page(60*10)
 def player_gamelog(request, username):
 
     players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
@@ -1452,7 +1447,6 @@ def player_gamelog(request, username):
 
     return render(request, 'match/player/player_gamelog.html', context)
 
-@cache_page(60*10)
 def maps_overview(request):
 
     players = Player.objects.filter(Team="Team A")
@@ -1605,7 +1599,6 @@ def maps_overview(request):
     # Render template
     return render(request, 'match/maps.html', context)
 
-@cache_page(60*10)
 def agents_overview(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -1835,7 +1828,6 @@ def agent_detail(request, agent):
 
     return render(request, 'match/agent/agent_detail.html', context)
 
-@cache_page(60*10)
 def roles_overview(request):
     # Get all players
     players = Player.objects.filter(Team="Team A")
@@ -2145,7 +2137,6 @@ def role_detail(request, role):
 
     return render(request, 'match/role/role_detail.html', context)
 
-@cache_page(60*10)
 def role_splits(request, role):
     players = Player.objects.filter(Team="Team A", Role=role).order_by('-Match__Date')
 
@@ -2885,7 +2876,6 @@ def role_splits(request, role):
 
     return render(request, 'match/role/role_splits.html', context)
 
-@cache_page(60*10)
 def agent_splits(request, agent):
     if agent == "KAYO":
         agent = "KAY/O"
@@ -3375,7 +3365,6 @@ def map_detail(request, map):
 
     return render(request, 'match/map/map_detail.html', context)
 
-@cache_page(60*10)
 def map_splits(request, map):
     players = Player.objects.filter(Team="Team A", Match__Map=map).order_by('-Match__Date')
 
@@ -4538,7 +4527,6 @@ def record_career(request):
 
 ### 
 
-@cache_page(60*10)
 def player_teammates(request, username):
     players = Player.objects.filter(Team="Team A", Username=username)
 
@@ -4795,7 +4783,6 @@ def player_teammates(request, username):
     
     return render(request, 'match/player/player_teammates.html', context)
 
-@cache_page(60*10)
 def lineups(request):
 
     players = Player.objects.filter(Team="Team A")
