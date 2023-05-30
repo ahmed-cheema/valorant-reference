@@ -299,6 +299,17 @@ def player_stats(request):
 
     date_filter = request.GET.get('dateRange')
 
+    if map_filter == "None":
+        map_filter = None
+    if outcome_filter == "None":
+        outcome_filter = None
+    if agent_filter == "None":
+        agent_filter = None
+    if role_filter == "None":
+        role_filter = None
+    if date_filter == "None":
+        date_filter = None
+
     if date_filter is not None:
         start_date = date_filter.split(' - ')[0]
         end_date = date_filter.split(' - ')[1]
@@ -1409,6 +1420,17 @@ def player_gamelog(request, username):
     date_filter = request.GET.get('dateRange')
 
     mvp_filter = request.GET.get('mvp')
+
+    if map_filter == "None":
+        map_filter = None
+    if outcome_filter == "None":
+        outcome_filter = None
+    if agent_filter == "None":
+        agent_filter = None
+    if role_filter == "None":
+        role_filter = None
+    if date_filter == "None":
+        date_filter = None
 
     if date_filter is not None:
         start_date = date_filter.split(' - ')[0]
