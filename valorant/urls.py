@@ -52,6 +52,7 @@ urlpatterns = [
     path('lineups/', views.lineups, name='lineups'),
 
     path('analysis/', views.analysis, name='analysis'),
+    path('analysis/time/', views.time_of_day, name='time_of_day'),
     path('analysis/mvps/', views.leaderboard_analysis, name='leaderboard_analysis'),
     path('analysis/solo-duelists/', views.solo_duelists, name='solo_duelists'),
     

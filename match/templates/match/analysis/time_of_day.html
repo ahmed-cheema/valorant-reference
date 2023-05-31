@@ -1,91 +1,91 @@
 {% extends 'match/base.html' %}
 
 {% block title %}
-Analysis · Leaderboard
+Analysis · Time of Day
 {% endblock %}
 
 {% block css %}
 <style>
-    @media screen and (max-width: 768px) {
-      p {
-        width: 100% !important;
-      }
+  @media screen and (max-width: 768px) {
+    p, .adjust {
+      width: 100% !important;
     }
+  }
 
-    table {
-        table-layout: auto !important;
-        width: 1px !important;
-        overflow: visible !important;
-    }
+  table {
+      table-layout: auto !important;
+      width: 1px !important;
+      overflow: visible !important;
+  }
 
-    td, th {
-        max-width:100%;
-        white-space:nowrap;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-    }
+  td, th {
+      max-width:100%;
+      white-space:nowrap;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+  }
 
-    td {
-        background-clip: padding-box !important;
-    }
+  td {
+      background-clip: padding-box !important;
+  }
 
-    .right {
-        text-align: right;
-    }
+  .right {
+      text-align: right;
+  }
 
-    table.sortable tbody tr:nth-child(2n) td {
-        background: white;
-    }
-    table.sortable tbody tr:nth-child(2n+1) td {
-        background: rgba(0,0,0,0.05);
-    }
-    .nav-link:not(.nav-custom) {
-        margin-right: 30px;
-    }
+  table.sortable tbody tr:nth-child(2n) td {
+      background: white;
+  }
+  table.sortable tbody tr:nth-child(2n+1) td {
+      background: rgba(0,0,0,0.05);
+  }
+  .nav-link:not(.nav-custom) {
+      margin-right: 30px;
+  }
 
-    .nav-link#analysis {
-        color:rgb(220,53,69) !important;
-        border-bottom: solid 3px rgb(220,53,69) !important;
-    }
+  .nav-link#analysis {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
 
-    .hover-nav:hover {
-        color:rgb(220,53,69) !important;
-        border-bottom: solid 3px rgb(220,53,69) !important;
-    }
+  .hover-nav:hover {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
 
-    .nav-tabs {
-        width: 75%;
-        border-bottom: none;
-    }
+  .nav-tabs {
+      width: 75%;
+      border-bottom: none;
+  }
 
-    .nav-custom {
-        color: black !important;
-        border: solid 1px rgb(168, 168, 168) !important;
-        border-bottom: none !important;
-    }
+  .nav-custom {
+      color: black !important;
+      border: solid 1px rgb(168, 168, 168) !important;
+      border-bottom: none !important;
+  }
 
-    a.active, .nav-custom:hover {
-        color: white !important;
-        background-color: black !important;
-        border: solid 1px rgb(168, 168, 168) !important;
-        border-bottom: none !important;
-    }
+  a.active, .nav-custom:hover {
+      color: white !important;
+      background-color: black !important;
+      border: solid 1px rgb(168, 168, 168) !important;
+      border-bottom: none !important;
+  }
 
-    button[aria-selected="true"] {
-        color: white !important;
-    }
+  button[aria-selected="true"] {
+      color: white !important;
+  }
 
-    .btn-outline-dark {
-        color: black !important;
-    }
+  .btn-outline-dark {
+      color: black !important;
+  }
 
-    .btn-outline-dark:hover {
-        color: white !important;
-    }
+  .btn-outline-dark:hover {
+      color: white !important;
+  }
 
-    a {
-        text-decoration: none;
-    }
+  a {
+      text-decoration: none;
+  }
 </style>
 {% endblock %}
 
@@ -115,18 +115,21 @@ Analysis · Leaderboard
 <div class="container">
 
     <br>
-    <h2>Leaderboard Analysis</h2>
+    <h2>Time of Day</h2>
 
     <p style="width: 800px">
-        Average Combat Score (ACS) is a metric unique to Valorant which is meant to provide a holistic assessment of a player's performance in a single number.
-        Players receive a higher ACS for dealing damage, getting multi-kills, providing non-damage assists through utility, and getting kills earlier into the round with more enemies alive.
-        At the end of every match, all ten players are ranked based on their ACS and the player with the highest ACS on each team is named MVP.
+        Whenever five players express that they are online and ready to play, a game may occur. There is no set schedule for these games - they happen when they happen.
+        Thus, there is variance in the time of day at which matches are played. 
     </p>
-    
+
     <p style="width: 800px">
-        On this page, you can view the number of MVPs racked up by each player along with their <strong>MVP%</strong>, or the percentage of matches in which they won MVP. 
-        Under the <strong>Rank</strong> column is each player's average rank on the leaderbaord (among players on their team) where a value of 1 is equal to MVP and a value of 5 corresponds with the lowest ACS on their team.
+      Two main questions follow from this fact. First, when are games usually played? Is it completely random (unlikely), or is there some pattern? 
+      Second, does this have any effect on the team's performance? 
+      Research suggests that <a href="https://pubmed.ncbi.nlm.nih.gov/11128289/">"human performance efficiency changes as a function of time of day."</a> 
+      How does this apply to the team's Valorant matches?
     </p>
+
+    <img class="adjust" src="data:image/svg+xml,{{ uri }}" alt="My Histogram">
 
     <div class="table-responsive">
         <table id="table-basic" class="sortable table table-hover table-sm center "

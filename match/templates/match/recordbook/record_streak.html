@@ -144,7 +144,7 @@ Records · Streaks
                     <p style="margin-bottom:0;"><strong>Consecutive games won:</strong></p>
                     {% for streak in streaks.WonGameStreak %}
                         <p style="margin-bottom:0;">
-                            {% if streak.BestStreak %}
+                            {% if streak.Active %}
                                 {% active_streak_element streak %}
                             {% else %}
                                 {% streak_element streak %}
@@ -175,7 +175,7 @@ Records · Streaks
                     <p style="margin-bottom:0;"><strong>Consecutive games as MVP:</strong></p>
                     {% for streak in streaks.MVPStreak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
-                            {% if streak.BestStreak %}
+                            {% if streak.Active %}
                                 {% active_streak_element streak %}
                             {% else %}
                                 {% streak_element streak %}
@@ -187,7 +187,7 @@ Records · Streaks
                     <p style="margin-bottom:0;"><strong>Consecutive games in top two:</strong></p>
                     {% for streak in streaks.TopTwoStreak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
-                            {% if streak.BestStreak %}
+                            {% if streak.Active %}
                                 {% active_streak_element streak %}
                             {% else %}
                                 {% streak_element streak %}
@@ -199,7 +199,7 @@ Records · Streaks
                     <p style="margin-bottom:0;"><strong>Consecutive games in top three:</strong></p>
                     {% for streak in streaks.TopThreeStreak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
-                            {% if streak.BestStreak %}
+                            {% if streak.Active %}
                                 {% active_streak_element streak %}
                             {% else %}
                                 {% streak_element streak %}
@@ -211,7 +211,7 @@ Records · Streaks
                     <p style="margin-bottom:0;"><strong>Consecutive games in top four:</strong></p>
                     {% for streak in streaks.TopFourStreak %}
                         <p style="margin-bottom:0; text-indent: 30px;">
-                            {% if streak.BestStreak %}
+                            {% if streak.Active %}
                                 {% active_streak_element streak %}
                             {% else %}
                                 {% streak_element streak %}

@@ -18,7 +18,7 @@ from django.views.decorators.cache import cache_page
 #from django.dispatch import receiver
 
 #import pandas as pd
-#import plotly.graph_objects as go
+import plotly.graph_objects as go
 #from plotly.subplots import make_subplots
 #import plotly.io as pio
 
@@ -4981,7 +4981,7 @@ def lineups(request):
     # Render template
     return render(request, 'match/lineups.html', context)
 
-### Analysis
+### ANALYSIS
 
 def solo_duelists(request):
     players = Player.objects.filter(Team="Team A",
@@ -5479,3 +5479,69 @@ def leaderboard_analysis(request):
     }
     
     return render(request, 'match/analysis/leaderboard_analysis.html', context)
+
+from django.db.models.functions import ExtractHour
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import urllib
+import io
+
+def time_of_day(request):
+
+    hourly_data = Match.objects.annotate(
+            hour=ExtractHour('Date')
+        ).values('hour').annotate(
+            won=Sum('TeamOneWon'),
+            lost=Sum('TeamOneLost'),
+            draw=Sum('MatchDraw')
+        ).order_by('hour')
+    
+    # Extract hours and counts from the QuerySet.
+    hours = [data['hour'] for data in hourly_data]
+    won_counts = [data['won'] for data in hourly_data]
+    lost_counts = [data['lost'] for data in hourly_data]
+    draw_counts = [data['draw'] for data in hourly_data]
+
+    # Plot the histogram.
+    plt.bar(hours, won_counts, color='green', label="Win")
+    plt.bar(hours, lost_counts, bottom=won_counts, color='red', label="Loss")
+    plt.bar(hours, draw_counts, bottom=[i+j for i, j in zip(won_counts, lost_counts)], color='grey', label="Draw")
+
+    plt.xlabel('Hour')
+    plt.ylabel('Count')
+    plt.title('Games Played Per Hour')
+
+    # Format x-axis labels to display in 12-hour format.
+    def format_hour(value, tick_number):
+        # Convert to int because the value might be a float.
+        hour = int(value)
+        return f'{((hour % 12) or 12)} {"AM" if hour < 12 else "PM"}'
+
+    # Apply the formatter to the x-axis.
+    plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(format_hour))
+    plt.legend(title="Match Outcome", loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.tight_layout()
+
+    # Save the figure to a BytesIO object.
+    buf = io.BytesIO()
+    plt.savefig(buf, format='svg')
+    plt.close()
+
+    svg = buf.getvalue().decode()
+    buf.close()
+    uri = urllib.parse.quote(svg)
+
+    #############################################################
+    #############################################################
+
+    context = {
+        'uri': uri,
+    }
+
+    return render(request, 'match/analysis/time_of_day.html', context)
+
+
