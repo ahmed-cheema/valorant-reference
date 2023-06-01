@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Match, Player
 
 from django.db import models
-from django.db.models import Sum, Count, Max, Case, When, Avg, F, FloatField, ExpressionWrapper, Value, Q
+from django.db.models import Subquery, OuterRef, Sum, Count, Min, Max, Case, When, Avg, F, FloatField, ExpressionWrapper, Value, Q
 from django.db.models.functions import Cast, Round
 
 from django.http import Http404
@@ -5491,13 +5491,26 @@ import io
 
 def time_of_day(request):
 
+    # Format x-axis labels to display in 12-hour format.
+    def format_hour(value, tick_number):
+        # Convert to int because the value might be a float.
+        hour = int(value)
+        return f'{((hour % 12) or 12)} {"AM" if hour < 12 else "PM"}'
+
     hourly_data = Match.objects.annotate(
             hour=ExtractHour('Date')
         ).values('hour').annotate(
+            num_matches=Count('MatchID'),
             won=Sum('TeamOneWon'),
             lost=Sum('TeamOneLost'),
-            draw=Sum('MatchDraw')
+            draw=Sum('MatchDraw'),
+            win_pct=(Sum('TeamOneWon')+0.5*Sum('MatchDraw'))/Count('MatchID'),
+            round_win_pct=(Sum('TeamOneScore'))/Cast(Sum('RoundsPlayed'), FloatField()),
         ).order_by('hour')
+    
+    for h in hourly_data:
+        h['hour'] = format_hour(h['hour'], None)
+        h['MatchRecord'] = "{}-{}-{}".format(h['won'],h['lost'],h['draw'])
     
     # Extract hours and counts from the QuerySet.
     hours = [data['hour'] for data in hourly_data]
@@ -5506,23 +5519,18 @@ def time_of_day(request):
     draw_counts = [data['draw'] for data in hourly_data]
 
     # Plot the histogram.
-    plt.bar(hours, won_counts, color='green', label="Win")
-    plt.bar(hours, lost_counts, bottom=won_counts, color='red', label="Loss")
-    plt.bar(hours, draw_counts, bottom=[i+j for i, j in zip(won_counts, lost_counts)], color='grey', label="Draw")
+    plt.bar(hours, won_counts, color='#7ab378', label="Win", edgecolor="black", linewidth=0.5)
+    plt.bar(hours, lost_counts, bottom=won_counts, color='#f79ea6', label="Loss", edgecolor="black", linewidth=0.5)
+    plt.bar(hours, draw_counts, bottom=[i+j for i, j in zip(won_counts, lost_counts)], color='grey', label="Draw", edgecolor="black", linewidth=0.5)
+    plt.ylim(0,max([a+b+c for a,b,c in zip(won_counts,lost_counts,draw_counts)])+5)
 
     plt.xlabel('Hour')
     plt.ylabel('Count')
     plt.title('Games Played Per Hour')
 
-    # Format x-axis labels to display in 12-hour format.
-    def format_hour(value, tick_number):
-        # Convert to int because the value might be a float.
-        hour = int(value)
-        return f'{((hour % 12) or 12)} {"AM" if hour < 12 else "PM"}'
-
     # Apply the formatter to the x-axis.
     plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(format_hour))
-    plt.legend(title="Match Outcome", loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.legend(title="Match Outcome", loc='best')
 
     plt.tight_layout()
 
@@ -5538,8 +5546,54 @@ def time_of_day(request):
     #############################################################
     #############################################################
 
+    sub_qs = Player.objects.filter(Team="Team A").values('Match').annotate(min_id=Min('id')).values('min_id')
+    queryset = Player.objects.filter(id__in=Subquery(sub_qs)).annotate(
+        hour=ExtractHour('Match__Date'),
+        time_category=Case(
+            When(Q(hour__gte=12) & Q(hour__lt=20), then=Value('Pre-Night')),
+            When(Q(hour__gte=20) & Q(hour__lt=24), then=Value('Early Night')),
+            default=Value('Late Night'),
+            output_field=models.CharField(),
+        )
+    )
+
+    categorized = queryset.values('time_category').annotate(
+        num_matches=Count('Match'),
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        rounds_played=Sum('RoundsPlayed'),
+        rounds_won=Sum('AttackWins') + Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses') + Sum('DefenseLosses'),
+
+        attack_rounds=Sum('AttackRounds'),
+        attack_wins=Sum('AttackWins'),
+        attack_losses=Sum('AttackLosses'),
+
+        defense_rounds=Sum('DefenseRounds'),
+        defense_wins=Sum('DefenseWins'),
+        defense_losses=Sum('DefenseLosses'),
+    ).annotate(
+        win_pct=(F('matches_won') + 0.5 * F('matches_draw')) / Cast(F('num_matches'), FloatField()),
+        round_win_pct=F('rounds_won') / Cast(F('rounds_played'), FloatField()),
+        attack_win_pct=F('attack_wins') / Cast(F('attack_rounds'), FloatField()),
+        defense_win_pct=F('defense_wins') / Cast(F('defense_rounds'), FloatField())
+    )
+
+    for m in categorized:
+        m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
+        m['RoundRecord'] = "{}-{}".format(m["rounds_won"],m["rounds_lost"])
+        m['AttackRecord'] = "{}-{}".format(m["attack_wins"],m["attack_losses"])
+        m['DefenseRecord'] = "{}-{}".format(m["defense_wins"],m["defense_losses"])
+
+    #############################################################
+    #############################################################
+
     context = {
         'uri': uri,
+        'hourly_data':hourly_data,
+        'categorized':categorized,
     }
 
     return render(request, 'match/analysis/time_of_day.html', context)
