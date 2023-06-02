@@ -11,7 +11,7 @@ Records · Streaks
     .nav-link {
         margin-right: 30px;
     }
-    div {
+    div.size {
         font-size: 14px !important;
     }
     h4 {
@@ -104,10 +104,11 @@ Records · Streaks
 
     <div id="buttons" style="text-align:center; margin-top: 1%;">
         <div style="display: inline-block;">
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
-            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120% !important; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120% !important; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120% !important; margin:5px" href="{% url 'record_span' %}" role="button">Spans</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120% !important; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120% !important; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
         </div>
     </div>
 
@@ -137,7 +138,7 @@ Records · Streaks
 
     <br>
 
-    <div class="tab-content">
+    <div class="tab-content size">
 
         <div id="tab-overall" class="tab-pane active">
 

@@ -149,6 +149,14 @@ class Player(models.Model):
         return ', '.join(f'{field.name}={getattr(self, field.name)}' for field in self._meta.fields)
     
     @property
+    def RoundsWon(self):
+        return self.AttackWins+self.DefenseWins
+    
+    @property
+    def WeightWins(self):
+        return self.MatchWon+0.5*self.MatchDraw
+    
+    @property
     def ExactADR(self):
         return self.TotalDamage/(self.Match.RoundsPlayed)
     

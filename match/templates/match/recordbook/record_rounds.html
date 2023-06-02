@@ -106,6 +106,7 @@ Records · Single-Game
         <div style="display: inline-block;">
             <a class="btn btn-outline-dark shadow-sm " style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
             <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_span' %}" role="button">Spans</a>
             <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
             <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
         </div>
@@ -144,7 +145,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_ge={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -194,7 +195,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_le={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -244,7 +245,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_le={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -299,7 +300,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_le={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -349,7 +350,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_le={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -399,7 +400,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_le={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -453,7 +454,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_ge={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -503,7 +504,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_ge={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>
@@ -553,7 +554,7 @@ Records · Single-Game
                                 <td><a href="{% url 'gamelog' %}?rounds_ge={{ key.0 }}">{{ key.0 }}</a></td>
                                 <td>
                                     {% for game in games %}
-                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="25px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                        <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                         <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                         
                                         <br>

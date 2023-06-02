@@ -1,13 +1,30 @@
 {% extends 'match/base.html' %}
 
 {% block title %}
-Records · Streaks
+Records · Spans
 {% endblock %}
 
 {% load record_elements %}
 
 {% block css %}
 <style>
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .right {
+        text-align: right !important;
+    }
+
     .nav-link {
         margin-right: 30px;
     }
@@ -64,18 +81,8 @@ Records · Streaks
         border-bottom: none !important;
     }
 
-    p {
-        text-indent: 0px !important;
-    }
-
-    button[aria-selected="true"] {
-        color: white !important;
-    }
-    .btn-outline-dark {
-        color: black !important;
-    }
-    .btn-outline-dark:hover {
-        color: white !important;
+    span {
+        font-size:60% !important;
     }
 </style>
 {% endblock %}
@@ -100,28 +107,724 @@ Records · Streaks
         <div style="display: inline-block;">
             <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
             <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
-            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_span' %}" role="button">Spans</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
             <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
         </div>
     </div>
 
     <hr>
 
-    <ul class="nav justify-content-center" style="margin-top:1%">
-        <li class="nav-item">
-            <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-overall">All-Time</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link btn btn-outline-dark shadow-sm" data-bs-toggle="tab" data-bs-target="#tab-active">Active</button>
-        </li>
-    </ul>
-
     <br>
 
-    <div class="tab-content">
+    <div class="row justify-content-center">
 
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most MVPs in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#mvp" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="mvp" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">MVPs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in mvp.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-        
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest ACS in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#acs" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="acs" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">ACS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in acs.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest ADR in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#adr" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="adr" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">ADR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in adr.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most Kills in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#kills" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kills" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Kills</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kills.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Fewest Deaths in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#deaths" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="deaths" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Deaths</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in deaths.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most Assists in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#assists" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="assists" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Assists</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in assists.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest K/D in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#kdr" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kdr" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">K/D</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kdr.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest KPR in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#kpr" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kpr" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">KPR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kpr.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest K% in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#kpct" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kpct" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">K%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most First Bloods in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#fbs" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="fbs" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">FB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in fbs.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Fewest First Deaths in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#fds" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="fds" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">FD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in fds.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest FB/FD in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#fbfd" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="fbfd" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">FB/FD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in fbfd.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest FB% in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#fbpct" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="fbpct" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">FB%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in fbpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Lowest FD% in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#fdpct" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="fdpct" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">FD%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in fdpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Lowest D% in X Game Span</h5>
+                <button class="btn btn-outline-dark mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#dpct" aria-expanded="false" aria-controls="collapseExample"
+                        style="margin:auto; display:block;">
+                    Show
+                </button>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="dpct" class="collapse table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">D%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in dpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                        <a href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                            ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                        </a>
+                                        <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <br>

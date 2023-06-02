@@ -4237,7 +4237,8 @@ def BestGame(field,sort="desc",model="Player"):
 
     return top_games
 
-def BestSpan(field, n, most=True):
+from collections import deque
+def BestSpan(field, n, maximum=True):
     players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
 
     user_groups = defaultdict(list)
@@ -4247,55 +4248,48 @@ def BestSpan(field, n, most=True):
     all_spans = []
 
     for username, user_group in user_groups.items():
-        if len(user_group) < n:  # skip if user has fewer than n games
-            continue
+        queue = deque(maxlen=n)
+        total_field = 0
+        prev_span = None
+        agent_counts = defaultdict(int) # to store agent frequencies
 
-        agents = [user_group[i].Agent for i in range(n)]
-        field_sum = sum(getattr(user_group[i], field) for i in range(n))
-        start_date = user_group[0].Match.Date
+        for i, player in enumerate(user_group):
+            total_field += getattr(player, field)
+            queue.append(player)
+            agent_counts[player.Agent] += 1  # increment agent count
 
-        for i in range(n, len(user_group)):
-            field_sum = field_sum - getattr(user_group[i-n], field) + getattr(user_group[i], field)
-            agents = agents[1:] + [user_group[i].Agent]
+            if len(queue) == n:
+                most_common_agent = max(agent_counts, key=agent_counts.get)  # get most common agent
 
-            most_common_agent = max(set(agents), key=agents.count)
-            all_spans.append({
-                'Username': username,
-                'DisplayName': user_group[i].DisplayName,
-                'UserTag': user_group[i].UserTag,
-                'Agent': most_common_agent,
-                'AgentImage': AgentImage(most_common_agent),
-                'SpanValue': field_sum,
-                'StartDate': start_date,
-                'EndDate': user_group[i].Match.Date,
-                'EndDateHidden': user_group[i].Match.Date + timedelta(days=1),
-            })
-            start_date = user_group[i-n+1].Match.Date
+                new_span = {
+                    'Username': username,
+                    'DisplayName': queue[0].DisplayName,
+                    'UserTag': queue[0].UserTag,
+                    'Agent': most_common_agent,  # set the most common agent
+                    'AgentImage': AgentImage(most_common_agent),
+                    'SpanLength': n,
+                    'Span': total_field,
+                    'StartDate': queue[0].Match.Date,
+                    'EndDate': queue[-1].Match.Date,
+                    'EndIndex': i,
+                    'Active': i == len(user_group) - 1
+                }
 
-        # Handle the case when the span is at the end of the list.
-        if len(user_group) == n:  
-            most_common_agent = max(set(agents), key=agents.count)
-            all_spans.append({
-                'Username': username,
-                'DisplayName': user_group[-1].DisplayName,
-                'UserTag': user_group[-1].UserTag,
-                'Agent': most_common_agent,
-                'AgentImage': AgentImage(most_common_agent),
-                'SpanValue': field_sum,
-                'StartDate': start_date,
-                'EndDate': user_group[-1].Match.Date,
-                'EndDateHidden': user_group[-1].Match.Date + timedelta(days=1),
-            })
+                if prev_span is None or prev_span['EndIndex'] < i - n + 1 or (maximum and new_span['Span'] > prev_span['Span']) or (not maximum and new_span['Span'] < prev_span['Span']):
+                    prev_span = new_span
+                    all_spans.append(prev_span)
 
-    # Sort by span value
-    all_spans.sort(key=itemgetter('SpanValue'), reverse=most)  # Set to False for least
-    top_span_value = all_spans[0]['SpanValue'] if all_spans else None
-    top_spans = [span for span in all_spans if span['SpanValue'] == top_span_value]
+                total_field -= getattr(queue[0], field)
+                agent_counts[queue[0].Agent] -= 1  # decrement agent count for the oldest game in the queue
+
+    all_spans.sort(key=itemgetter('Span'), reverse=maximum)
+    top_span = all_spans[0]['Span'] if all_spans else None
+    top_spans = [span for span in all_spans if span['Span'] == top_span]
     top_spans.sort(key=itemgetter('StartDate'))
 
     return top_spans
 
-def BestSpanRatio(field1, field2, n, most=True):
+def BestSpanRatio(field1, field2, n, maximum=True):
     players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
 
     user_groups = defaultdict(list)
@@ -4305,60 +4299,45 @@ def BestSpanRatio(field1, field2, n, most=True):
     all_spans = []
 
     for username, user_group in user_groups.items():
-        if len(user_group) < n:  # skip if user has fewer than n games
-            continue
+        queue = deque(maxlen=n)
+        total_field1 = 0
+        total_field2 = 0
+        agent_counts = defaultdict(int)  # to store agent frequencies
 
-        agents = [user_group[i].Agent for i in range(n)]
-        field1_sum = sum(getattr(user_group[i], field1) for i in range(n))
-        field2_sum = sum(getattr(user_group[i], field2) for i in range(n))
-        start_date = user_group[0].Match.Date
+        for i, player in enumerate(user_group):
+            total_field1 += getattr(player, field1)
+            total_field2 += getattr(player, field2)
+            queue.append(player)
+            agent_counts[player.Agent] += 1  # increment agent count
 
-        for i in range(n, len(user_group)):
-            field1_sum = field1_sum - getattr(user_group[i-n], field1) + getattr(user_group[i], field1)
-            field2_sum = field2_sum - getattr(user_group[i-n], field2) + getattr(user_group[i], field2)
-            agents = agents[1:] + [user_group[i].Agent]
+            if len(queue) == n:
+                most_common_agent = max(agent_counts, key=agent_counts.get)  # get most common agent
 
-            # avoid division by zero
-            ratio = field1_sum / field2_sum if field2_sum != 0 else 0
+                span = {
+                    'Username': username,
+                    'DisplayName': queue[0].DisplayName,
+                    'UserTag': queue[0].UserTag,
+                    'Agent': most_common_agent,  # set the most common agent
+                    'AgentImage': AgentImage(most_common_agent),
+                    'SpanLength': n,
+                    'Span': total_field1 / total_field2 if total_field2 != 0 else 0,
+                    'StartDate': queue[0].Match.Date,
+                    'EndDate': queue[-1].Match.Date,
+                    'Active': i == len(user_group) - 1
+                }
+                all_spans.append(span)
+                total_field1 -= getattr(queue[0], field1)
+                total_field2 -= getattr(queue[0], field2)
+                agent_counts[queue[0].Agent] -= 1  # decrement agent count for the oldest game in the queue
 
-            most_common_agent = max(set(agents), key=agents.count)
-            all_spans.append({
-                'Username': username,
-                'DisplayName': user_group[i].DisplayName,
-                'UserTag': user_group[i].UserTag,
-                'Agent': most_common_agent,
-                'AgentImage': AgentImage(most_common_agent),
-                'SpanValue': ratio,
-                'StartDate': start_date,
-                'EndDate': user_group[i].Match.Date,
-                'EndDateHidden': user_group[i].Match.Date + timedelta(days=1),
-            })
-            start_date = user_group[i-n+1].Match.Date
-
-        # Handle the case when the span is at the end of the list.
-        if len(user_group) == n:  
-            most_common_agent = max(set(agents), key=agents.count)
-            all_spans.append({
-                'Username': username,
-                'DisplayName': user_group[-1].DisplayName,
-                'UserTag': user_group[-1].UserTag,
-                'Agent': most_common_agent,
-                'AgentImage': AgentImage(most_common_agent),
-                'SpanValue': field1_sum / field2_sum if field2_sum != 0 else 0,
-                'StartDate': start_date,
-                'EndDate': user_group[-1].Match.Date,
-                'EndDateHidden': user_group[-1].Match.Date + timedelta(days=1),
-            })
-
-    # Sort by span value
-    all_spans.sort(key=itemgetter('SpanValue'), reverse=most)  # Set to False for least
-    top_span_value = all_spans[0]['SpanValue'] if all_spans else None
-    top_spans = [span for span in all_spans if span['SpanValue'] == top_span_value]
+    all_spans.sort(key=itemgetter('Span'), reverse=maximum)
+    top_span = all_spans[0]['Span'] if all_spans else None
+    top_spans = [span for span in all_spans if span['Span'] == top_span]
     top_spans.sort(key=itemgetter('StartDate'))
 
     return top_spans
 
-@cache_page(60*10)
+@cache_page(60*15)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -4452,7 +4431,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-@cache_page(60*10)
+@cache_page(60*15)
 def record_game(request):
     players = Player.objects.filter(Team="Team A").annotate(
         k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
@@ -4587,7 +4566,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-@cache_page(60*10)
+@cache_page(60*15)
 def record_streak(request):
 
     streaks = {
@@ -4705,17 +4684,165 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*15)
 def record_span(request):
 
+    mvp = {}
+    for i in range(3, 21):
+        top_spans = BestSpan("MVP", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in mvp:
+                mvp[key] = []
+            mvp[key].append(span)
+
+    acs = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("CombatScore", "RoundsPlayed", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in acs:
+                acs[key] = []
+            acs[key].append(span)
+
+    adr = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("TotalDamage", "RoundsPlayed", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in adr:
+                adr[key] = []
+            adr[key].append(span)
+
+    kills = {}
+    for i in range(1, 21):
+        top_spans = BestSpan("Kills", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in kills:
+                kills[key] = []
+            kills[key].append(span)
+
+    deaths = {}
+    for i in range(1, 21):
+        top_spans = BestSpan("Deaths", i, 0)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in deaths:
+                deaths[key] = []
+            deaths[key].append(span)
+
+    assists = {}
+    for i in range(1, 21):
+        top_spans = BestSpan("Assists", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in assists:
+                assists[key] = []
+            assists[key].append(span)
+
+    kdr = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("Kills", "Deaths", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in kdr:
+                kdr[key] = []
+            kdr[key].append(span)
+
+    kpr = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("Kills", "RoundsPlayed", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in kpr:
+                kpr[key] = []
+            kpr[key].append(span)
+
+    kpct = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("AtLeastOneKill", "RoundsPlayed", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in kpct:
+                kpct[key] = []
+            kpct[key].append(span)
+
+    fbs = {}
+    for i in range(1, 21):
+        top_spans = BestSpan("FirstBloods", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in fbs:
+                fbs[key] = []
+            fbs[key].append(span)
+
+    fds = {}
+    for i in range(3, 21):
+        top_spans = BestSpan("FirstDeaths", i, 0)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in fds:
+                fds[key] = []
+            fds[key].append(span)
+
+    fbfd = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("FirstBloods", "FirstDeaths", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in fbfd:
+                fbfd[key] = []
+            fbfd[key].append(span)
+
+    fbpct = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("FirstBloods", "RoundsPlayed", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in fbpct:
+                fbpct[key] = []
+            fbpct[key].append(span)
+
+    fdpct = {}
+    for i in range(3, 21):
+        top_spans = BestSpanRatio("FirstDeaths", "RoundsPlayed", i, 0)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in fdpct:
+                fdpct[key] = []
+            fdpct[key].append(span)
+
+    dpct = {}
+    for i in range(2, 21):
+        top_spans = BestSpanRatio("Deaths", "RoundsPlayed", i, 0)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in dpct:
+                dpct[key] = []
+            dpct[key].append(span)
 
     context = {
-
+        'mvp': mvp,
+        'acs': acs,
+        'adr': adr,
+        'kills': kills,
+        'deaths': deaths,
+        'assists': assists,
+        'kdr': kdr,
+        'kpr': kpr,
+        'kpct': kpct,
+        'fbs': fbs,
+        'fds': fds,
+        'fbfd': fbfd,
+        'fbpct': fbpct,
+        'fdpct': fdpct,
+        'dpct': dpct,
     }
 
     return render(request, "match/recordbook/record_span.html", context)
 
-@cache_page(60*10)
+@cache_page(60*15)
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -4817,6 +4944,8 @@ def record_career(request):
     return render(request, "match/recordbook/record_career.html", context)
 
 from collections import OrderedDict
+
+@cache_page(60*15)
 def record_rounds(request):
 
     #####
