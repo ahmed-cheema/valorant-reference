@@ -4358,7 +4358,7 @@ def BestSpanRatio(field1, field2, n, most=True):
 
     return top_spans
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -4452,7 +4452,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_game(request):
     players = Player.objects.filter(Team="Team A").annotate(
         k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
@@ -4587,7 +4587,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_streak(request):
 
     streaks = {
@@ -4715,7 +4715,7 @@ def record_span(request):
 
     return render(request, "match/recordbook/record_span.html", context)
 
-#@cache_page(60*10)
+@cache_page(60*10)
 def record_career(request):
 
     def GetTopBot(agg, field):
