@@ -5,6 +5,10 @@ from django.db import models
 from django.db.models import Subquery, OuterRef, Sum, Count, Min, Max, Case, When, Avg, F, FloatField, ExpressionWrapper, Value, Q
 from django.db.models.functions import Cast, Round
 
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from urllib.parse import unquote
+
 from django.http import Http404
 
 from collections import Counter
@@ -57,7 +61,7 @@ def AgentImage(agent):
 def AgentPortrait(agent):
         return f"https://trackercdn.com/cdn/tracker.gg/valorant/db/agents/{agent.lower()}_portrait.png"
 
-def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter=None):
+def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter=None, n_duelists=None):
     if map_filter:
         players = players.filter(Match__Map=map_filter)
     if outcome_filter:
@@ -78,6 +82,8 @@ def FilterPlayers(players, map_filter, outcome_filter, agent_filter, role_filter
         players = players.filter(Match__Date__range=(start, end))
     if mvp_filter:
         players = players.filter(MVP=mvp_filter)
+    if n_duelists:
+        players = players.filter(Match__N_Duelists=n_duelists)
     return players
 
 def FilterMatches(matches, map_filter, outcome_filter, date_filter, mvp_filter):
@@ -142,7 +148,9 @@ def analysis(request):
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, MatchID=match_id)
-    players = Player.objects.filter(Match=match)
+    players = Player.objects.filter(Match=match).annotate(
+        kpr=F('Kills')/Cast(F('RoundsPlayed'), FloatField())
+    )
     return render(request, 'match/match_detail.html', {'match': match, 'players': players})
 
 def match_list(request):
@@ -162,6 +170,8 @@ def match_list(request):
     date_filter = request.GET.get('dateRange')
 
     mvp_filter = request.GET.get('mvp')
+
+    n_duelists = request.GET.get('n_duelists')
 
     if map_filter == "None":
         map_filter = None
@@ -183,6 +193,9 @@ def match_list(request):
         end_date = date_filter.split(' - ')[1]
 
     matches = FilterMatches(matches, map_filter, outcome_filter, date_filter, mvp_filter)
+
+    if n_duelists is not None:
+        matches = matches.filter(N_Duelists=n_duelists)
 
     matches = FilterPlayerParticipation(matches, button_values)
 
@@ -223,7 +236,7 @@ def match_list(request):
     return render(request, 'match/match_list.html', context)
 
 def gamelog(request):
-    players = Player.objects.filter(Team="Team A").order_by('-ACS')
+    players = Player.objects.filter(Team="Team A").order_by('-ACS').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
 
     unique_maps = sorted(list(Match.objects.values_list("Map", flat=True).distinct()))
     unique_agents = sorted(list(Player.objects.values_list("Agent", flat=True).distinct()))
@@ -241,6 +254,8 @@ def gamelog(request):
 
     date_filter = request.GET.get('dateRange')
 
+    n_duelists = request.GET.get('n_duelists')
+
     if map_filter == "None":
         map_filter = None
     if outcome_filter == "None":
@@ -257,7 +272,18 @@ def gamelog(request):
         end_date = date_filter.split(' - ')[1]
     
     players = FilterPlayers(players, 
-                            map_filter, outcome_filter, agent_filter, role_filter, date_filter)
+                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, n_duelists=n_duelists)
+
+    rounds_le = request.GET.get('rounds_le')
+    rounds = request.GET.get('rounds')
+    rounds_ge = request.GET.get('rounds_ge')
+
+    if rounds_le:
+        players = players.filter(Match__RoundsPlayed__lte=rounds_le)
+    if rounds:
+        players = players.filter(Match__RoundsPlayed=rounds)
+    if rounds_ge:
+        players = players.filter(Match__RoundsPlayed__gte=rounds_ge)
     
     context = {
         'players': players,
@@ -377,6 +403,7 @@ def player_stats(request):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -624,6 +651,7 @@ def CalculateAggregates(players, field="Username", agent=None):
             rounds=Sum('RoundsPlayed'),
 
             kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+            kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
             acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
             adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -745,6 +773,7 @@ def CalculateAggregates(players, field="Username", agent=None):
             rounds=Sum('RoundsPlayed'),
 
             kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+            kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
             acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
             adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -933,6 +962,7 @@ def player_splits(request, username):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -1051,6 +1081,7 @@ def player_splits(request, username):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -1175,6 +1206,7 @@ def player_splits(request, username):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -1299,6 +1331,7 @@ def player_splits(request, username):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -1386,13 +1419,18 @@ def player_splits(request, username):
 
     return render(request, 'match/player/player_splits.html', context)
 
+from dateutil.parser import parse
 def player_gamelog(request, username):
 
-    players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date')
+    players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
 
     if (players.count() == 0):
         raise Http404
     
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
+
     firstRow = players.values().first()
 
     tagSplit = firstRow['Username'].split("#")
@@ -1421,6 +1459,8 @@ def player_gamelog(request, username):
 
     mvp_filter = request.GET.get('mvp')
 
+    n_duelists = request.GET.get('n_duelists')
+
     if map_filter == "None":
         map_filter = None
     if outcome_filter == "None":
@@ -1437,11 +1477,25 @@ def player_gamelog(request, username):
         end_date = date_filter.split(' - ')[1]
 
     players = FilterPlayers(players, 
-                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter)
+                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter, n_duelists=n_duelists)
     
-    mvps = players.aggregate(
-        mvps=Sum('MVP')
-    )['mvps']
+    rounds_le = request.GET.get('rounds_le')
+    rounds = request.GET.get('rounds')
+    rounds_ge = request.GET.get('rounds_ge')
+
+    if rounds_le:
+        players = players.filter(Match__RoundsPlayed__lte=rounds_le)
+    if rounds:
+        players = players.filter(Match__RoundsPlayed=rounds)
+    if rounds_ge:
+        players = players.filter(Match__RoundsPlayed__gte=rounds_ge)
+    
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    if start and end:
+        start = parse(unquote(start))
+        end = parse(unquote(end))
+        players = players.filter(Match__Date__range=(start, end))
 
     context = {
         'players': players,
@@ -1530,6 +1584,7 @@ def maps_overview(request):
         defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
         kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -1707,6 +1762,7 @@ def agents_overview(request):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -1935,6 +1991,7 @@ def roles_overview(request):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -2067,6 +2124,7 @@ def roles_overview(request):
         defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
         kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -2246,6 +2304,7 @@ def role_splits(request, role):
         defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
         kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -2349,6 +2408,7 @@ def role_splits(request, role):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -2501,6 +2561,7 @@ def role_splits(request, role):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -2646,6 +2707,7 @@ def role_splits(request, role):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -2794,6 +2856,7 @@ def role_splits(request, role):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -2968,6 +3031,7 @@ def agent_splits(request, agent):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3116,6 +3180,7 @@ def agent_splits(request, agent):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3260,6 +3325,7 @@ def agent_splits(request, agent):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3452,6 +3518,7 @@ def map_splits(request, map):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3604,6 +3671,7 @@ def map_splits(request, map):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3749,6 +3817,7 @@ def map_splits(request, map):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -3898,6 +3967,7 @@ def map_splits(request, map):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -4096,7 +4166,7 @@ def BestStreak(field, value, op):
                         'Streak': streak,
                         'StartDate': start_date,
                         'EndDate': player.Match.Date if i > 0 else start_date,
-                        'EndDateHidden': player.Match.Date + timedelta(days=1),
+                        'EndDateHidden': player.Match.Date - timedelta(minutes=1),
                         'Active': False
                     })
                 streak = 0
@@ -4115,7 +4185,7 @@ def BestStreak(field, value, op):
                     'Streak': streak,
                     'StartDate': start_date,
                     'EndDate': player.Match.Date,
-                    'EndDateHidden': player.Match.Date + timedelta(days=1),
+                    'EndDateHidden': player.Match.Date - timedelta(minutes=1),
                     'Active': True
                 })
 
@@ -4134,6 +4204,7 @@ def BestGame(field,sort="desc",model="Player"):
         else:
             players = Player.objects.filter(Team="Team A").order_by(field)
         top_field = getattr(players[0],field) if players else None
+        qual_players = players.filter(**{field:top_field})
         top_games = [{'Username': player.Username,
                     'Value': getattr(player, field),
                     'Date': player.Match.Date,
@@ -4142,13 +4213,14 @@ def BestGame(field,sort="desc",model="Player"):
                     'Agent': player.Agent,
                     'AgentImage': player.AgentImage,
                     'MatchID': player.Match.MatchID,
-                    } for player in players if getattr(player, field) == top_field]
+                    } for player in qual_players if getattr(player, field) == top_field]
     else:
         if sort == "desc":
             matches = Match.objects.order_by('-'+field)
         else:
             matches = Match.objects.order_by(field)
         top_field = getattr(matches[0],field) if matches else None
+        qual_matches = matches.filter(**{field:top_field})
         top_games = [{'MatchID': match.MatchID,
                     'Value': getattr(match, field),
                     'Date': match.Date,
@@ -4159,13 +4231,134 @@ def BestGame(field,sort="desc",model="Player"):
                     'RoundsPlayed': match.RoundsPlayed,
                     'TeamOneWon': match.TeamOneWon,
                     'Players': match.Players,
-                    } for match in matches if getattr(match, field) == top_field]
+                    } for match in qual_matches if getattr(match, field) == top_field]
     
     top_games = sorted(top_games, key=lambda x: x['Date'])
 
     return top_games
 
-@cache_page(60*10)
+def BestSpan(field, n, most=True):
+    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+
+    user_groups = defaultdict(list)
+    for player in players:
+        user_groups[player.Username].append(player)
+
+    all_spans = []
+
+    for username, user_group in user_groups.items():
+        if len(user_group) < n:  # skip if user has fewer than n games
+            continue
+
+        agents = [user_group[i].Agent for i in range(n)]
+        field_sum = sum(getattr(user_group[i], field) for i in range(n))
+        start_date = user_group[0].Match.Date
+
+        for i in range(n, len(user_group)):
+            field_sum = field_sum - getattr(user_group[i-n], field) + getattr(user_group[i], field)
+            agents = agents[1:] + [user_group[i].Agent]
+
+            most_common_agent = max(set(agents), key=agents.count)
+            all_spans.append({
+                'Username': username,
+                'DisplayName': user_group[i].DisplayName,
+                'UserTag': user_group[i].UserTag,
+                'Agent': most_common_agent,
+                'AgentImage': AgentImage(most_common_agent),
+                'SpanValue': field_sum,
+                'StartDate': start_date,
+                'EndDate': user_group[i].Match.Date,
+                'EndDateHidden': user_group[i].Match.Date + timedelta(days=1),
+            })
+            start_date = user_group[i-n+1].Match.Date
+
+        # Handle the case when the span is at the end of the list.
+        if len(user_group) == n:  
+            most_common_agent = max(set(agents), key=agents.count)
+            all_spans.append({
+                'Username': username,
+                'DisplayName': user_group[-1].DisplayName,
+                'UserTag': user_group[-1].UserTag,
+                'Agent': most_common_agent,
+                'AgentImage': AgentImage(most_common_agent),
+                'SpanValue': field_sum,
+                'StartDate': start_date,
+                'EndDate': user_group[-1].Match.Date,
+                'EndDateHidden': user_group[-1].Match.Date + timedelta(days=1),
+            })
+
+    # Sort by span value
+    all_spans.sort(key=itemgetter('SpanValue'), reverse=most)  # Set to False for least
+    top_span_value = all_spans[0]['SpanValue'] if all_spans else None
+    top_spans = [span for span in all_spans if span['SpanValue'] == top_span_value]
+    top_spans.sort(key=itemgetter('StartDate'))
+
+    return top_spans
+
+def BestSpanRatio(field1, field2, n, most=True):
+    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+
+    user_groups = defaultdict(list)
+    for player in players:
+        user_groups[player.Username].append(player)
+
+    all_spans = []
+
+    for username, user_group in user_groups.items():
+        if len(user_group) < n:  # skip if user has fewer than n games
+            continue
+
+        agents = [user_group[i].Agent for i in range(n)]
+        field1_sum = sum(getattr(user_group[i], field1) for i in range(n))
+        field2_sum = sum(getattr(user_group[i], field2) for i in range(n))
+        start_date = user_group[0].Match.Date
+
+        for i in range(n, len(user_group)):
+            field1_sum = field1_sum - getattr(user_group[i-n], field1) + getattr(user_group[i], field1)
+            field2_sum = field2_sum - getattr(user_group[i-n], field2) + getattr(user_group[i], field2)
+            agents = agents[1:] + [user_group[i].Agent]
+
+            # avoid division by zero
+            ratio = field1_sum / field2_sum if field2_sum != 0 else 0
+
+            most_common_agent = max(set(agents), key=agents.count)
+            all_spans.append({
+                'Username': username,
+                'DisplayName': user_group[i].DisplayName,
+                'UserTag': user_group[i].UserTag,
+                'Agent': most_common_agent,
+                'AgentImage': AgentImage(most_common_agent),
+                'SpanValue': ratio,
+                'StartDate': start_date,
+                'EndDate': user_group[i].Match.Date,
+                'EndDateHidden': user_group[i].Match.Date + timedelta(days=1),
+            })
+            start_date = user_group[i-n+1].Match.Date
+
+        # Handle the case when the span is at the end of the list.
+        if len(user_group) == n:  
+            most_common_agent = max(set(agents), key=agents.count)
+            all_spans.append({
+                'Username': username,
+                'DisplayName': user_group[-1].DisplayName,
+                'UserTag': user_group[-1].UserTag,
+                'Agent': most_common_agent,
+                'AgentImage': AgentImage(most_common_agent),
+                'SpanValue': field1_sum / field2_sum if field2_sum != 0 else 0,
+                'StartDate': start_date,
+                'EndDate': user_group[-1].Match.Date,
+                'EndDateHidden': user_group[-1].Match.Date + timedelta(days=1),
+            })
+
+    # Sort by span value
+    all_spans.sort(key=itemgetter('SpanValue'), reverse=most)  # Set to False for least
+    top_span_value = all_spans[0]['SpanValue'] if all_spans else None
+    top_spans = [span for span in all_spans if span['SpanValue'] == top_span_value]
+    top_spans.sort(key=itemgetter('StartDate'))
+
+    return top_spans
+
+#@cache_page(60*10)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -4259,10 +4452,39 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_game(request):
+    players = Player.objects.filter(Team="Team A").annotate(
+        k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
+        fb_pct = (Sum('FirstBloods')) / (Cast(Sum('RoundsPlayed'), FloatField())),
+        fd_pct = (Sum('FirstDeaths')) / (Cast(Sum('RoundsPlayed'), FloatField())),
+        kpr = (Sum('Kills')) / (Cast(Sum('RoundsPlayed'), FloatField())),
+    )
+
     MostKills = BestGame("Kills")
     LeastKills = BestGame("Kills","asc")
+
+    players = players.order_by('-kpr')
+    qual_players = players.filter(kpr=players.first().kpr)
+    HighestKPR = [{'Username': players.first().Username,
+                    'Value': players.first().kpr,
+                    'Date': players.first().Match.Date,
+                    'DisplayName': players.first().DisplayName,
+                    'UserTag': players.first().UserTag,
+                    'Agent': players.first().Agent,
+                    'AgentImage': AgentImage(players.first().Agent),
+                    'MatchID': players.first().Match.MatchID,
+                    } for player in qual_players if getattr(player, "kpr") == players.first().kpr]
+    qual_players = players.filter(kpr=players.last().kpr)
+    LowestKPR = [{'Username': players.last().Username,
+                    'Value': players.last().kpr,
+                    'Date': players.last().Match.Date,
+                    'DisplayName': players.last().DisplayName,
+                    'UserTag': players.last().UserTag,
+                    'Agent': players.last().Agent,
+                    'AgentImage': AgentImage(players.last().Agent),
+                    'MatchID': players.last().Match.MatchID,
+                    } for player in qual_players if getattr(player, "kpr") == players.last().kpr]
 
     MostDeaths = BestGame("Deaths")
     LeastDeaths = BestGame("Deaths","asc")
@@ -4285,9 +4507,31 @@ def record_game(request):
     MostFB = BestGame("FirstBloods")
     MostFD = BestGame("FirstDeaths")
 
-    players = Player.objects.filter(Team="Team A").annotate(
-        k_pct = Round((Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),2),
-    ).order_by('-k_pct')
+    players = players.order_by('-fb_pct')
+    qual_players = players.filter(fb_pct=players.first().fb_pct)
+    HighestFB_Pct = [{'Username': players.first().Username,
+                    'Value': players.first().fb_pct,
+                    'Date': players.first().Match.Date,
+                    'DisplayName': players.first().DisplayName,
+                    'UserTag': players.first().UserTag,
+                    'Agent': players.first().Agent,
+                    'AgentImage': AgentImage(players.first().Agent),
+                    'MatchID': players.first().Match.MatchID,
+                    } for player in qual_players if getattr(player, "fb_pct") == players.first().fb_pct]
+    players = players.order_by('-fd_pct')
+    qual_players = players.filter(fd_pct=players.first().fd_pct)
+    HighestFD_Pct = [{'Username': players.first().Username,
+                    'Value': players.first().fd_pct,
+                    'Date': players.first().Match.Date,
+                    'DisplayName': players.first().DisplayName,
+                    'UserTag': players.first().UserTag,
+                    'Agent': players.first().Agent,
+                    'AgentImage': AgentImage(players.first().Agent),
+                    'MatchID': players.first().Match.MatchID,
+                    } for player in qual_players if getattr(player, "fd_pct") == players.first().fd_pct]
+
+    players = players.order_by('-k_pct')
+    qual_players = players.filter(k_pct=players.first().k_pct)
     HighestK_Pct = [{'Username': players.first().Username,
                     'Value': players.first().k_pct,
                     'Date': players.first().Match.Date,
@@ -4296,7 +4540,8 @@ def record_game(request):
                     'Agent': players.first().Agent,
                     'AgentImage': AgentImage(players.first().Agent),
                     'MatchID': players.first().Match.MatchID,
-                    } for player in players if getattr(player, "k_pct") == players.first().k_pct]
+                    } for player in qual_players if getattr(player, "k_pct") == players.first().k_pct]
+    qual_players = players.filter(k_pct=players.last().k_pct)
     LowestK_Pct = [{'Username': players.last().Username,
                     'Value': players.last().k_pct,
                     'Date': players.last().Match.Date,
@@ -4305,10 +4550,7 @@ def record_game(request):
                     'Agent': players.last().Agent,
                     'AgentImage': AgentImage(players.last().Agent),
                     'MatchID': players.last().Match.MatchID,
-                    } for player in players if getattr(player, "k_pct") == players.last().k_pct]
-
-    HighestKAST = BestGame("KAST")
-    LowestKAST = BestGame("KAST","asc")
+                    } for player in qual_players if getattr(player, "k_pct") == players.last().k_pct]
 
     HighestHS_Pct = BestGame("HS_Pct")
     LowestHS_Pct = BestGame("HS_Pct","asc")
@@ -4319,6 +4561,8 @@ def record_game(request):
     context = {
         "MostKills": MostKills,
         "LeastKills": LeastKills,
+        "HighestKPR": HighestKPR,
+        "LowestKPR": LowestKPR,
         "MostDeaths": MostDeaths,
         "LeastDeaths": LeastDeaths,
         "MostAssists": MostAssists,
@@ -4331,10 +4575,10 @@ def record_game(request):
         "WorstACS": WorstACS,
         "MostFB": MostFB,
         "MostFD": MostFD,
+        "HighestFB_Pct": HighestFB_Pct,
+        "HighestFD_Pct": HighestFD_Pct,
         "HighestK_Pct": HighestK_Pct,
         "LowestK_Pct": LowestK_Pct,
-        "HighestKAST": HighestKAST,
-        "LowestKAST": LowestKAST,
         "HighestHS_Pct": HighestHS_Pct,
         "LowestHS_Pct": LowestHS_Pct,
         "HighestDD": HighestDD,
@@ -4343,7 +4587,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
 def record_streak(request):
 
     streaks = {
@@ -4364,12 +4608,21 @@ def record_streak(request):
         "ACS_Gr_250_Streak": BestStreak("ACS", 250, ge),
         "ACS_Gr_300_Streak": BestStreak("ACS", 300, ge),
         #"ACS_Gr_350_Streak": BestStreak("ACS", 350, ge),
+        "ADR_Gr_100_Streak": BestStreak("ExactADR", 100, ge),
+        "ADR_Gr_125_Streak": BestStreak("ExactADR", 125, ge),
+        "ADR_Gr_150_Streak": BestStreak("ExactADR", 150, ge),
+        "ADR_Gr_175_Streak": BestStreak("ExactADR", 175, ge),
+        "ADR_Gr_200_Streak": BestStreak("ExactADR", 200, ge),
         "KDR_Greq_1_Streak": BestStreak("KillDeathRatio", 1, ge),
         "KDR_Gr_1_Streak": BestStreak("KillDeathRatio", 1, gt),
         "KDR_Gr_1d25_Streak": BestStreak("KillDeathRatio", 1.25, ge),
         "KDR_Gr_1d5_Streak": BestStreak("KillDeathRatio", 1.5, ge),
         "KDR_Gr_1d75_Streak": BestStreak("KillDeathRatio", 1.75, ge),
         "KDR_Gr_2_Streak": BestStreak("KillDeathRatio", 2.00, ge),
+        "KPR_Gr_0d5_Streak": BestStreak("KillsPerRound", 0.5, ge),
+        "KPR_Gr_0d75_Streak": BestStreak("KillsPerRound", 0.75, ge),
+        "KPR_Greq_1_Streak": BestStreak("KillsPerRound", 1, ge),
+        "KPR_Gr_1_Streak": BestStreak("KillsPerRound", 1, gt),
         "FB_Eq_0_Streak": BestStreak("FirstBloods", 1, lt),
         "FB_Gr_1_Streak": BestStreak("FirstBloods", 1, ge),
         "FB_Gr_2_Streak": BestStreak("FirstBloods", 2, ge),
@@ -4401,13 +4654,22 @@ def record_streak(request):
         "ACS_Gr_200_Streak": BestActiveStreak("ACS", 200, ge),
         "ACS_Gr_250_Streak": BestActiveStreak("ACS", 250, ge),
         "ACS_Gr_300_Streak": BestActiveStreak("ACS", 300, ge),
-        #"ACS_Gr_350_Streak": BestActiveStreak("ACS", 350, ge),
+        #"ACS_Gr_350_Streak": BestStreak("ACS", 350, ge),
+        "ADR_Gr_100_Streak": BestActiveStreak("ExactADR", 100, ge),
+        "ADR_Gr_125_Streak": BestActiveStreak("ExactADR", 125, ge),
+        "ADR_Gr_150_Streak": BestActiveStreak("ExactADR", 150, ge),
+        "ADR_Gr_175_Streak": BestActiveStreak("ExactADR", 175, ge),
+        "ADR_Gr_200_Streak": BestActiveStreak("ExactADR", 200, ge),
         "KDR_Greq_1_Streak": BestActiveStreak("KillDeathRatio", 1, ge),
         "KDR_Gr_1_Streak": BestActiveStreak("KillDeathRatio", 1, gt),
         "KDR_Gr_1d25_Streak": BestActiveStreak("KillDeathRatio", 1.25, ge),
         "KDR_Gr_1d5_Streak": BestActiveStreak("KillDeathRatio", 1.5, ge),
         "KDR_Gr_1d75_Streak": BestActiveStreak("KillDeathRatio", 1.75, ge),
         "KDR_Gr_2_Streak": BestActiveStreak("KillDeathRatio", 2.00, ge),
+        "KPR_Gr_0d5_Streak": BestActiveStreak("KillsPerRound", 0.5, ge),
+        "KPR_Gr_0d75_Streak": BestActiveStreak("KillsPerRound", 0.75, ge),
+        "KPR_Greq_1_Streak": BestActiveStreak("KillsPerRound", 1, ge),
+        "KPR_Gr_1_Streak": BestActiveStreak("KillsPerRound", 1, gt),
         "FB_Eq_0_Streak": BestActiveStreak("FirstBloods", 1, lt),
         "FB_Gr_1_Streak": BestActiveStreak("FirstBloods", 1, ge),
         "FB_Gr_2_Streak": BestActiveStreak("FirstBloods", 2, ge),
@@ -4436,7 +4698,6 @@ def record_streak(request):
             for dic in active_streak:
                 dic['BestStreak'] = False
 
-
     context = {
         "streaks": streaks,
         "streaks_active": streaks_active,
@@ -4444,7 +4705,17 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-@cache_page(60*10)
+#@cache_page(60*10)
+def record_span(request):
+
+
+    context = {
+
+    }
+
+    return render(request, "match/recordbook/record_span.html", context)
+
+#@cache_page(60*10)
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -4520,8 +4791,6 @@ def record_career(request):
             mvp_pct=Avg('MVP'),
             adj_mvp_pct=Sum(F('MVP') * F('RoundsPlayed'), output_field=FloatField()) / Cast(Sum('RoundsPlayed'), FloatField())
         )
-    
-    print(agg_players)
 
     context = {
         "kpr": GetTopBot(agg_players, "kpr"),
@@ -4546,6 +4815,438 @@ def record_career(request):
     }
 
     return render(request, "match/recordbook/record_career.html", context)
+
+from collections import OrderedDict
+def record_rounds(request):
+
+    #####
+
+    kills_dict = {}
+    max_kills_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-Kills', 'RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.Kills > max_kills_cumulative or (top_player.Kills == max_kills_cumulative and top_player.RoundsPlayed < best_performance.RoundsPlayed):
+                max_kills_cumulative = top_player.Kills
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", Kills=max_kills_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'Kills': player.Kills,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_kills_cumulative)
+
+                if key not in kills_dict:
+                    kills_dict[key] = []
+
+                kills_dict[key].append(player_dict)
+
+    #####
+
+    assists_dict = {}
+    max_kills_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-Assists', 'RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.Assists > max_kills_cumulative or (top_player.Assists == max_kills_cumulative and top_player.RoundsPlayed < best_performance.RoundsPlayed):
+                max_kills_cumulative = top_player.Assists
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", Assists=max_kills_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'Assists': player.Assists,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_kills_cumulative)
+
+                if key not in assists_dict:
+                    assists_dict[key] = []
+
+                assists_dict[key].append(player_dict)
+
+    #####
+
+    fb_dict = {}
+    max_kills_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-FirstBloods', 'RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.FirstBloods > max_kills_cumulative or (top_player.FirstBloods == max_kills_cumulative and top_player.RoundsPlayed < best_performance.RoundsPlayed):
+                max_kills_cumulative = top_player.FirstBloods
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", FirstBloods=max_kills_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'FirstBloods': player.FirstBloods,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_kills_cumulative)
+
+                if key not in fb_dict:
+                    fb_dict[key] = []
+
+                fb_dict[key].append(player_dict)
+
+    #####
+
+    fd_dict = {}
+    max_kills_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-FirstDeaths', 'RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.FirstDeaths > max_kills_cumulative or (top_player.FirstDeaths == max_kills_cumulative and top_player.RoundsPlayed < best_performance.RoundsPlayed):
+                max_kills_cumulative = top_player.FirstDeaths
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", FirstDeaths=max_kills_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'FirstDeaths': player.FirstDeaths,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_kills_cumulative)
+
+                if key not in fd_dict:
+                    fd_dict[key] = []
+
+                fd_dict[key].append(player_dict)
+                
+    #####
+
+    acs_dict = {}
+    max_acs_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-ACS', '-RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.ACS > max_acs_cumulative or (top_player.ACS == max_acs_cumulative and top_player.RoundsPlayed > best_performance.RoundsPlayed):
+                max_acs_cumulative = top_player.ACS
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", ACS=max_acs_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'ACS': player.ACS,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_acs_cumulative)
+
+                if key not in acs_dict:
+                    acs_dict[key] = []
+
+                acs_dict[key].append(player_dict)
+
+    acs_dict = OrderedDict(sorted(acs_dict.items()))
+
+    #####
+
+    adr_dict = {}
+    max_acs_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-AverageDamage', '-RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.AverageDamage > max_acs_cumulative or (top_player.AverageDamage == max_acs_cumulative and top_player.RoundsPlayed > best_performance.RoundsPlayed):
+                max_acs_cumulative = top_player.AverageDamage
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", AverageDamage=max_acs_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'ADR': player.AverageDamage,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_acs_cumulative)
+
+                if key not in adr_dict:
+                    adr_dict[key] = []
+
+                adr_dict[key].append(player_dict)
+
+    adr_dict = OrderedDict(sorted(adr_dict.items()))
+
+    #####
+
+    kdr_dict = {}
+    max_acs_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-KillDeathRatio', '-RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.KillDeathRatio > max_acs_cumulative or (top_player.KillDeathRatio == max_acs_cumulative and top_player.RoundsPlayed > best_performance.RoundsPlayed):
+                max_acs_cumulative = top_player.KillDeathRatio
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", KillDeathRatio=max_acs_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'KDR': player.KillDeathRatio,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_acs_cumulative)
+
+                if key not in kdr_dict:
+                    kdr_dict[key] = []
+
+                kdr_dict[key].append(player_dict)
+
+    kdr_dict = OrderedDict(sorted(kdr_dict.items()))
+
+    #####
+
+    kpr_dict = {}
+    max_acs_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A",RoundsPlayed__gte=rounds).annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'),FloatField())).order_by('-KPR','-RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.KPR > max_acs_cumulative or (top_player.KPR == max_acs_cumulative and top_player.RoundsPlayed > best_performance.RoundsPlayed):
+                max_acs_cumulative = top_player.KPR
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", KPR=max_acs_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'KPR': player.KPR,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_acs_cumulative)
+
+                if key not in kpr_dict:
+                    kpr_dict[key] = []
+
+                kpr_dict[key].append(player_dict)
+
+    kpr_dict = OrderedDict(sorted(kpr_dict.items()))
+
+    #####
+
+    kpct_dict = {}
+    max_acs_cumulative = 0
+    best_performance = None
+
+    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+
+    for rounds in rounds_played_values:
+        players_in_round = Player.objects.filter(Team="Team A",RoundsPlayed__gte=rounds).annotate(k_pct=(F('RoundsPlayed')-F('ZeroKillRounds'))/Cast(F('RoundsPlayed'),FloatField())).order_by('-k_pct','-RoundsPlayed')
+
+        if players_in_round.exists():
+            top_player = players_in_round.first()
+
+            if top_player.k_pct > max_acs_cumulative or (top_player.k_pct == max_acs_cumulative and top_player.RoundsPlayed > best_performance.RoundsPlayed):
+                max_acs_cumulative = top_player.k_pct
+                best_performance = top_player
+
+            best_players_in_round = players_in_round.filter(Team="Team A", k_pct=max_acs_cumulative, RoundsPlayed=best_performance.RoundsPlayed)
+
+            for player in best_players_in_round:
+                player_dict = {
+                    'Rounds': rounds,
+                    'Username': player.Username,
+                    'K_Pct': player.k_pct,
+                    'Date': player.Match.Date,
+                    'DisplayName': player.DisplayName,
+                    'UserTag': player.UserTag,
+                    'Agent': player.Agent,
+                    'AgentImage': player.AgentImage,
+                    'MatchID': player.Match.MatchID,
+                    'RoundsPlayed': player.RoundsPlayed,
+                    'Score': player.Match.Score,
+                    'Won': player.MatchWon,
+                    'Lost': player.MatchLost,
+                    'Draw': player.MatchDraw,
+                }
+
+                key = (rounds, max_acs_cumulative)
+
+                if key not in kpct_dict:
+                    kpct_dict[key] = []
+
+                kpct_dict[key].append(player_dict)
+
+    kpct_dict = OrderedDict(sorted(kpct_dict.items()))
+
+    context = {
+        'kills_dict': kills_dict,
+        'assists_dict': assists_dict,
+        'fb_dict': fb_dict,
+        'fd_dict': fd_dict,
+        'acs_dict': acs_dict,
+        'adr_dict': adr_dict,
+        'kdr_dict': kdr_dict,
+        'kpr_dict': kpr_dict,
+        'kpct_dict': kpct_dict,
+    }
+
+    return render(request, "match/recordbook/record_rounds.html", context)
 
 ### 
 
@@ -4636,6 +5337,7 @@ def player_teammates(request, username):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -4911,6 +5613,7 @@ def lineups(request):
         defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
         kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -5050,6 +5753,7 @@ def solo_duelists(request):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 
@@ -5219,6 +5923,7 @@ def solo_duelists(request):
         defense_win_pct=Sum('DefenseWins')/Cast(Sum('DefenseRounds'), output_field=FloatField()),
 
         kdr=Sum('Kills')/Cast(Sum('Deaths'), output_field=FloatField()),
+        kpr=Sum('Kills')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         acs=Sum('CombatScore')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
         adr=Sum('TotalDamage')/Cast(Sum('RoundsPlayed'), output_field=FloatField()),
 
@@ -5398,6 +6103,7 @@ def leaderboard_analysis(request):
         rounds = Sum('RoundsPlayed'),
 
         kdr=F('total_kills')/Cast('total_deaths', FloatField()),
+        kpr=F('total_kills')/Cast('rounds', FloatField()),
         acs=F('total_score')/Cast('rounds', FloatField()),
         adr=F('total_damage')/Cast('rounds', FloatField()),
 

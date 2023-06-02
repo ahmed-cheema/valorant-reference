@@ -15,9 +15,10 @@ def active_streak_element(context, streak):
 def streak_element(context, streak):
     return render_to_string('match/recordbook/streak_element.html', {'streak': streak})
 
-@register.simple_tag(takes_context=True)
-def game_element(context, game):
-    return render_to_string('match/recordbook/game_element.html', {'game': game})
+@register.simple_tag
+def game_element(game, FloatCount):
+    return render_to_string('match/recordbook/game_element.html', {'game': game,
+                                                                   'FloatCount': FloatCount})
 
 @register.simple_tag(takes_context=True)
 def match_element(context, game):

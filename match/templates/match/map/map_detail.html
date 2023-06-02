@@ -196,6 +196,7 @@
                     <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
                     <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
                     <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                    <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
                     <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
                     <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
                     <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
@@ -212,6 +213,7 @@
                         <td class="right">{{ m.num_matches }}</td>
                         <td class="right" style="{% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
                         <td class="right" style="{% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
+                        <td class="right">{{ m.kpr|floatformat:3 }}</td>
                         <td class="right">{{ m.acs|floatformat:1 }}</td>
                         <td class="right">{{ m.adr|floatformat:1 }}</td>
                         <td class="right" style="{% if m.k_pct > 0.5 %}color:green{% elif m.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ m.k_pct|floatformat:3 }}</td>

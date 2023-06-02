@@ -1,4 +1,4 @@
 <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height=30px title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
 <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}:</a> 
-{{ game.Value }} 
+{{ game.Value|floatformat:FloatCount }} 
 <a href="{% url 'match_detail' game.MatchID %}"> ({{ game.Date|date:"n/j/y" }}) </a>

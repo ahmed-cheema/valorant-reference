@@ -296,8 +296,8 @@ Player Statistics
               <th>Player</th>
               <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
               <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -312,8 +312,8 @@ Player Statistics
               <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
               <td class="right mp"><a href="{% url 'player_gamelog' p.Username %}?&map={{ map_filter }}&agent={{ agent_filter }}&role={{ role_filter }}&outcome={{ outcome_filter }}&dateRange={{ date_filter }}">{{ p.num_matches }}</a></td>
               <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
               <td class="right">{{ p.acs|floatformat:1 }}</td>
               <td class="right">{{ p.adr|floatformat:1 }}</td>

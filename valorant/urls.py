@@ -46,7 +46,9 @@ urlpatterns = [
 
     path('records/', views.record_overview, name='record_overview'),
     path('records/single-game/', views.record_game, name='record_game'),
+    path('records/single-game/rounds/', views.record_rounds, name='record_rounds'),
     path('records/streaks/', views.record_streak, name='record_streak'),
+    path('records/spans/', views.record_span, name='record_span'),
     path('records/career/', views.record_career, name='record_career'),
 
     path('lineups/', views.lineups, name='lineups'),

@@ -253,7 +253,7 @@
     </form>
     </div>
 
-    <div style="display: inline-block table-responsive-lg">
+    <div style="display: inline-block" class="table-responsive-lg">
         <table id="performances" class="sortable table table-hover table-sm" 
                style="font-size:90%; font-weight:normal; border:1px solid rgb(168, 168, 168)">
           <thead>
@@ -266,8 +266,8 @@
               <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
               <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
               <th class="right" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
-              <th class="right" title="Kill Difference (Kills-Deaths)" data-bs-toggle="tooltip" data-bs-placement="top">+/-</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -291,8 +291,8 @@
               <td class="right">{{ player.Kills }}</td>
               <td class="right">{{ player.Deaths }}</td>
               <td class="right">{{ player.Assists }}</td>
-              <td class="right" style="{% if player.KillDifferential > 0 %}color:green{% elif player.KillDifferential == 0 %}{% else %}color:red{% endif %}">{{ player.KillDifferential }}</td>
               <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
+              <td class="right" style="{% if player.KPR > 1 %}color:green{% else %}{% endif %}">{{ player.KPR|floatformat:2 }}</td>
               <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if player.DamageDelta > 0 %}color:green{% elif player.DamageDelta == 0 %}{% else %}color:red{% endif %}">{{ player.DamageDelta }}</td>
               <td class="right">{{ player.ACS }}</td>
               <td class="right">{{ player.ExactADR|floatformat:0 }}</td>

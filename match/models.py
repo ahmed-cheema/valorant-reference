@@ -198,6 +198,10 @@ class Player(models.Model):
         return (self.AttackWins+self.DefenseWins) / self.RoundsPlayed
     
     @property
+    def KillsPerRound(self):
+        return self.Kills/self.Match.RoundsPlayed
+    
+    @property
     def K_Pct(self):
         return (self.Match.RoundsPlayed-self.ZeroKillRounds)/self.Match.RoundsPlayed
     

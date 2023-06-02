@@ -148,8 +148,8 @@
               <th class="sorttable_nosort">Player</th>
               <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
               <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -164,8 +164,8 @@
               <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a> </td>
               <td class="right"><a href="{% url 'player_gamelog' p.Username %}?map={{ map }}">{{ p.num_matches }}</a></td>
               <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
               <td class="right">{{ p.acs|floatformat:1 }}</td>
               <td class="right">{{ p.adr|floatformat:1 }}</td>
@@ -331,8 +331,8 @@
               <th class="sorttable_nosort" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
               <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
               <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -348,8 +348,8 @@
               <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"><a href="{% url 'agent_detail' p.TopAgent|remove_slash %}"> {{ p.TopAgent }}</a></td>
               <td class="right"><a href="{% url 'gamelog' %}?map={{ map }}&role={{ p.Role }}">{{ p.num_matches }}</a></td>
               <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
               <td class="right">{{ p.acs|floatformat:1 }}</td>
               <td class="right">{{ p.adr|floatformat:1 }}</td>
@@ -514,8 +514,8 @@
               <th class="sorttable_nosort">Agent</th>
               <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
               <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -530,8 +530,8 @@
               <td><a href="{% url 'agent_detail' p.Agent|remove_slash %}"><img src="{{ p.AgentImage }}" alt="{{ p.Agent }}" height=30px title="{{ p.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> {{ p.Agent }} </a></td>
               <td class="right"><a href="{% url 'gamelog' %}?map={{ map }}&agent={{ p.Agent }}">{{ p.num_matches }}</a></td>
               <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
               <td class="right">{{ p.acs|floatformat:1 }}</td>
               <td class="right">{{ p.adr|floatformat:1 }}</td>
@@ -689,8 +689,8 @@
           <tr>
               <th class="sorttable_nosort">Outcome</th>
               <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
-              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
               <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
               <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -704,8 +704,8 @@
             <tr>
               <td style="{% if p.Outcome == 'Win' %} color:green {% elif p.Outcome == 'Loss' %} color:red {% endif %}"> {{ p.Outcome }} </td>
               <td class="right"><a href="{% url 'gamelog' %}?map={{ map }}&outcome={{ p.Outcome|lower }}">{{ p.num_matches }}</a></td>
-              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
               <td class="right">{{ p.acs|floatformat:1 }}</td>
               <td class="right">{{ p.adr|floatformat:1 }}</td>

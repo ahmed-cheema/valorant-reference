@@ -140,10 +140,10 @@
       <thead>
         <tr>
             <th></th>
-            <th class="right" title="Performances Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
-            <th class="right" title="Percentage of Performances Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-            <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
+            <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
             <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
             <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
             <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
             <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
@@ -158,8 +158,8 @@
             <td>{{ p.Label }}</td>
             <td class="right">{{ p.num_performances }}</td>
             <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-            <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
             <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+            <td class="right">{{ p.kpr|floatformat:3 }}</td>
             <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
             <td class="right">{{ p.acs|floatformat:1 }}</td>
             <td class="right">{{ p.adr|floatformat:1 }}</td>
@@ -192,10 +192,11 @@
         <thead>
           <tr>
               <th></th>
-              <th class="right" title="Performances Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
               <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
               <th class="right" title="Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
               <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
               <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
               <th class="right" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
               <th class="right" title="First Bloods per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
@@ -213,6 +214,7 @@
               <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
               <td class="right">{{ p.deaths_per_20|floatformat:1 }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
               <td class="right">{{ p.d_pct|floatformat:2 }}</td>
               <td class="right">{{ p.fb_per_20|floatformat:1 }}</td>
@@ -232,10 +234,11 @@
         <thead>
           <tr>
             <th></th>
-            <th class="right" title="Performances Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+            <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
             <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
             <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
             <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+            <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
             <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
             <th class="right" title="Percent of Rounds with 1+ Death" data-bs-toggle="tooltip" data-bs-placement="top">D%</th>
             <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
@@ -253,6 +256,7 @@
               <td class="right">{{ p.total_kills }}</td>
               <td class="right">{{ p.total_deaths }}</td>
               <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
               <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif player.k_pct == 0.5 %}{% else %}color:red{% endif %};">{{ p.k_pct|floatformat:2 }}</td>
               <td class="right">{{ p.d_pct|floatformat:2 }}</td>
               <td class="right">{{ p.first_bloods }}</td>

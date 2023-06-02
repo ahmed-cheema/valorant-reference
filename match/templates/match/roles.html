@@ -246,8 +246,8 @@ Roles
                     <th class="right" title="Individual Performances" data-bs-toggle="tooltip" data-bs-placement="top">P</th>
                     <th class="right" title="Frequency of Role per Match" data-bs-toggle="tooltip" data-bs-placement="top">Freq</th>
                     <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
-                    <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K/20</th>
                     <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                    <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
                     <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
                     <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
                     <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
@@ -263,8 +263,8 @@ Roles
                     <td class="right"><a href="{% url 'gamelog' %}?role={{ p.Role }}&map={{ map_filter }}&outcome={{ outcome_filter }}&dateRange={{ date_filter }}">{{ p.num_performances }}</a></td>
                     <td class="right">{{ p.perf_per_match|floatformat:2 }}</td>
                     <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
-                    <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
                     <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                    <td class="right">{{ p.kpr|floatformat:3 }}</td>
                     <td class="right">{{ p.acs|floatformat:1 }}</td>
                     <td class="right">{{ p.adr|floatformat:1 }}</td>
                     <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif p.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ p.k_pct|floatformat:3 }}</td>
@@ -467,6 +467,7 @@ Roles
                     <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
                     <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
                     <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                    <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
                     <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
                     <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
                     <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
@@ -486,6 +487,7 @@ Roles
                     <td class="right"><a href="{% url 'gamelog' %}?map={{ m.Match__Map }}&dateRange={{ date_filter }}">{{ m.num_matches }}</a></td>
                     <td class="right" style="{% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
                     <td class="right" style="{% if m.kdr > 1 %}color:green{% elif m.kdr == 1 %}{% else %}color:red{% endif %}">{{ m.kdr|floatformat:2 }}</td>
+                    <td class="right">{{ m.kpr|floatformat:3 }}</td>
                     <td class="right">{{ m.acs|floatformat:1 }}</td>
                     <td class="right">{{ m.adr|floatformat:1 }}</td>
                     <td class="right" style="{% if m.k_pct > 0.5 %}color:green{% elif m.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ m.k_pct|floatformat:3 }}</td>
