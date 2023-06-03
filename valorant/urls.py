@@ -49,6 +49,9 @@ urlpatterns = [
     path('records/single-game/rounds/', views.record_rounds, name='record_rounds'),
     path('records/streaks/', views.record_streak, name='record_streak'),
     path('records/spans/', views.record_span, name='record_span'),
+    path('records/spans/performance/', views.record_span, name='record_span_performance'),
+    path('records/spans/kda/', views.record_span_kda, name='record_span_kda'),
+    path('records/spans/fb-fd/', views.record_span_fbfd, name='record_span_fbfd'),
     path('records/career/', views.record_career, name='record_career'),
 
     path('lineups/', views.lineups, name='lineups'),

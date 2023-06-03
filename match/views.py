@@ -4337,7 +4337,7 @@ def BestSpanRatio(field1, field2, n, maximum=True):
 
     return top_spans
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_overview(request):
     BiggestWin = BestGame("ScoreDifferential",model="match")
     BiggestLoss = BestGame("ScoreDifferential",sort="asc",model="match")
@@ -4431,7 +4431,7 @@ def record_overview(request):
 
     return render(request, "match/recordbook/record_overview.html", context)
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_game(request):
     players = Player.objects.filter(Team="Team A").annotate(
         k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
@@ -4566,7 +4566,7 @@ def record_game(request):
 
     return render(request, "match/recordbook/record_game.html", context)
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_streak(request):
 
     streaks = {
@@ -4684,7 +4684,7 @@ def record_streak(request):
 
     return render(request, "match/recordbook/record_streak.html", context)
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_span(request):
 
     mvp = {}
@@ -4713,6 +4713,17 @@ def record_span(request):
             if key not in adr:
                 adr[key] = []
             adr[key].append(span)
+
+    context = {
+        'mvp': mvp,
+        'acs': acs,
+        'adr': adr,
+    }
+
+    return render(request, "match/recordbook/record_span.html", context)
+
+@cache_page(60*10)
+def record_span_kda(request):
 
     kills = {}
     for i in range(1, 21):
@@ -4768,6 +4779,30 @@ def record_span(request):
                 kpct[key] = []
             kpct[key].append(span)
 
+    dpct = {}
+    for i in range(1, 21):
+        top_spans = BestSpanRatio("Deaths", "RoundsPlayed", i, 0)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in dpct:
+                dpct[key] = []
+            dpct[key].append(span)
+
+    context = {
+        'kills': kills,
+        'deaths': deaths,
+        'assists': assists,
+        'kdr': kdr,
+        'kpr': kpr,
+        'kpct': kpct,
+        'dpct': dpct,
+    }
+
+    return render(request, "match/recordbook/record_span_kda.html", context)
+
+@cache_page(60*10)
+def record_span_fbfd(request):
+
     fbs = {}
     for i in range(1, 21):
         top_spans = BestSpan("FirstBloods", i)
@@ -4785,6 +4820,15 @@ def record_span(request):
             if key not in fds:
                 fds[key] = []
             fds[key].append(span)
+
+    most_fds = {}
+    for i in range(1, 21):
+        top_spans = BestSpan("FirstDeaths", i)
+        for span in top_spans:
+            key = (span['SpanLength'], span['Span'])
+            if key not in most_fds:
+                most_fds[key] = []
+            most_fds[key].append(span)
 
     fbfd = {}
     for i in range(1, 21):
@@ -4813,36 +4857,18 @@ def record_span(request):
                 fdpct[key] = []
             fdpct[key].append(span)
 
-    dpct = {}
-    for i in range(2, 21):
-        top_spans = BestSpanRatio("Deaths", "RoundsPlayed", i, 0)
-        for span in top_spans:
-            key = (span['SpanLength'], span['Span'])
-            if key not in dpct:
-                dpct[key] = []
-            dpct[key].append(span)
-
     context = {
-        'mvp': mvp,
-        'acs': acs,
-        'adr': adr,
-        'kills': kills,
-        'deaths': deaths,
-        'assists': assists,
-        'kdr': kdr,
-        'kpr': kpr,
-        'kpct': kpct,
         'fbs': fbs,
+        'most_fds': most_fds,
         'fds': fds,
         'fbfd': fbfd,
         'fbpct': fbpct,
         'fdpct': fdpct,
-        'dpct': dpct,
     }
 
-    return render(request, "match/recordbook/record_span.html", context)
+    return render(request, "match/recordbook/record_span_fbfd.html", context)
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_career(request):
 
     def GetTopBot(agg, field):
@@ -4945,7 +4971,7 @@ def record_career(request):
 
 from collections import OrderedDict
 
-@cache_page(60*15)
+@cache_page(60*10)
 def record_rounds(request):
 
     #####

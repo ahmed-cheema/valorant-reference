@@ -1,0 +1,435 @@
+{% extends 'match/base.html' %}
+
+{% block title %}
+Records · Spans
+{% endblock %}
+
+{% load record_elements %}
+
+{% block css %}
+<style>
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .right {
+        text-align: right !important;
+    }
+
+    .nav-link {
+        margin-right: 30px;
+    }
+    .nav-link#records {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+    h2 {
+        text-align:center;
+    }
+
+    h4 {
+        text-align:center;
+    }
+
+    a {
+        text-decoration: none;
+    } 
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+    }
+
+    table.dataTable.no-footer > tbody > tr:last-child > td {
+        border-bottom: none;
+    }
+    table {
+        border-radius: 5px;
+    }
+
+    .hiddenLink {
+        color: inherit !important;
+        text-decoration: inherit !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+        }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    span {
+        font-size:60% !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}
+
+{% block content %}
+<br>
+
+<div class="container">
+
+    <h2 style="text-align:center">Record Book</h2>
+
+    <div id="buttons" style="text-align:center; margin-top: 1%;">
+        <div style="display: inline-block;">
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_overview' %}" role="button">General</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_game' %}" role="button">Single-Game</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_span' %}" role="button">Spans</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_streak' %}" role="button">Streaks</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_career' %}" role="button">Career</a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div id="buttons" style="text-align:center; margin-top:1%; margin-bottom:1%;">
+        <div style="display: inline-block;">
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_span_performance' %}" role="button">Performance</a>
+            <a class="btn btn-outline-dark shadow-sm active" style="font-size:120%; margin:5px" href="{% url 'record_span_kda' %}" role="button">K/D/A</a>
+            <a class="btn btn-outline-dark shadow-sm" style="font-size:120%; margin:5px" href="{% url 'record_span_fbfd' %}" role="button">FB/FD</a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most Kills in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kills" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Kills</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kills.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Fewest Deaths in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="deaths" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Deaths</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in deaths.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Most Assists in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="assists" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">Assists</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in assists.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest K/D in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kdr" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">K/D</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kdr.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest KPR in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kpr" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">KPR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kpr.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Highest K% in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="kpct" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">K%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in kpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+
+        <div class="col-md mt-2">
+            <div>
+                <h5 style="text-align:center">Lowest D% in X Game Span</h5>
+                <div class="table-responsive-lg" style="display: block;">
+                    <table id="dpct" class="table table-striped table-hover table-sm" 
+                        style="font-weight:normal; border:1px solid rgb(168, 168, 168); margin:auto; font-size:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Player</th>
+                                <th>Date</th>
+                                <th class="right">D%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, games in dpct.items %}
+                                <tr>
+                                    <td>{{ key.0 }}</td>
+                                    <td>
+                                        {% for game in games %}
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for game in games %}
+                                            <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_gamelog' game.Username %}?start={{ game.StartDate|date:'c'|urlencode }}&end={{ game.EndDate|date:'c'|urlencode }}">
+                                                ({{ game.StartDate|date:"n/j/y" }}-{{ game.EndDate|date:"n/j/y" }})
+                                            </a>
+                                            <br>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="right">{{ key.1|floatformat:3 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <br>
+
+</div>
+{% endblock %}
