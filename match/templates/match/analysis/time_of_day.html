@@ -1,4 +1,5 @@
 {% extends 'match/base.html' %}
+{% load custom_filters %}
 
 {% block title %}
 Analysis · Time of Day
@@ -33,12 +34,6 @@ Analysis · Time of Day
       text-align: right;
   }
 
-  table.sortable tbody tr:nth-child(2n) td {
-      background: white;
-  }
-  table.sortable tbody tr:nth-child(2n+1) td {
-      background: rgba(0,0,0,0.05);
-  }
   .nav-link:not(.nav-custom) {
       margin-right: 30px;
   }
@@ -132,7 +127,7 @@ Analysis · Time of Day
       </p>
 
       <p>
-        Note: the time associated with a game is the time at which the game started.
+        Note: the time associated with a game is the time at which the game started. All times are in Central Standard Time.
       </p>
 
       <div class="row">
@@ -153,7 +148,7 @@ Analysis · Time of Day
                 {% for p in hourly_data %}
                   <tr>
                     <td>{{ p.hour }}</td>
-                    <td class="right">{{ p.num_matches }}</td>
+                    <td class="right"><a href="{% url 'match_list' %}?hour={{ p.hour_24 }}">{{ p.num_matches }}</a></td>
                     <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.MatchRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
                     <td class="right" style="{% if p.round_win_pct > 0.5 %}color:green{% elif p.round_win_pct == 0.5 %}{% else %}color:red{% endif %}">{{ p.round_win_pct|floatformat:3 }}</td>
                   </tr>
@@ -167,8 +162,6 @@ Analysis · Time of Day
           <img class="adjust" style="margin:auto; display:block; width:500px" src="data:image/svg+xml,{{ uri }}" alt="My Histogram">
         </div>
 
-        
-
       </div>
 
       <br>
@@ -176,11 +169,11 @@ Analysis · Time of Day
       <p>
         We can get a broader overview through categorization. 
         These classifications are a bit arbitrary, partially because I tried to have a high volume of games in each category while still being intuitive.
-        The categories are <strong>Pre-Night (12 PM to 8 PM)</strong>, <strong>Early Night (8 PM to 12 PM)</strong>, and <strong>Late Night (12 PM to 4 AM)</strong>.
+        The categories are <strong>Pre-Night (12 PM to 8 PM)</strong>, <strong>Early Night (8 PM to 12 AM)</strong>, and <strong>Late Night (12 AM to 4 AM)</strong>.
       </p>
 
       <div class="table-responsive-lg">
-        <table id="table-overview" class="sortable table table-hover table-sm center"
+        <table id="table-overview" class="sortable table table-striped table-hover table-sm center"
               style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168); margin:auto; font-size: 12px">
           <thead>
             <tr id="ignore">
@@ -191,7 +184,7 @@ Analysis · Time of Day
                 <th colspan="2" style="text-align:center">Defense Rounds</th>
             </tr>
             <tr>
-                <th style="border-right:1px solid rgb(222, 226, 230)">Map</th>
+                <th class="sorttable_nosort" style="border-right:1px solid rgb(222, 226, 230)">Time (Central Time Zone)</th>
                 <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
                 <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
                 <th class="right" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
@@ -206,7 +199,7 @@ Analysis · Time of Day
             {% for m in categorized %}
               <tr>
                 <td style="border-right:1px solid rgb(222, 226, 230);">{{ m.time_category }}</td>
-                <td class="right">{{ m.num_matches }}</td>
+                <td class="right"><a href="{% url 'match_list' %}?time_class={{ m.time_category }}">{{ m.num_matches }}</a></td>
                 <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.win_pct > 0.5 %}color:green{% elif m.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.win_pct|floatformat:3 }}</td>
                 <td class="right">{{ m.rounds_played }}</td>
                 <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if m.round_win_pct > 0.5 %}color:green{% elif m.round_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ m.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ m.round_win_pct|floatformat:3 }}</td>
@@ -219,8 +212,71 @@ Analysis · Time of Day
           </tbody>
         </table>
       </div>
-      
+
+      <br>
+
+      <p>
+        At the time of this writing, there is a clear pattern of subpar performance after midnight for the team. 
+      </p>
+
+      <p>
+        Finally, let's wrap things up by aggregating each player's individual performance by time of day classification.
+      </p>
+
+      <div class="table-responsive mb-3">
+        <table id="table-basic" class="sortable table table-striped table-hover table-sm"
+            style="width:75%; border:1px solid rgb(168, 168, 168); margin:auto; font-size: 12px">
+          <thead>
+              <tr id="ignore">
+                <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="4" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Pre-Night</th>
+                <th colspan="4" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Early Night</th>
+                <th colspan="4" style="text-align:center;">Late Night</th>
+              </tr>
+              <tr>
+                <th class="sorttable_nosort" style="border-right:1px solid rgb(222, 226, 230)">Player</th>
+                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Match Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Match Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Match Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+              </tr>
+          </thead>
+          <tbody>
+            {% for player_name, player_data in player_stats.items %}
+              <tr>
+                <td style="border-right:1px solid rgb(222, 226, 230)">{{ player_name }}</td>
+                {% for category in categories %}
+                  {% with stats=player_data|get_item:category %}
+                    <td class="right"><a href="{% url 'player_gamelog' player_name %}?time_class={{ category }}">{{ stats.total_matches|default_if_none:"&nbsp;" }}</a></td>
+                    <td class="right" style="{% if stats.win_pct > 0.5 %}color:green{% elif stats.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ stats.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ stats.win_pct|floatformat:3|default_if_none:"&nbsp;" }}</td>
+                    <td class="right" style="{% if stats.kdr > 1 %}color:green{% elif stats.kdr == 1 %}{% else %}color:red{% endif %}">{{ stats.kdr|floatformat:2|default_if_none:"&nbsp;" }}</td>
+                    <td class="right" style="{% if category != "Late Night" %}border-right:1px solid rgb(222, 226, 230){% endif %}">
+                      {{ stats.acs|floatformat:1|default_if_none:"&nbsp;" }}
+                    </td>
+                  {% endwith %}
+                {% endfor %}
+              </tr>
+            {% endfor %}        
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        It's worth mentioning that while the match start times are listed in the Central Standard Time, not all of these players live in this time zone. 
+        A game that occurs prior to midnight for some players may be occurring after midnight for others.
+      </p>
+
     </div>
+
+    <br>
 
 </div>
 

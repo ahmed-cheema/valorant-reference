@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Match, Player
 
 from django.db import models
-from django.db.models import Subquery, OuterRef, Sum, Count, Min, Max, Case, When, Avg, F, FloatField, ExpressionWrapper, Value, Q
+from django.db.models import Subquery, OuterRef, Sum, Count, Min, Max, Case, When, Avg, F, IntegerField, FloatField, ExpressionWrapper, Value, Q
 from django.db.models.functions import Cast, Round
 
 from django.utils import timezone
@@ -171,6 +171,9 @@ def match_list(request):
 
     mvp_filter = request.GET.get('mvp')
 
+    hour = request.GET.get('hour')
+    time_class = request.GET.get('time_class')
+
     n_duelists = request.GET.get('n_duelists')
 
     if map_filter == "None":
@@ -193,9 +196,21 @@ def match_list(request):
         end_date = date_filter.split(' - ')[1]
 
     matches = FilterMatches(matches, map_filter, outcome_filter, date_filter, mvp_filter)
+    matches = matches.annotate(hour=ExtractHour('Date'))
 
     if n_duelists is not None:
         matches = matches.filter(N_Duelists=n_duelists)
+
+    if hour is not None:
+        matches = matches.filter(hour=hour)
+
+    if time_class is not None:
+        if "Pre-Night" in time_class:
+            matches = matches.filter(hour__range=(12,19))
+        elif "Early Night" in time_class:
+            matches = matches.filter(hour__range=(20, 23))
+        elif "Late Night" in time_class:
+            matches = matches.filter(hour__range=(0, 4))
 
     matches = FilterPlayerParticipation(matches, button_values)
 
@@ -1459,6 +1474,8 @@ def player_gamelog(request, username):
 
     mvp_filter = request.GET.get('mvp')
 
+    time_class = request.GET.get('time_class')
+
     n_duelists = request.GET.get('n_duelists')
 
     if map_filter == "None":
@@ -1490,6 +1507,15 @@ def player_gamelog(request, username):
     if rounds_ge:
         players = players.filter(Match__RoundsPlayed__gte=rounds_ge)
     
+    if time_class is not None:
+        players = players.annotate(hour=ExtractHour('Match__Date'))
+        if "Pre-Night" in time_class:
+            players = players.filter(hour__range=(12,19))
+        elif "Early Night" in time_class:
+            players = players.filter(hour__range=(20, 23))
+        elif "Late Night" in time_class:
+            players = players.filter(hour__range=(0, 4))
+
     start = request.GET.get('start')
     end = request.GET.get('end')
     if start and end:
@@ -6349,6 +6375,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import urllib
 import io
+from matplotlib.ticker import MaxNLocator
 
 def time_of_day(request):
 
@@ -6370,14 +6397,24 @@ def time_of_day(request):
         ).order_by('hour')
     
     for h in hourly_data:
+        h['hour_24'] = h['hour']
         h['hour'] = format_hour(h['hour'], None)
         h['MatchRecord'] = "{}-{}-{}".format(h['won'],h['lost'],h['draw'])
     
+    hours = ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM',
+             '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM',
+             '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM']
+
     # Extract hours and counts from the QuerySet.
-    hours = [data['hour'] for data in hourly_data]
-    won_counts = [data['won'] for data in hourly_data]
-    lost_counts = [data['lost'] for data in hourly_data]
-    draw_counts = [data['draw'] for data in hourly_data]
+    won_counts = [0]*24
+    lost_counts = [0]*24
+    draw_counts = [0]*24
+
+    for data in hourly_data:
+        index = hours.index(data['hour'])
+        won_counts[index] = data['won']
+        lost_counts[index] = data['lost']
+        draw_counts[index] = data['draw']
 
     # Plot the histogram.
     plt.bar(hours, won_counts, color='#7ab378', label="Win", edgecolor="black", linewidth=0.5)
@@ -6391,7 +6428,12 @@ def time_of_day(request):
 
     # Apply the formatter to the x-axis.
     plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(format_hour))
+    
     plt.legend(title="Match Outcome", loc='best')
+
+    tick_hours = ['12 AM', '3 AM', '12 PM', '6 PM', "11 PM"]
+    tick_indices = [hours.index(hour) for hour in tick_hours]
+    plt.xticks(tick_indices, tick_hours)
 
     plt.tight_layout()
 
@@ -6411,9 +6453,9 @@ def time_of_day(request):
     queryset = Player.objects.filter(id__in=Subquery(sub_qs)).annotate(
         hour=ExtractHour('Match__Date'),
         time_category=Case(
-            When(Q(hour__gte=12) & Q(hour__lt=20), then=Value('Pre-Night')),
-            When(Q(hour__gte=20) & Q(hour__lt=24), then=Value('Early Night')),
-            default=Value('Late Night'),
+            When(Q(hour__gte=12) & Q(hour__lt=20), then=Value('Pre-Night (12 PM to 8 PM)')),
+            When(Q(hour__gte=20) & Q(hour__lt=24), then=Value('Early Night (8 PM to 12 AM)')),
+            default=Value('Late Night (12 AM to 4 AM)'),
             output_field=models.CharField(),
         )
     )
@@ -6440,7 +6482,14 @@ def time_of_day(request):
         round_win_pct=F('rounds_won') / Cast(F('rounds_played'), FloatField()),
         attack_win_pct=F('attack_wins') / Cast(F('attack_rounds'), FloatField()),
         defense_win_pct=F('defense_wins') / Cast(F('defense_rounds'), FloatField())
+    ).annotate(
+    ordering=Case(
+        When(time_category__contains='Pre-Night', then=Value(1)),
+        When(time_category__contains='Early Night', then=Value(2)),
+        When(time_category__contains='Late Night', then=Value(3)),
+        output_field=IntegerField(),
     )
+    ).order_by('ordering')
 
     for m in categorized:
         m['WinLossRecord'] = "{}-{}-{}".format(m['matches_won'],m['matches_lost'],m['matches_draw'])
@@ -6451,10 +6500,59 @@ def time_of_day(request):
     #############################################################
     #############################################################
 
+    queryset = Player.objects.filter(Team="Team A").annotate(
+        hour=ExtractHour('Match__Date'),
+        time_category=Case(
+            When(Q(hour__gte=12) & Q(hour__lt=20), then=Value('Pre-Night')),
+            When(Q(hour__gte=20) & Q(hour__lt=24), then=Value('Early Night')),
+            default=Value('Late Night'),
+            output_field=models.CharField(),
+        )
+    )
+
+    player_stats = queryset.values('time_category', 'Username').annotate(
+        total_matches=Count('Match'),
+
+        matches_won=Sum('MatchWon'),
+        matches_lost=Sum('MatchLost'),
+        matches_draw=Sum('MatchDraw'),
+
+        rounds_played=Sum('RoundsPlayed'),
+        rounds_won=Sum('AttackWins') + Sum('DefenseWins'),
+        rounds_lost=Sum('AttackLosses') + Sum('DefenseLosses'),
+
+        kdr = Sum('Kills')/Cast(Sum('Deaths'), FloatField()),
+        kpr = Sum('Kills')/Cast(Sum('RoundsPlayed'), FloatField()),
+        acs = Sum('CombatScore')/Cast(Sum('RoundsPlayed'), FloatField()),
+    ).annotate(
+        win_pct=(F('matches_won') + 0.5 * F('matches_draw')) / F('total_matches'),
+        round_win_pct=F('rounds_won') / F('rounds_played'),
+    )
+
+    for p in player_stats:
+        p['WinLossRecord'] = "{}-{}-{}".format(p['matches_won'],p['matches_lost'],p['matches_draw'])
+
+    def restructure_queryset(queryset):
+        result = {}
+        for record in queryset:
+            username = record['Username']
+            category = record['time_category']
+            if username not in result:
+                result[username] = {}
+            result[username][category] = record
+        return result
+
+    player_stats = restructure_queryset(player_stats)
+
+    #############################################################
+    #############################################################
+
     context = {
         'uri': uri,
         'hourly_data':hourly_data,
         'categorized':categorized,
+        'player_stats': player_stats,
+        'categories': ['Pre-Night', 'Early Night', 'Late Night'],
     }
 
     return render(request, 'match/analysis/time_of_day.html', context)
