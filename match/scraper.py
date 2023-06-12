@@ -201,12 +201,16 @@ def ScrapeMatch(match_id):
 
     while(True):
         soup = bs.BeautifulSoup(browser.page_source, features="html.parser")
-        if (len(soup.find_all("span", {"class": "trn-ign"})) == 0) or \
-           ((len(soup.find_all("div", {"id": "closeIconHit"})) == 0) and \
-           (len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})) == 0)):
-            continue
-        else:
+        body_class = soup.body.get('class')
+        if body_class and 'skin-takeover' in body_class:
             break
+        else:
+            if (len(soup.find_all("span", {"class": "trn-ign"})) == 0) or \
+            ((len(soup.find_all("div", {"id": "closeIconHit"})) == 0) and \
+            (len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})) == 0)):
+                continue
+            else:
+                break
 
     time.sleep(0.5)
 
