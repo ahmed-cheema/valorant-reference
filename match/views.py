@@ -21,10 +21,10 @@ from django.views.decorators.cache import cache_page
 #from django.db.models.signals import post_save, post_delete
 #from django.dispatch import receiver
 
-#import pandas as pd
+import pandas as pd
 import plotly.graph_objects as go
-#from plotly.subplots import make_subplots
-#import plotly.io as pio
+from plotly.subplots import make_subplots
+import plotly.io as pio
 
 agent_map = {"41fb69c1-4189-7b37-f117-bcaf1e96f1bf":"Astra",
              "5f8d3a7f-467b-97f3-062c-13acf203c006":"Breach",
@@ -144,7 +144,69 @@ def about(request):
     return render(request, 'match/about.html')
 
 def analysis(request):
-    return render(request, 'match/analysis.html')
+
+    """
+    nmd = Player.objects.filter(Username="jit#jits").values_list("Kills","Deaths","CombatScore","RoundsPlayed").order_by("Match__Date")
+
+    df = pd.DataFrame(nmd)
+    df.columns = ["Kills","Deaths","CombatScore","Rounds"]
+
+    WINDOW = 20
+    
+    df['CareerKDRatio'] = df['Kills'].cumsum() / (df['Deaths'].cumsum())
+    df['CareerACS'] = df['CombatScore'].cumsum() / (df['Rounds'].cumsum())
+
+    df['RollingKDRatio'] = (df['Kills'].rolling(window=WINDOW).sum()) / (df['Deaths'].rolling(window=WINDOW).sum())
+    df['RollingAvgCombatScore'] = (df['CombatScore'].rolling(window=WINDOW).sum()) / (df['Rounds'].rolling(window=WINDOW).sum())
+
+    df.reset_index(inplace=True)
+
+    df['GameNumber'] = df.index + 1
+
+    df2 = df.dropna()
+
+    df = df[df.GameNumber >= 20]
+
+    fig = make_subplots(rows=1, cols=2)
+
+    # Add trace for RollingKDRatio to the first column
+    fig.add_trace(go.Scatter(x=df['GameNumber'], y=df['CareerACS'], 
+                            mode='lines', name='Career ACS'), row=1, col=1)
+
+    # Add trace for RollingAvgCombatScore to the second column
+    fig.add_trace(go.Scatter(x=df2['GameNumber'], y=df2['RollingAvgCombatScore'], 
+                            mode='lines', name='Rolling ACS'), row=1, col=2)
+
+    # Update layout to include titles
+    fig.update_layout(title_text="nmd#219: The Decline?", title_x=0.5, template="simple_white",
+                      title_font=dict(size=22))
+
+    # Update xaxis and yaxis properties for the subplots
+    fig.update_xaxes(title_text="Game", row=1, col=1, title_font=dict(family="sans-serif",size=14))
+    fig.update_yaxes(title_text="Career ACS", row=1, col=1, title_font=dict(family="sans-serif",size=14))
+    fig.update_xaxes(title_text="Game", row=1, col=2, title_font=dict(family="sans-serif",size=14))
+    fig.update_yaxes(title_text="Rolling ACS", row=1, col=2, title_font=dict(family="sans-serif",size=14))
+
+    fig.add_annotation(text="Career ACS Over Time", 
+                   xref="paper", yref="paper", 
+                   x=0.16, y=1.1, showarrow=False, font=dict(family="sans-serif",size=14))
+
+    fig.add_annotation(text="20 Game Rolling ACS", 
+                   xref="paper", yref="paper", 
+                   x=0.835, y=1.1, showarrow=False, font=dict(family="sans-serif",size=14))
+    
+    fig.update_layout(showlegend=False)
+
+    fig_div = pio.to_html(fig, full_html=False)
+
+    pio.write_image(fig, 'rolling_averages_plot.svg', width=1400)
+
+    context = {
+        "fig":fig_div,
+    }
+    """
+
+    return render(request, 'match/analysis.html')#, context)
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, MatchID=match_id)
