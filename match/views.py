@@ -6619,4 +6619,5 @@ def time_of_day(request):
 
     return render(request, 'match/analysis/time_of_day.html', context)
 
-
+#def versatility(request):
+#    return render(request, 'match/analysis/versatility.html', context)
