@@ -1,0 +1,128 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Analysis · Time of Day
+{% endblock %}
+
+{% block css %}
+<style>
+  @media screen and (max-width: 768px) {
+    p, .adjust {
+      width: 100% !important;
+    }
+  }
+
+  table {
+      table-layout: auto !important;
+      width: 1px !important;
+      overflow: visible !important;
+  }
+
+  td, th {
+      max-width:100%;
+      white-space:nowrap;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+  }
+
+  td {
+      background-clip: padding-box !important;
+  }
+
+  .right {
+      text-align: right;
+  }
+
+  .nav-link:not(.nav-custom) {
+      margin-right: 30px;
+  }
+
+  .nav-link#analysis {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
+
+  .hover-nav:hover {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
+
+  .nav-tabs {
+      width: 75%;
+      border-bottom: none;
+  }
+
+  .nav-custom {
+      color: black !important;
+      border: solid 1px rgb(168, 168, 168) !important;
+      border-bottom: none !important;
+  }
+
+  a.active, .nav-custom:hover {
+      color: white !important;
+      background-color: black !important;
+      border: solid 1px rgb(168, 168, 168) !important;
+      border-bottom: none !important;
+  }
+
+  button[aria-selected="true"] {
+      color: white !important;
+  }
+
+  .btn-outline-dark {
+      color: black !important;
+  }
+
+  .btn-outline-dark:hover {
+      color: white !important;
+  }
+
+  a {
+      text-decoration: none;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2>Versatility</h2>
+
+    <div class="adjust" style="width: 800px">
+
+      <p>
+          Whenever five players express that they are online and ready to play, a game may occur. There is no set schedule for these games - they happen when they happen.
+          Thus, there is variance in the time of day at which matches are played. 
+      </p>
+      
+    </div>
+
+    <br>
+
+</div>
+
+{% endblock %}

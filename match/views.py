@@ -6619,5 +6619,47 @@ def time_of_day(request):
 
     return render(request, 'match/analysis/time_of_day.html', context)
 
-#def versatility(request):
-#    return render(request, 'match/analysis/versatility.html', context)
+import numpy as np
+
+def versatility(request):
+
+    player_data = Player.objects.filter(Team="Team A").annotate(
+        acs=Sum('CombatScore') / Sum('RoundsPlayed')).values('Username', 'Agent', 'Role', 'acs')
+
+    # Create a pandas DataFrame from the QuerySet
+    df = pd.DataFrame.from_records(player_data)
+
+    # Calculate the sum of average_combat_score for each agent and role
+    grouped = df.groupby(['Username', 'Agent', 'Role']).mean().reset_index()
+
+    grouped['normalized_performance'] = grouped.groupby('Username')['acs'].transform(
+        lambda x: (x - x.min()) / (x.max() - x.min()))
+
+    # Count number of times each Agent is used by each user
+    agent_counts = df.groupby(['Username', 'Agent']).size().reset_index(name='counts')
+
+    # Count number of times each Role is used by each user
+    role_counts = df.groupby(['Username', 'Role']).size().reset_index(name='counts')
+
+    # Calculate the probabilities
+    agent_counts['prob'] = agent_counts.groupby('Username')['counts'].transform(lambda x: x / x.sum())
+    role_counts['prob'] = role_counts.groupby('Username')['counts'].transform(lambda x: x / x.sum())
+
+    # Calculate the entropies
+    agent_counts['entropy'] = -agent_counts['prob'] * np.log2(agent_counts['prob'])
+    role_counts['entropy'] = -role_counts['prob'] * np.log2(role_counts['prob'])
+
+    # Get the total entropies per user
+    agent_entropy = agent_counts.groupby('Username')['entropy'].sum().reset_index()
+    role_entropy = role_counts.groupby('Username')['entropy'].sum().reset_index()
+
+    # Merge the entropies into the final dataframe
+    final_df = pd.merge(agent_entropy, role_entropy, on='Username', suffixes=('_agent', '_role'))
+
+    print(final_df.sort_values(by="entropy_role",ascending=False))
+
+    context = {
+
+    }
+
+    return render(request, 'match/analysis/versatility.html', context)
