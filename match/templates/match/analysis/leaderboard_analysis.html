@@ -86,6 +86,10 @@ Analysis · Leaderboard
     a {
         text-decoration: none;
     }
+
+    span {
+      font-size:60% !important;
+    }
 </style>
 {% endblock %}
 
@@ -129,8 +133,8 @@ Analysis · Leaderboard
     </p>
 
     <div class="table-responsive">
-        <table id="table-basic" class="sortable table table-hover table-sm center "
-            style="width:75%; border:1px solid rgb(168, 168, 168)">
+        <table id="table-basic" class="sortable table table-hover table-sm center"
+            style="border:1px solid rgb(168, 168, 168)">
         <thead>
             <tr id="ignore">
                 <th style="border-right:1px solid rgb(222, 226, 230)"></th>
@@ -155,23 +159,44 @@ Analysis · Leaderboard
             </tr>
         </thead>
         <tbody>
-            {% for p,w,l in zipped %}
+          {% for p in player_stats %}
             <tr>
-                <td style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
-                <td class="right"><a href="{% url 'player_gamelog' p.Username %}">{{ p.num_matches }}</a></td>
-                <td class="right"><a href="{% url 'player_gamelog' p.Username %}?mvp=1">{{ p.mvps }}</a></td>
-                <td class="right" style="{% if p.mvp_pct > 0.2 %}color:green{% elif p.mvp_pct == 0.2 %}{% else %}color:red{% endif %}">{{ p.mvp_pct|floatformat:3 }}</td>
-                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if p.avg_rank < 3 %}color:green{% elif p.avg_rank == 3 %}{% else %}color:red{% endif %}">{{ p.avg_rank|floatformat:2 }}</td>
-                <td class="right"><a href="{% url 'player_gamelog' w.Username %}?outcome=win">{{ w.num_matches }}</a></td>
-                <td class="right"><a href="{% url 'player_gamelog' w.Username %}?outcome=win&mvp=1">{{ w.mvps }}</a></td>
-                <td class="right" style="{% if w.mvp_pct > 0.2 %}color:green{% elif w.mvp_pct == 0.2 %}{% else %}color:red{% endif %}">{{ w.mvp_pct|floatformat:3 }}</td>
-                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if w.avg_rank < 3 %}color:green{% elif w.avg_rank == 3 %}{% else %}color:red{% endif %}">{{ w.avg_rank|floatformat:2 }}</td>
-                <td class="right"><a href="{% url 'player_gamelog' l.Username %}?outcome=loss">{{ l.num_matches }}</a></td>
-                <td class="right"><a href="{% url 'player_gamelog' l.Username %}?outcome=loss&mvp=1">{{ l.mvps }}</a></td>
-                <td class="right" style="{% if l.mvp_pct > 0.2 %}color:green{% elif l.mvp_pct == 0.2 %}{% else %}color:red{% endif %}">{{ l.mvp_pct|floatformat:3 }}</td>
-                <td class="right" style="{% if l.avg_rank < 3 %}color:green{% elif l.avg_rank == 3 %}{% else %}color:red{% endif %}">{{ l.avg_rank|floatformat:2 }}</td>
+              <td style="border-right:1px solid rgb(222, 226, 230)">
+                  <img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                  <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} 
+                  <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a>
+              </td>
+              <td class="right"><a href="{% url 'player_gamelog' p.Username %}">{{ p.num_matches }}</a></td>
+              <td class="right"><a href="{% url 'player_gamelog' p.Username %}?mvp=1">{{ p.mvps }}</a></td>
+              <td class="right" style="{% if p.mvp_pct > 0.2 %}color:green{% elif p.mvp_pct == 0.2 %}{% else %}color:red{% endif %}">{{ p.mvp_pct|floatformat:3 }}</td>
+              <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if p.avg_rank < 3 %}color:green{% elif p.avg_rank == 3 %}{% else %}color:red{% endif %}">{{ p.avg_rank|floatformat:2 }}</td>
+              <!-- Wins -->
+              {% if p.matches_won != None %}
+                  <td class="right"><a href="{% url 'player_gamelog' p.Username %}?outcome=win">{{ p.matches_won }}</a></td>
+                  <td class="right"><a href="{% url 'player_gamelog' p.Username %}?outcome=win&mvp=1">{{ p.mvps_win }}</a></td>
+                  <td class="right" style="{% if p.mvp_pct_win > 0.2 %}color:green{% elif p.mvp_pct_win == 0.2 %}{% else %}color:red{% endif %}">{{ p.mvp_pct_win|floatformat:3 }}</td>
+                  <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if p.avg_rank_win < 3 %}color:green{% elif p.avg_rank_win == 3 %}{% else %}color:red{% endif %}">{{ p.avg_rank_win|floatformat:2 }}</td>
+              {% else %}
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td style="border-right:1px solid rgb(222, 226, 230);"></td>
+              {% endif %}
+
+              <!-- Losses -->
+              {% if p.matches_lost != None %}
+                  <td class="right"><a href="{% url 'player_gamelog' p.Username %}?outcome=loss">{{ p.matches_lost }}</a></td>
+                  <td class="right"><a href="{% url 'player_gamelog' p.Username %}?outcome=loss&mvp=1">{{ p.mvps_loss }}</a></td>
+                  <td class="right" style="{% if p.mvp_pct_loss > 0.2 %}color:green{% elif p.mvp_pct_loss == 0.2 %}{% else %}color:red{% endif %}">{{ p.mvp_pct_loss|floatformat:3 }}</td>
+                  <td class="right" style="{% if p.avg_rank_loss < 3 %}color:green{% elif p.avg_rank_loss == 3 %}{% else %}color:red{% endif %}">{{ p.avg_rank_loss|floatformat:2 }}</td>
+              {% else %}
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+              {% endif %}
             </tr>
-            {% endfor %}
+          {% endfor %}
         </tbody>
         </table>
     </div>

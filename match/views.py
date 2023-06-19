@@ -1499,7 +1499,7 @@ def player_splits(request, username):
 from dateutil.parser import parse
 def player_gamelog(request, username):
 
-    players = Player.objects.filter(Team="Team A", Username=username).order_by('-Match__Date').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
+    players = Player.objects.filter(Team="Team A", Username=username)
 
     if (players.count() == 0):
         raise Http404
@@ -1517,6 +1517,8 @@ def player_gamelog(request, username):
     agent_counter = Counter(players.values_list('Agent', flat=True))
     topAgent = agent_counter.most_common(1)[0][0]
     topAgentImage = AgentImage(topAgent)
+
+    players = players.order_by('-Match__Date').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
 
     unique_maps = sorted(list(Match.objects.values_list("Map", flat=True).distinct()))
     unique_agents = sorted(list(Player.objects.values_list("Agent", flat=True).distinct()))
@@ -6242,18 +6244,27 @@ def solo_duelists(request):
 
 def leaderboard_analysis(request):
     players = Player.objects.filter(Team="Team A")
-    
+
     player_stats = players.values('Username').annotate(
         num_matches=Count('Match'),
 
-        matches_won=Sum('MatchWon'),
-        matches_lost=Sum('MatchLost'),
-        matches_draw=Sum('MatchDraw'),
+        matches_won=Sum(Case(When(MatchWon=1, then=1), output_field=IntegerField())),
+        matches_lost=Sum(Case(When(MatchLost=1, then=1), output_field=IntegerField())),
+        matches_draw=Sum(Case(When(MatchDraw=1, then=1), output_field=IntegerField())),
 
         mvps=Sum('MVP'),
         mvp_pct=Avg('MVP'),
         avg_rank=Avg('ACS_Rank'),
+
+        mvps_win=Sum(Case(When(MatchWon=1, then='MVP'), default=0, output_field=IntegerField())),
+        mvp_pct_win=Avg(Case(When(MatchWon=1, then='MVP'), default=0, output_field=IntegerField())),
+        avg_rank_win=Avg(Case(When(MatchWon=1, then='ACS_Rank'), default=0, output_field=IntegerField())),
+
+        mvps_loss=Sum(Case(When(MatchLost=1, then='MVP'), default=0, output_field=IntegerField())),
+        mvp_pct_loss=Avg(Case(When(MatchLost=1, then='MVP'), default=0, output_field=IntegerField())),
+        avg_rank_loss=Avg(Case(When(MatchLost=1, then='ACS_Rank'), default=0, output_field=IntegerField())),
     ).order_by('-Username')
+
 
     for p in player_stats:
         filtered_players = Player.objects.filter(Team="Team A", 
@@ -6419,10 +6430,9 @@ def leaderboard_analysis(request):
         p['max_fd_id'] = filtered_players.filter(FirstDeaths=p['max_fd']).values('Match__MatchID').first()['Match__MatchID']
 
     context = {
-        'players': player_stats,
+        'player_stats': player_stats,
         'win': win,
         'loss': loss,
-        'zipped': zip(player_stats,win,loss),
 
         'mvp_stats': mvp_stats
     }
@@ -6632,34 +6642,47 @@ def versatility(request):
     # Calculate the sum of average_combat_score for each agent and role
     grouped = df.groupby(['Username', 'Agent', 'Role']).mean().reset_index()
 
-    grouped['normalized_performance'] = grouped.groupby('Username')['acs'].transform(
-        lambda x: (x - x.min()) / (x.max() - x.min()))
-
-    # Count number of times each Agent is used by each user
     agent_counts = df.groupby(['Username', 'Agent']).size().reset_index(name='counts')
-
-    # Count number of times each Role is used by each user
     role_counts = df.groupby(['Username', 'Role']).size().reset_index(name='counts')
 
-    # Calculate the probabilities
     agent_counts['prob'] = agent_counts.groupby('Username')['counts'].transform(lambda x: x / x.sum())
     role_counts['prob'] = role_counts.groupby('Username')['counts'].transform(lambda x: x / x.sum())
 
-    # Calculate the entropies
-    agent_counts['entropy'] = -agent_counts['prob'] * np.log2(agent_counts['prob'])
-    role_counts['entropy'] = -role_counts['prob'] * np.log2(role_counts['prob'])
+    agent_counts['naive_entropy'] = -agent_counts['prob'] * np.log2(agent_counts['prob'])
+    role_counts['naive_entropy'] = -role_counts['prob'] * np.log2(role_counts['prob'])
 
-    # Get the total entropies per user
-    agent_entropy = agent_counts.groupby('Username')['entropy'].sum().reset_index()
-    role_entropy = role_counts.groupby('Username')['entropy'].sum().reset_index()
+    # Get the total naive entropies per user
+    naive_agent_entropy = agent_counts.groupby('Username')['naive_entropy'].sum().reset_index()
+    naive_role_entropy = role_counts.groupby('Username')['naive_entropy'].sum().reset_index()
 
-    # Merge the entropies into the final dataframe
-    final_df = pd.merge(agent_entropy, role_entropy, on='Username', suffixes=('_agent', '_role'))
+    # Merge the naive and weighted entropies into the final dataframe
+    final_df = pd.merge(naive_agent_entropy, naive_role_entropy, on='Username', suffixes=('_naive_agent', '_naive_role'))
 
-    print(final_df.sort_values(by="entropy_role",ascending=False))
+    def process_row(row):
+        N_ROLES = 4
+
+        filtered = Player.objects.filter(Team="Team A", Username=row['Username'])
+        tag_split = row['Username'].split("#")
+        row['DisplayName'] = tag_split[0]
+        row['UserTag'] = "#" + tag_split[1]
+        agents = filtered.values_list('Agent', flat=True)
+        row['MP'] = len(agents)
+        agent_counter = Counter(agents)
+        agents_played = len(agent_counter)
+        roles_played = len(filtered.values_list('Role', flat=True).distinct())
+        row['AgentPct'] = len(agent_counter)/len(agent_map)
+        row['AgentStr'] = "{}/{}".format(agents_played,len(agent_map))
+        row['RolePct'] = roles_played/N_ROLES
+        row['RoleStr'] = "{}/{}".format(roles_played,N_ROLES)
+        row['TopAgent'] = agent_counter.most_common(1)[0][0] if agent_counter else None
+        row['TopAgentImage'] = AgentImage(row['TopAgent']) if row['TopAgent'] else None
+        return row
+
+    final_df = final_df.apply(process_row, axis=1).sort_values(by="MP",ascending=False).reset_index(drop=True)
 
     context = {
-
+        "player_stats": final_df.to_dict('records'),
+        "playable_agents": len(agent_map),
     }
 
     return render(request, 'match/analysis/versatility.html', context)

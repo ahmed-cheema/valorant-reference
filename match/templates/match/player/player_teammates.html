@@ -123,9 +123,11 @@
   </div>
 
   <div style="text-align: center; margin-left: auto; margin-right: auto;">
-    <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;">
-      {{ mvps }}x MVP
-    </span>
+    <a class="hiddenLink" href="{% url 'player_gamelog' username %}?mvp=1">
+      <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;">
+        {{ mvps }}x MVP
+      </span>
+    </a>
   </div>
 
   <div id="buttons" style="text-align:center; margin-top: 1%;">

@@ -11,6 +11,7 @@ exceptiongroup==1.1.1
 gunicorn==20.1.0
 h11==0.14.0
 idna==3.4
+numpy==1.24.3
 outcome==1.2.0
 pandas==2.0.1
 pathlib==1.0.1
