@@ -420,6 +420,13 @@ def player_stats(request):
     players = FilterPlayers(players, 
                             map_filter, outcome_filter, agent_filter, role_filter, date_filter)
 
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    if start and end:
+        start = parse(unquote(start))
+        end = parse(unquote(end))
+        players = players.filter(Match__Date__range=(start, end))
+
     # Aggregate data
     player_stats = players.values('Username').annotate(
         num_matches=Count('Match'),
