@@ -282,8 +282,6 @@ def ScrapeMatch(match_id):
     for i, col in enumerate(tracker_columns):
         data[col] = values[i::14]
 
-    print(data)
-
     df = pd.DataFrame(data)
 
     df["CombatScore"] = df.ACS*df.Rounds
