@@ -6128,9 +6128,9 @@ def solo_duelists(request):
             m['Count'] = "Two Duelists"
         elif m['Match__N_Duelists'] == 3:
             m['Count'] = "Three Duelists"
-        elif m['Match__N_Duelists'] == 3:
+        elif m['Match__N_Duelists'] == 4:
             m['Count'] = "Four Duelists"
-        elif m['Match__N_Duelists'] == 3:
+        elif m['Match__N_Duelists'] == 5:
             m['Count'] = "Five Duelists"
 
     count_splits_combat = Player.objects.filter(Team="Team A", Role="Duelist").values('Match__N_Duelists').annotate(
