@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
-from match.models import Match, Player
+from match.models import Match, Player, User
 import json
 
 from django.core.cache import cache
@@ -21,12 +21,21 @@ class Command(BaseCommand):
 
         old_display = old_name.split("#")[0]
         new_display = new_name.split("#")[0]
+        new_tag = new_name.split("#")[1]
 
         ### FIX PLAYER OBJECT FIELDS
         
         for p in Player.objects.filter(Username = old_name):
             p.Username = new_name
             p.DisplayName = new_display
+            p.save()
+
+        ### FIX USER OBJECT FIELDS
+        
+        for p in User.objects.filter(Username = old_name):
+            p.Username = new_name
+            p.DisplayName = new_display
+            p.UserTag = new_tag
             p.save()
 
         ### FIX MATCH OBJECT FIELDS

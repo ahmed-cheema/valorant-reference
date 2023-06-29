@@ -259,3 +259,17 @@ class Player(models.Model):
         if self.FirstDeaths == 0:
             return self.FirstBloods
         return self.FirstBloods/self.FirstDeaths
+    
+class Award(models.Model):
+    Name = models.CharField(max_length=255)
+    StartDate = models.DateTimeField()
+    EndDate = models.DateTimeField()
+
+    def __str__(self):
+        return self.name
+
+class User(models.Model):
+    Username = models.CharField(max_length=200)
+    DisplayName = models.CharField(max_length=200)
+    UserTag = models.CharField(max_length=200)
+    Awards = models.ManyToManyField(Award, blank=True)

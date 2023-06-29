@@ -13,7 +13,7 @@ import time
 
 import undetected_chromedriver as uc
 
-from .models import Match, Player
+from .models import Match, Player, User
 
 def printError(msg,match_id):
     print("\n=== ERROR ===\nMATCH ID: {}".format(match_id))
@@ -474,6 +474,11 @@ def ScrapeMatch(match_id):
 
     for idx, row in db.iterrows():
         if row["Team"] == "Team A":
+            if not User.objects.filter(Username=row["Username"]).exists():
+                user = User(Username = row["Username"],
+                            DisplayName = row["DisplayName"],
+                            UserTag = row["Username"].split("#")[1])
+                user.save()
             player = Player(Match = match,
                             Username = row["Username"],
                             DisplayName = row["DisplayName"],
