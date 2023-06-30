@@ -243,10 +243,10 @@ Lineups
       </div>
     </div>
 
-    <div class="row mb-2 ">
-        <div class="col">
+    <div class="row mb-2">
+        <div class="col-lg-12">
           {% for player in unique_players %}
-            <div class="btn-group-toggle d-inline-block" data-toggle="buttons">
+            <div class="btn-group-toggle d-inline-block mr-1 mb-1" data-toggle="buttons">
               {% if button_values|default:None %}
                 {% with button_values|get_item:player as value %}
                   <input type="radio" name="{{ player }}" value="2" {% if value == 2 %}checked{% endif %} hidden>

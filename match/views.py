@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Match, Player
+from .models import Match, Player, User, Award
 
 from django.db import models
 from django.db.models import Subquery, OuterRef, Sum, Count, Min, Max, Case, When, Avg, F, IntegerField, FloatField, ExpressionWrapper, Value, Q
@@ -592,12 +592,6 @@ def player_detail(request, username):
 
     if (players.count() == 0):
         raise Http404
-    
-    firstRow = players.values().first()
-
-    tagSplit = firstRow['Username'].split("#")
-    displayName = tagSplit[0]
-    userTag = "#" + tagSplit[1]
 
     agent_counter = Counter(players.values_list('Agent', flat=True))
     topAgent = agent_counter.most_common(1)[0][0]
@@ -620,14 +614,14 @@ def player_detail(request, username):
     mvps = players.aggregate(
         mvps=Sum('MVP')
     )['mvps']
+
+    user = User.objects.filter(Username=username).first()
     
     context = {
         'lst': [last_five_aggregates, last_ten_aggregates, 
                 last_twenty_aggregates, all_aggregates],
 
-        'username': username,
-        'displayName': displayName,
-        'userTag': userTag,
+        'User': user,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
 
@@ -981,9 +975,6 @@ def player_splits(request, username):
     if (players.count() == 0):
         raise Http404
     
-    firstRow = players.values().first()
-    tagSplit = firstRow['Username'].split("#")
-    displayName = tagSplit[0]
     agent_counter = Counter(players.values_list('Agent', flat=True))
     topAgent = agent_counter.most_common(1)[0][0]
     topAgentImage = AgentImage(topAgent)
@@ -1488,14 +1479,15 @@ def player_splits(request, username):
         mvps=Sum('MVP')
     )['mvps']
 
+    user = User.objects.filter(Username=username).first()
+
     context = {
         'role_splits': role_splits,
         'agent_splits': agent_splits,
         'map_splits': map_splits,
         'outcome_splits': outcome_splits,
-
-        'username': username,
-        'displayName': displayName,
+        
+        'User': user,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
 
@@ -1515,12 +1507,6 @@ def player_gamelog(request, username):
     mvps = players.aggregate(
         mvps=Sum('MVP')
     )['mvps']
-
-    firstRow = players.values().first()
-
-    tagSplit = firstRow['Username'].split("#")
-    displayName = tagSplit[0]
-    userTag = "#" + tagSplit[1]
 
     agent_counter = Counter(players.values_list('Agent', flat=True))
     topAgent = agent_counter.most_common(1)[0][0]
@@ -1595,12 +1581,12 @@ def player_gamelog(request, username):
         end = parse(unquote(end))
         players = players.filter(Match__Date__range=(start, end))
 
+    user = User.objects.filter(Username=username).first()
+
     context = {
         'players': players,
 
-        'username': username,
-        'displayName': displayName,
-        'userTag': userTag,
+        'User': user,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
 
@@ -4217,7 +4203,7 @@ def BestActiveStreak(field, value, op):
                         'Agent': most_common_agent,
                         'AgentImage': AgentImage(most_common_agent),
                         'Streak': streak,
-                        'StartDate': player.Match.Date,
+                        'StartDate': player.Match.Date + timedelta(minutes=1),
                         'EndDate': end_date,
                         'EndDateHidden': end_date + timedelta(days=1),
                         'Active': True
@@ -4263,7 +4249,7 @@ def BestStreak(field, value, op):
                         'AgentImage': AgentImage(most_common_agent),
                         'Streak': streak,
                         'StartDate': start_date,
-                        'EndDate': player.Match.Date if i > 0 else start_date,
+                        'EndDate': player.Match.Date - timedelta(minutes=1) if i > 0 else start_date,
                         'EndDateHidden': player.Match.Date - timedelta(minutes=1),
                         'Active': False
                     })
@@ -5509,10 +5495,6 @@ def player_teammates(request, username):
     if (players.count() == 0):
         raise Http404
     
-    firstRow = players.values().first()
-    tagSplit = firstRow['Username'].split("#")
-    displayName = tagSplit[0]
-    userTag = "#"+tagSplit[1]
     agent_counter = Counter(players.values_list('Agent', flat=True))
     topAgent = agent_counter.most_common(1)[0][0]
     topAgentImage = AgentImage(topAgent)
@@ -5711,6 +5693,10 @@ def player_teammates(request, username):
         
         user_agg = CalculateAggregates(user_games)
 
+        tag_split = username.split("#")
+        displayName = tag_split[0]
+        userTag = tag_split[1]
+
         user_agg['PlayerUsername'] = username
         user_agg['PlayerDisplayName'] = displayName
         user_agg['PlayerUserTag'] = userTag
@@ -5746,12 +5732,13 @@ def player_teammates(request, username):
         mvps=Sum('MVP')
     )['mvps']
 
+    user = User.objects.filter(Username=username).first()
+
     context = {
         "PlayerPerformances": UserPerformances,
         "TeammatePerformances": anno,
 
-        'username': username,
-        'displayName': displayName,
+        'User': user,
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
         

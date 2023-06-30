@@ -1,4 +1,4 @@
 <img src="{{ streak.AgentImage }}" alt="{{ streak.Agent }}" height=25px title="{{ streak.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
 <a href="{% url 'player_detail' streak.Username %}">{{ streak.DisplayName }}:</a> 
 {{ streak.Streak }} 
-<a href="{% url 'player_gamelog' streak.Username %}?start={{ streak.StartDate|date:'c'|urlencode }}&end={{ streak.EndDateHidden|date:'c'|urlencode }}"> ({{ streak.StartDate|date:"n/j/y" }}-{{ streak.EndDate|date:"n/j/y" }}) </a>
+<a href="{% url 'player_gamelog' streak.Username %}?start={{ streak.StartDate|date:'c'|urlencode }}&end={{ streak.EndDate|date:'c'|urlencode }}"> ({{ streak.StartDate|date:"n/j/y" }}-{{ streak.EndDate|date:"n/j/y" }}) </a>

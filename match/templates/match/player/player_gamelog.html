@@ -1,7 +1,7 @@
 {% extends 'match/base.html' %}
 
 {% block title %}
-{{ username }} · Game Log
+{{ User.Username }} · Game Log
 {% endblock %}
 
 {% block css %}
@@ -171,25 +171,36 @@
     </div>
     <div style="display: inline-block; vertical-align: middle; white-space: nowrap;">
       <h1 style="font-weight:bold"
-      title="{{ username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ displayName }}</h1>
+      title="{{ User.Username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ User.DisplayName }}</h1>
     </div>
   </div>
 
   <div style="text-align: center; margin-left: auto; margin-right: auto;">
-    <a class="hiddenLink" href="{% url 'player_gamelog' username %}?mvp=1">
-      <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;">
-        {{ mvps }}x MVP
-      </span>
+    <a class="hiddenLink" href="{% url 'player_gamelog' User.Username %}?mvp=1">
+    <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;">
+      {{ mvps }}x MVP
+    </span>
     </a>
   </div>
-  
+
+  <div class="mt-2" style="text-align: center; margin-left: auto; margin-right: auto;">
+    {% for award in User.Awards.all %}
+      {% if award.Name == "Player of the Week" %}
+        <span class="btn" style="background-color:#74a7f7; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+              title="Player of the Week" data-bs-toggle="tooltip" data-bs-placement="top">
+          POTW
+        </span>
+      {% endif %}
+    {% endfor %}
+  </div>
+
   <div id="buttons" style="text-align:center; margin-top: 1%;">
     <div style="display: inline-block;">
-      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_detail' username %}" role="button">Overview</a>
-      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' username %}" role="button">Splits</a>
-      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' username %}" role="button">Teammates</a>
-      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ displayName }}=1" role="button">Matches</a>
-      <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' username %}" role="button">Game Log</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_detail' User.Username %}" role="button">Overview</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' User.Username %}" role="button">Splits</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' User.Username %}" role="button">Teammates</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ User.DisplayName }}=1" role="button">Matches</a>
+      <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' User.Username %}" role="button">Game Log</a>
     </div>
   </div>
 
