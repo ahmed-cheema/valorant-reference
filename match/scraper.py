@@ -232,18 +232,18 @@ def ScrapeMatch(match_id):
 
     usernames = [x.text.strip().replace("  #","#") for x in soup.find_all("span", {"class": "trn-ign"})]
     displayNames = [x.split("#")[0] for x in usernames]
-    agents = [agent_map.get(x["src"].split("agents/")[1].split("/displayicon.png")[0]) for x in soup.find_all("img", {"data-v-f2f6dd5e": True, "data-v-2a2d68ed": True, }) if ("displayicon" in x["src"])]
+    agents = [agent_map.get(x["src"].split("agents/")[1].split("/displayicon.png")[0]) for x in soup.find_all("img", {"data-v-4ff6b405": True, "data-v-2a2d68ed": True, }) if ("displayicon" in x["src"])]
     roles = [role_map.get(x) for x in agents]
 
     TeamChunks = soup.find_all("div",{"class": "st__item st-header__item st-header__item--sortable st__item--sticky st__item--wide"})
     if "Avg. Rank:" in str(TeamChunks[0]) and "Avg. Rank:" in str(TeamChunks[1]):
-        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-f2f6dd5e": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [0,6]]
+        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-4ff6b405": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [0,6]]
     elif "Avg. Rank:" in str(TeamChunks[0]):
-        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-f2f6dd5e": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [0]]
+        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-4ff6b405": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [0]]
     elif "Avg. Rank:" in str(TeamChunks[1]):
-        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-f2f6dd5e": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [5]]
+        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-4ff6b405": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])]) if i not in [5]]
     else:
-        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-f2f6dd5e": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])])]
+        ranks = [map_rank(e) for i, e in enumerate([x["src"] for x in soup.find_all("img", {"data-v-4ff6b405": True, "data-v-2a2d68ed": True, }) if ("tiersv2" in x["src"])])]
 
     won = ([int(teamOneScore > teamTwoScore)] * 5) + ([int(teamTwoScore > teamOneScore)] * 5)
 
