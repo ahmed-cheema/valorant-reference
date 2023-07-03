@@ -539,6 +539,13 @@ def player_stats(request):
             map_filter, outcome_filter, agent_filter, role_filter, date_filter
         )
 
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        if start and end:
+            start = parse(unquote(start))
+            end = parse(unquote(end))
+            filtered_players = filtered_players.filter(Match__Date__range=(start, end))
+
         tagSplit = p['Username'].split("#")
 
         p['DisplayName'] = tagSplit[0]
