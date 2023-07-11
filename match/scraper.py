@@ -209,7 +209,8 @@ def ScrapeMatch(match_id):
         else:
             if (len(soup.find_all("span", {"class": "trn-ign"})) == 0) or \
             ((len(soup.find_all("div", {"id": "closeIconHit"})) == 0) and \
-            (len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})) == 0)):
+            (len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})) == 0) and \
+            (len(soup.find_all("div", {"class": "cpmsoutstreamclose"})) == 0)):
                 continue
             else:
                 break
@@ -222,6 +223,8 @@ def ScrapeMatch(match_id):
     elif len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})):
         closeVideo = soup.select("div[id='cpmstarvideosliderclose']")[0]
         browser.find_element(by=By.XPATH, value=xpath_soup(closeVideo)).click()
+    elif len(soup.find_all("div", {"class": "cpmsoutstreamclose"})):
+        browser.find_element(by=By.XPATH, value="/html/body/div[2]/div/div[4]").click()
 
     mapName = soup.find("div", {"class": "trn-match-drawer__header-value"}).text
     datetime_object = datetime.strptime([x.text.strip() for x in soup.select("div.trn-match-drawer__header-label") if ", " in x.text][0],
