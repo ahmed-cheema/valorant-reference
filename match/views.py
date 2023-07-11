@@ -334,6 +334,8 @@ def gamelog(request):
 
     n_duelists = request.GET.get('n_duelists')
 
+    mvp_filter = request.GET.get('mvp')
+
     if map_filter == "None":
         map_filter = None
     if outcome_filter == "None":
@@ -344,13 +346,15 @@ def gamelog(request):
         role_filter = None
     if date_filter == "None":
         date_filter = None
+    if mvp_filter == "None":
+        mvp_filter = None
 
     if date_filter is not None:
         start_date = date_filter.split(' - ')[0]
         end_date = date_filter.split(' - ')[1]
     
     players = FilterPlayers(players, 
-                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, n_duelists=n_duelists)
+                            map_filter, outcome_filter, agent_filter, role_filter, date_filter, mvp_filter, n_duelists=n_duelists)
 
     rounds_le = request.GET.get('rounds_le')
     rounds = request.GET.get('rounds')
