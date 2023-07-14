@@ -627,6 +627,15 @@ def player_detail(request, username):
     )['mvps']
 
     user = User.objects.filter(Username=username).first()
+
+    award_counts = {
+        'potw': user.Awards.filter(Name='Player of the Week').count(),
+        'potm': user.Awards.filter(Name='Player of the Month').count(),
+        'cotm': user.Awards.filter(Name='Controller of the Month').count(),
+        'dotm': user.Awards.filter(Name='Duelist of the Month').count(),
+        'iotm': user.Awards.filter(Name='Initiator of the Month').count(),
+        'sotm': user.Awards.filter(Name='Sentinel of the Month').count(),
+    }
     
     context = {
         'lst': [last_five_aggregates, last_ten_aggregates, 
@@ -636,7 +645,8 @@ def player_detail(request, username):
         'topAgent': topAgent,
         'topAgentImage': topAgentImage,
 
-        'mvps': mvps
+        'mvps': mvps,
+        'award_counts': award_counts,
     }
 
     return render(request, 'match/player/player_detail.html', context)
@@ -1492,6 +1502,15 @@ def player_splits(request, username):
 
     user = User.objects.filter(Username=username).first()
 
+    award_counts = {
+        'potw': user.Awards.filter(Name='Player of the Week').count(),
+        'potm': user.Awards.filter(Name='Player of the Month').count(),
+        'cotm': user.Awards.filter(Name='Controller of the Month').count(),
+        'dotm': user.Awards.filter(Name='Duelist of the Month').count(),
+        'iotm': user.Awards.filter(Name='Initiator of the Month').count(),
+        'sotm': user.Awards.filter(Name='Sentinel of the Month').count(),
+    }
+
     context = {
         'role_splits': role_splits,
         'agent_splits': agent_splits,
@@ -1503,6 +1522,7 @@ def player_splits(request, username):
         'topAgentImage': topAgentImage,
 
         'mvps': mvps,
+        'award_counts': award_counts,
     }
 
     return render(request, 'match/player/player_splits.html', context)
@@ -1594,6 +1614,15 @@ def player_gamelog(request, username):
 
     user = User.objects.filter(Username=username).first()
 
+    award_counts = {
+        'potw': user.Awards.filter(Name='Player of the Week').count(),
+        'potm': user.Awards.filter(Name='Player of the Month').count(),
+        'cotm': user.Awards.filter(Name='Controller of the Month').count(),
+        'dotm': user.Awards.filter(Name='Duelist of the Month').count(),
+        'iotm': user.Awards.filter(Name='Initiator of the Month').count(),
+        'sotm': user.Awards.filter(Name='Sentinel of the Month').count(),
+    }
+
     context = {
         'players': players,
 
@@ -1614,6 +1643,7 @@ def player_gamelog(request, username):
         'end_date': end_date,
 
         'mvps': mvps,
+        'award_counts': award_counts,
     }
 
     return render(request, 'match/player/player_gamelog.html', context)
@@ -5744,6 +5774,15 @@ def player_teammates(request, username):
 
     user = User.objects.filter(Username=username).first()
 
+    award_counts = {
+        'potw': user.Awards.filter(Name='Player of the Week').count(),
+        'potm': user.Awards.filter(Name='Player of the Month').count(),
+        'cotm': user.Awards.filter(Name='Controller of the Month').count(),
+        'dotm': user.Awards.filter(Name='Duelist of the Month').count(),
+        'iotm': user.Awards.filter(Name='Initiator of the Month').count(),
+        'sotm': user.Awards.filter(Name='Sentinel of the Month').count(),
+    }
+
     context = {
         "PlayerPerformances": UserPerformances,
         "TeammatePerformances": anno,
@@ -5753,6 +5792,7 @@ def player_teammates(request, username):
         'topAgentImage': topAgentImage,
         
         'mvps': mvps,
+        'award_counts': award_counts,
     }
     
     return render(request, 'match/player/player_teammates.html', context)

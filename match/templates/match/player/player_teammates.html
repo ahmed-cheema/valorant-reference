@@ -124,21 +124,52 @@
 
   <div style="text-align: center; margin-left: auto; margin-right: auto;">
     <a class="hiddenLink" href="{% url 'player_gamelog' User.Username %}?mvp=1">
-    <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;">
+    <span class="btn" style="background-color:white; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+          title="Most Valuable Player" data-bs-toggle="tooltip" data-bs-placement="top">
       {{ mvps }}x MVP
     </span>
     </a>
   </div>
 
   <div class="mt-2" style="text-align: center; margin-left: auto; margin-right: auto;">
-    {% for award in User.Awards.all %}
-      {% if award.Name == "Player of the Week" %}
-        <span class="btn" style="background-color:#74a7f7; font-size:80% !important; border: 1px solid black; font-weight:bold;"
-              title="Player of the Week" data-bs-toggle="tooltip" data-bs-placement="top">
-          POTW
-        </span>
-      {% endif %}
-    {% endfor %}
+    {% if award_counts.potm > 0 %}
+      <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Player of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.potm }}x POTM
+      </span>
+    {% endif %}
+    {% if award_counts.potw > 0 %}
+      <span class="btn" style="background-color:#74a7f7; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Player of the Week" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.potw }}x POTW
+      </span>
+    {% endif %}
+  </div>
+  <div class="mt-2" style="text-align: center; margin-left: auto; margin-right: auto;">
+    {% if award_counts.cotm > 0 %}
+      <span class="btn" style="background-color:#f7a752; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Controller of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.cotm }}x COTM
+      </span>
+    {% endif %}
+    {% if award_counts.dotm > 0 %}
+      <span class="btn" style="background-color:#ed8080; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Duelist of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.dotm }}x DOTM
+      </span>
+    {% endif %}
+    {% if award_counts.iotm > 0 %}
+      <span class="btn" style="background-color:#b4fca4; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Initiator of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.iotm }}x IOTM
+      </span>
+    {% endif %}
+    {% if award_counts.sotm > 0 %}
+      <span class="btn" style="background-color:#d2d4d2; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Sentinel of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.sotm }}x SOTM
+      </span>
+    {% endif %}
   </div>
 
   <div id="buttons" style="text-align:center; margin-top: 1%;">
