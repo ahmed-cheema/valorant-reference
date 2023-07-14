@@ -4414,7 +4414,7 @@ def BestSpanRatio(field1, field2, n, maximum=True):
                     'Agent': most_common_agent,  # set the most common agent
                     'AgentImage': AgentImage(most_common_agent),
                     'SpanLength': n,
-                    'Span': total_field1 / total_field2 if total_field2 != 0 else 0,
+                    'Span': total_field1 / total_field2 if total_field2 != 0 else total_field1+1e-10,
                     'StartDate': queue[0].Match.Date,
                     'EndDate': queue[-1].Match.Date,
                     'Active': i == len(user_group) - 1
