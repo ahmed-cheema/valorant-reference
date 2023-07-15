@@ -56,6 +56,8 @@ urlpatterns = [
 
     path('lineups/', views.lineups, name='lineups'),
 
+    path('awards/', views.awards, name='awards'),
+
     path('analysis/', views.analysis, name='analysis'),
     path('analysis/time/', views.time_of_day, name='time_of_day'),
     path('analysis/mvps/', views.leaderboard_analysis, name='leaderboard_analysis'),

@@ -1,0 +1,431 @@
+{% extends 'match/base.html' %}
+
+{% block title %}
+Awards
+{% endblock %}
+
+{% block css %}
+<style>
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    td {
+        background-clip: padding-box !important;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .nav-link {
+        margin-right: 25px;
+    }
+
+    .nav-link#awards {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    a {
+        text-decoration: none;
+    } 
+
+    span {
+        font-size:60% !important;
+    }
+
+    a.nav-custom:hover,
+    a.nav-custom:active,
+    a.nav-custom:focus,
+    a.nav-custom.active,
+    .nav-item.show .nav-custom {
+        color: white !important;
+    }
+
+    a.nav-custom {
+        color: black;
+    }
+
+    #awardTabs {
+        display: flex;
+        justify-content: center;
+    }
+
+    #roleTabs {
+        display: flex;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2 style="text-align: center;">Awards</h2>
+
+    <div style="margin:auto; text-align:center;">
+        <ul class="nav" id="awardTabs" role="tablist" style="text-align:center">
+            <li class="nav-item" role="presentation">
+                <a class="m-2 nav-link nav-custom btn btn-outline-dark shadow-sm active" id="potm-tab" data-bs-toggle="tab" href="#tab-potm" role="tab">Player of the Month</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="m-2 nav-link nav-custom btn btn-outline-dark shadow-sm" id="potw-tab" data-bs-toggle="tab" href="#tab-potw" role="tab">Player of the Week</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="m-2 nav-link nav-custom btn btn-outline-dark shadow-sm" id="role-tab" data-bs-toggle="tab" href="#tab-role" role="tab">Monthly Role Awards</a>
+            </li>
+        </ul>
+    </div>
+
+    <br>
+
+    <div class="tab-content">
+
+        <div id="tab-potm" class="tab-pane active">
+            <h4 style="text-align: center;">Player of the Month</h4>
+            <div class="table-responsive-lg">
+            <table id="table-basic" class="table table-hover table-striped table-sm center"
+                style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                        <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                        <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                        <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                        <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                        <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                        <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in potm %}
+                    {% if p.Username == "N/A" %}
+                    <tr>
+                        <td>N/A</td>
+                        <td><a href="{% url 'player_stats' %}?dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                        <td><a href="{% url 'player_stats' %}?dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                        <td class="right"><a href="{% url 'player_gamelog' p.Username %}?dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                        <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                        <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                        <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                        <td class="right">{{ p.acs|floatformat:1 }}</td>
+                        <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>   
+            </div>   
+        </div>
+
+        <div id="tab-potw" class="tab-pane">
+            <h4 style="text-align: center;">Player of the Week</h4>
+            <div class="table-responsive-lg">
+            <table id="table-basic" class="table table-hover table-striped table-sm center"
+                style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                        <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                        <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                        <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                        <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                        <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                        <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in potw %}
+                    {% if p.Username == "N/A" %}
+                    <tr>
+                        <td>N/A</td>
+                        <td><a href="{% url 'player_stats' %}?dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                        <td><a href="{% url 'player_stats' %}?dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                        <td class="right"><a href="{% url 'player_gamelog' p.Username %}?dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                        <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                        <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                        <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                        <td class="right">{{ p.acs|floatformat:1 }}</td>
+                        <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>    
+            </div>  
+        </div>
+
+        <div id="tab-role" class="tab-pane">
+
+            <div style="margin:auto; text-align:center; font-size:80%">
+                <ul class="nav" id="roleTabs" role="tablist" style="text-align:center">
+                    <li class="nav-item" role="presentation">
+                        <a class="mr-2 mb-2 nav-link nav-custom btn btn-outline-dark shadow-sm active" id="cont-tab" data-bs-toggle="tab" href="#tab-controller" role="tab">Controller</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="mr-2 mb-2 nav-link nav-custom btn btn-outline-dark shadow-sm" id="duel-tab" data-bs-toggle="tab" href="#tab-duelist" role="tab">Duelist</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="mr-2 mb-2 nav-link nav-custom btn btn-outline-dark shadow-sm" id="init-tab" data-bs-toggle="tab" href="#tab-initiator" role="tab">Initiator</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="mr-2 mb-2 nav-link nav-custom btn btn-outline-dark shadow-sm" id="sent-tab" data-bs-toggle="tab" href="#tab-sentinel" role="tab">Sentinel</a>
+                    </li>
+                </ul>
+            </div>
+
+            <br>
+
+            <div class="tab-content">
+
+                <div id="tab-controller" class="tab-pane active">
+                    <h4 style="text-align: center;">Controller of the Month</h4>
+                    <div class="table-responsive-lg">
+                    <table id="table-basic" class="table table-hover table-striped table-sm center"
+                        style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                                <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                                <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for p in cotm %}
+                            {% if p.Username == "N/A" %}
+                            <tr>
+                                <td>N/A</td>
+                                <td><a href="{% url 'player_stats' %}?role=Controller&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                                <td><a href="{% url 'player_stats' %}?role=Controller&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td class="right"><a href="{% url 'player_gamelog' p.Username %}?role=Controller&dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                                <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                                <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                                <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                                <td class="right">{{ p.acs|floatformat:1 }}</td>
+                                <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>  
+                    </div>    
+                </div>
+
+                <div id="tab-duelist" class="tab-pane">
+                    <h4 style="text-align: center;">Duelist of the Month</h4>
+                    <div class="table-responsive-lg">
+                    <table id="table-basic" class="table table-hover table-striped table-sm center"
+                        style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                                <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                                <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for p in dotm %}
+                            {% if p.Username == "N/A" %}
+                            <tr>
+                                <td>N/A</td>
+                                <td><a href="{% url 'player_stats' %}?role=Duelist&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                                <td><a href="{% url 'player_stats' %}?role=Duelist&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td class="right"><a href="{% url 'player_gamelog' p.Username %}?role=Duelist&dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                                <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                                <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                                <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                                <td class="right">{{ p.acs|floatformat:1 }}</td>
+                                <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div id="tab-initiator" class="tab-pane">
+                    <h4 style="text-align: center;">Initiator of the Month</h4>
+                    <div class="table-responsive-lg">
+                    <table id="table-basic" class="table table-hover table-striped table-sm center"
+                        style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                                <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                                <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for p in iotm %}
+                            {% if p.Username == "N/A" %}
+                            <tr>
+                                <td>N/A</td>
+                                <td><a href="{% url 'player_stats' %}?role=Initiator&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                                <td><a href="{% url 'player_stats' %}?role=Initiator&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td class="right"><a href="{% url 'player_gamelog' p.Username %}?role=Initiator&dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                                <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                                <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                                <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                                <td class="right">{{ p.acs|floatformat:1 }}</td>
+                                <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div id="tab-sentinel" class="tab-pane">
+                    <h4 style="text-align: center;">Sentinel of the Month</h4>
+                    <div class="table-responsive-lg">
+                    <table id="table-basic" class="table table-hover table-striped table-sm center"
+                        style="border:1px solid rgb(168, 168, 168); margin:auto;">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th title="Date Range" data-bs-toggle="tooltip" data-bs-placement="top">Date</th>
+                                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+                                <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+                                <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+                                <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+                                <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>      
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for p in sotm %}
+                            {% if p.Username == "N/A" %}
+                            <tr>
+                                <td>N/A</td>
+                                <td><a href="{% url 'player_stats' %}?role=Sentinel&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=25px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                                <td><a href="{% url 'player_stats' %}?role=Sentinel&dateRange={{ p.RangeHidden }}">{{ p.Range }}</a></td>
+                                <td class="right"><a href="{% url 'player_gamelog' p.Username %}?role=Sentinel&dateRange={{ p.RangeHidden }}">{{ p.num_matches }}</a></td>
+                                <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+                                <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+                                <td class="right">{{ p.kpr|floatformat:3 }}</td>
+                                <td class="right">{{ p.acs|floatformat:1 }}</td>
+                                <td class="right">{{ p.adr|floatformat:1 }}</td>      
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>  
+                </div>
+
+            </div>
+
+        </div>
+    
+    </div>
+
+    <br>
+
+</div>
+
+{% endblock %}

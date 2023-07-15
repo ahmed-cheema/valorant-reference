@@ -266,7 +266,7 @@ class Award(models.Model):
     EndDate = models.DateTimeField()
 
     def __str__(self):
-        return self.name
+        return self.Name
 
 class User(models.Model):
     Username = models.CharField(max_length=200)

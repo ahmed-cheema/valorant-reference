@@ -4195,7 +4195,7 @@ from itertools import groupby
 from operator import itemgetter
 
 from operator import lt, gt, le, ge, eq
-from datetime import timedelta
+from datetime import timedelta, date
 from collections import defaultdict
 
 def BestActiveStreak(field, value, op):
@@ -5973,6 +5973,462 @@ def lineups(request):
 
     # Render template
     return render(request, 'match/lineups.html', context)
+
+
+### AWARDS
+
+from dateutil.relativedelta import relativedelta
+
+def get_months(start_date, end_date):
+    start_date = start_date.replace(day=1)
+    end_date = (end_date + relativedelta(months=2)).replace(day=1)
+
+    date = start_date
+    while date < end_date:
+        yield date
+        date += relativedelta(months=1)
+
+def get_mondays(start_date, end_date):
+    # if start_date is not Monday, adjust it to the Monday of its week
+    if start_date.weekday() != 0:
+        start_date = start_date - timedelta(days=start_date.weekday())
+
+    # if end_date is not Sunday, adjust it to the Monday of next week
+    if end_date.weekday() != 6:
+        end_date = end_date + timedelta(days=(7-end_date.weekday()))
+
+    date = start_date
+    while date <= end_date:
+        yield date
+        date += timedelta(days=7)
+
+def awards(request):
+    potm_awards = []
+    potw_awards = []
+
+    cotm_awards = []
+    dotm_awards = []
+    iotm_awards = []
+    sotm_awards = []
+
+    earliest_match = Match.objects.order_by('Date').first()
+    latest_match = Match.objects.order_by('-Date').first()
+
+    # POTM
+    months = list(get_months(earliest_match.Date.date(), latest_match.Date.date()))
+    for i in range(len(months)-1):
+        range_start = months[i]
+        range_end = months[i+1] - timedelta(days=1)
+        range_end_hidden = months[i+1]
+
+        range_string = range_start.strftime('%B %Y')  # Format the month as "Month, Year"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Player of the Month', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            potm_awards.append(player_stats)
+
+        except Award.DoesNotExist:
+            potm_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                                "RangeStart": range_start, "RangeEnd": range_end})
+
+    # POTW
+    mondays = list(get_mondays(earliest_match.Date.date(), latest_match.Date.date()))
+    for i in range(len(mondays)-1):
+        range_start = mondays[i]
+        range_end = mondays[i+1] - timedelta(days=1)
+        range_end_hidden = mondays[i+1]
+        range_string = f"{range_start.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}-{range_end.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Player of the Week', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            potw_awards.append(player_stats)
+        
+        except Award.DoesNotExist:
+            potw_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                           "RangeStart": range_start, "RangeEnd": range_end})
+
+    # COTM
+    for i in range(len(months)-1):
+        range_start = months[i]
+        range_end = months[i+1] - timedelta(days=1)
+        range_end_hidden = months[i+1]
+
+        range_string = range_start.strftime('%B %Y')  # Format the month as "Month, Year"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Controller of the Month', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Role="Controller", Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            cotm_awards.append(player_stats)
+
+        except Award.DoesNotExist:
+            cotm_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                                "RangeStart": range_start, "RangeEnd": range_end})
+
+    # DOTM
+    for i in range(len(months)-1):
+        range_start = months[i]
+        range_end = months[i+1] - timedelta(days=1)
+        range_end_hidden = months[i+1]
+
+        range_string = range_start.strftime('%B %Y')  # Format the month as "Month, Year"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Duelist of the Month', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Role="Duelist", Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            dotm_awards.append(player_stats)
+
+        except Award.DoesNotExist:
+            dotm_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                                "RangeStart": range_start, "RangeEnd": range_end})
+
+    # IOTM
+    for i in range(len(months)-1):
+        range_start = months[i]
+        range_end = months[i+1] - timedelta(days=1)
+        range_end_hidden = months[i+1]
+
+        range_string = range_start.strftime('%B %Y')  # Format the month as "Month, Year"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Initiator of the Month', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Role="Initiator", Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            iotm_awards.append(player_stats)
+
+        except Award.DoesNotExist:
+            iotm_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                                "RangeStart": range_start, "RangeEnd": range_end})
+
+    # SOTM
+    for i in range(len(months)-1):
+        range_start = months[i]
+        range_end = months[i+1] - timedelta(days=1)
+        range_end_hidden = months[i+1]
+
+        range_string = range_start.strftime('%B %Y')  # Format the month as "Month, Year"
+        range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        try:
+            award = Award.objects.get(Name='Sentinel of the Month', StartDate=range_start, EndDate=range_end)
+            username = award.user_set.first().Username
+
+            filtered_matches = Player.objects.filter(Username=username, Role="Sentinel", Match__Date__range=[range_start, range_end_hidden])
+
+            player_stats = filtered_matches.values('Username').aggregate(
+                num_matches=Count('Match'),
+
+                matches_won=Sum('MatchWon'),
+                matches_lost=Sum('MatchLost'),
+                matches_draw=Sum('MatchDraw'),
+
+                mvps=Sum('MVP'),
+                mvp_pct=Avg('MVP'),
+
+                total_kills=Sum('Kills'),
+                total_deaths=Sum('Deaths'),
+                total_assists=Sum('Assists'),
+
+                total_score=Sum('CombatScore'),
+                total_damage=Sum('TotalDamage'),
+
+                total_rounds=Sum('RoundsPlayed')
+            )
+
+            player_stats["Username"] = username
+
+            player_stats["Range"] = range_string
+            player_stats["RangeHidden"] = range_string_hidden
+            player_stats["RangeStart"] = range_start
+            player_stats["RangeEnd"] = range_end + timedelta(days=1)
+
+            tagSplit = username.split("#")
+
+            player_stats['DisplayName'] = tagSplit[0]
+            player_stats['UserTag'] = "#" + tagSplit[1]
+
+            player_stats['WinLossRecord'] = "{}-{}-{}".format(player_stats['matches_won'],player_stats['matches_lost'],player_stats['matches_draw'])
+
+            agent_counter = Counter(filtered_matches.values_list('Agent', flat=True))
+            if agent_counter:
+                player_stats['TopAgent'] = agent_counter.most_common(1)[0][0]
+                player_stats['AgentString'] =", ".join(f"{key} ({value})" for key, value in agent_counter.most_common())
+            player_stats['TopAgentImage'] = AgentImage(player_stats['TopAgent'])
+
+            player_stats['win_pct'] = (player_stats['matches_won']+0.5*player_stats['matches_draw'])/player_stats['num_matches']
+            player_stats['kdr'] = player_stats['total_kills']/player_stats['total_deaths']
+            player_stats['kpr'] = player_stats['total_kills']/player_stats['total_rounds']
+            player_stats['acs'] = player_stats['total_score']/player_stats['total_rounds']
+            player_stats['adr'] = player_stats['total_damage']/player_stats['total_rounds']
+
+            sotm_awards.append(player_stats)
+
+        except Award.DoesNotExist:
+            sotm_awards.append({"Username": "N/A", "Range": range_string, "RangeHidden": range_string_hidden,
+                                "RangeStart": range_start, "RangeEnd": range_end})
+
+    context = {
+        "potm": potm_awards,
+        "potw": potw_awards,
+
+        "cotm": cotm_awards,
+        "dotm": dotm_awards,
+        "iotm": iotm_awards,
+        "sotm": sotm_awards,
+    }
+
+    return render(request, 'match/awards.html', context)
 
 ### ANALYSIS
 
