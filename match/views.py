@@ -5994,8 +5994,8 @@ def get_mondays(start_date, end_date):
         start_date = start_date - timedelta(days=start_date.weekday())
 
     # if end_date is not Sunday, adjust it to the Monday of next week
-    if end_date.weekday() != 6:
-        end_date = end_date + timedelta(days=(7-end_date.weekday()))
+    if end_date.weekday() == 6:
+        end_date = end_date + timedelta(days=1)
 
     date = start_date
     while date <= end_date:
@@ -6090,6 +6090,8 @@ def awards(request):
         range_end_hidden = mondays[i+1]
         range_string = f"{range_start.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}-{range_end.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}"
         range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
+
+        print(mondays)
 
         try:
             award = Award.objects.get(Name='Player of the Week', StartDate=range_start, EndDate=range_end)
