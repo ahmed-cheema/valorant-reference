@@ -6091,8 +6091,6 @@ def awards(request):
         range_string = f"{range_start.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}-{range_end.strftime('X%m/X%d/%y').replace('X0','X').replace('X','')}"
         range_string_hidden = f"{range_start.strftime('%m/%d/%Y')} - {range_end_hidden.strftime('%m/%d/%Y')}"
 
-        print(mondays)
-
         try:
             award = Award.objects.get(Name='Player of the Week', StartDate=range_start, EndDate=range_end)
             username = award.user_set.first().Username
