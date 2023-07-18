@@ -1,0 +1,514 @@
+{% extends 'match/base.html' %}
+
+{% block title %}
+{{ User.Username }} · Graphs
+{% endblock %}
+
+{% block css %}
+<style>
+  @media screen and (max-width: 768px) {
+    p {
+      padding-left: 0px !important;
+      padding-right: 0px !important;
+    }
+    form {
+      display: block !important;
+    }
+  }
+
+  .nav-link {
+      margin-right: 30px;
+  }
+
+  .hover-nav:hover {
+      color:rgb(220,53,69) !important;
+      border-bottom: solid 3px rgb(220,53,69) !important;
+  }
+
+  /* Add this CSS to style the chart */
+  .line {
+  fill: none;
+  stroke-width: 2px;
+  }
+
+  .career-line {
+  stroke: blue;
+  }
+
+  .rolling-line {
+  stroke: red;
+  }
+
+  .axis text {
+  font-size: 12px;
+  }
+
+  .chart-title {
+  font-size: 16px;
+  text-anchor: middle;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+</script>
+
+<script>
+    const data = JSON.parse('{{ player_data|escapejs }}');
+
+    // Define chart dimensions
+    const width = 800;
+    const height = 400;
+    const margin = { top: 30, right: 20, bottom: 30, left: 50 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    // Create Chart.js chart context
+    const ctx = document.getElementById('chart').getContext('2d');
+
+    // Define scales and axes with D3.js
+    const xScale = d3.scaleLinear().range([0, innerWidth]);
+    const yScale = d3.scaleLinear().range([innerHeight, 0]);
+
+    const rollingAverageSize = +document.getElementById("rolling-average-input").value;
+    const metric = document.getElementById("metric-select").value;
+    
+    const metricTitles = {
+            acs: "Average Combat Score",
+            adr: "Average Damage",
+            kdr: "Kill Death Ratio",
+            kpr: "Kills Per Round",
+            k_pct: "Kill Percentage",
+            fb_pct: "First Blood Percentage",
+            fd_pct: "First Death Percentage",
+            fb_fd: "First Blood / Death Ratio",
+            win_pct: "Win Percentage",
+            rd_win_pct: "Round Win Percentage",
+    };
+
+    // Create initial empty Chart.js chart
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: `${metricTitles[metric]}`,
+                data: [],
+                borderColor: 'red',
+                fill: false,
+                pointStyle: 'circle',
+                pointBackgroundColor: 'red',
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                      display: false,
+                    },
+                    ticks: {
+                        maxTicksLimit: 10,
+                        color: 'black',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Match',
+                        color: 'black',
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                y: {
+                    ticks: {
+                        maxTicksLimit: 5,
+                        color: 'black',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: `${metricTitles[metric]}`,
+                        color: 'black',
+                        font: {
+                            size: 16
+                        }
+                    } 
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `{{ username }}: ${metricTitles[metric]} Over Time`,
+                    color: 'black',
+                    font: {
+                        size: 18
+                    }
+                },
+                subtitle: {
+                    display: true,
+                    text: `${rollingAverageSize} Game Rolling Average`,
+                    color: 'black',
+                    font: {
+                        size: 14
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(tooltipItem) {
+                            return '';
+                        },
+                        label: (tooltipItem) => {
+                            const dataIndex = tooltipItem.dataIndex;
+
+                            const matchStart = dataIndex + 1;
+                            const matchEnd = dataIndex + rollingAverageSize;
+
+                            const unixTimestampStart = data[matchStart - 1].MatchDate;
+                            const unixTimestampEnd = data[matchEnd - 1].MatchDate;
+                            const dateStart = new Date(unixTimestampStart).toLocaleDateString();
+                            const dateEnd = new Date(unixTimestampEnd).toLocaleDateString();
+
+                            const yValue = tooltipItem.parsed.y.toFixed(2);
+
+                            const output = ['Match Range: ' + matchStart + ' to ' + matchEnd,
+                                            'Date Range: ' + dateStart + ' to ' + dateEnd,
+                                            `${metricTitles[metric]}: ` + yValue];
+
+                            return output;
+                        }
+                }
+            }
+            },
+        }
+    });
+
+    // Function to calculate rolling average
+    function calculateRollingAverage(data, windowSize) {
+        const rollingData = [];
+
+        for (let i = windowSize - 1; i < data.length; i++) {
+            const windowData = data.slice(i - windowSize + 1, i + 1);
+            const sumRounds = windowData.reduce((acc, d) => acc + d.Rounds, 0);
+            const sumKills = windowData.reduce((acc, d) => acc + d.Kills, 0);
+            const sumDeaths = windowData.reduce((acc, d) => acc + d.Deaths, 0);
+            const sumCombatScore = windowData.reduce((acc, d) => acc + d.CombatScore, 0);
+            const sumDamage = windowData.reduce((acc, d) => acc + d.Damage, 0);
+            const sumKillRounds = windowData.reduce((acc, d) => acc + d.KillRounds, 0);
+            const sumFirstBloods = windowData.reduce((acc, d) => acc + d.FirstBloods, 0);
+            const sumFirstDeaths = windowData.reduce((acc, d) => acc + d.FirstDeaths, 0);
+            const sumRoundsWon = windowData.reduce((acc, d) => acc + d.RoundsWon, 0);
+            const sumMatchWins = windowData.reduce((acc, d) => acc + d.AdjMatchWin, 0);
+            const sumMatches = windowData.reduce((acc, d) => acc + d.Match, 0);
+
+            const averageCombatScore = sumCombatScore / sumRounds;
+            const averageDamage = sumDamage / sumRounds;
+
+            const killDeathRatio = sumKills / sumDeaths;
+            const killsPerRound = sumKills / sumRounds;
+            const killPct = sumKillRounds / sumRounds;
+
+            const fbPct = sumFirstBloods / sumRounds;
+            const fdPct = sumFirstDeaths / sumRounds;
+            const fbFdRatio = sumFirstBloods / sumFirstDeaths;
+
+            const roundWinPct = sumRoundsWon / sumRounds;
+            const matchWinPct = sumMatchWins / sumMatches;
+
+
+            rollingData.push({
+                ...data[i],
+                RollingAvgCombatScore: averageCombatScore,
+                RollingAvgDamage: averageDamage,
+                RollingKillDeathRatio: killDeathRatio,
+                RollingKillsPerRound: killsPerRound,
+                RollingKillPct: killPct,
+                RollingFbPct: fbPct,
+                RollingFdPct: fdPct,
+                RollingFbFdRatio: fbFdRatio,
+                RollingRoundWinPct: roundWinPct,
+                RollingMatchWinPct: matchWinPct,
+            });
+        }
+
+        return rollingData;
+    }
+
+    function updateChart() {
+        const rollingAverageSize = +document.getElementById("rolling-average-input").value;
+        const metric = document.getElementById("metric-select").value;
+
+        const rollingData = calculateRollingAverage(data, rollingAverageSize);
+
+        const xLabels = rollingData.map((d, i) => i + rollingAverageSize);
+        const yValues = rollingData.map(d => {
+            if (metric === "acs") {
+                return d.RollingAvgCombatScore;
+            } else if (metric === "adr") {
+                return d.RollingAvgDamage;
+            } else if (metric === "kdr") {
+                return d.RollingKillDeathRatio;
+            } else if (metric === "kpr") {
+                return d.RollingKillsPerRound;
+            } else if (metric === "k_pct") {
+                return d.RollingKillPct;
+            } else if (metric === "fb_pct") {
+                return d.RollingFbPct;
+            } else if (metric === "fd_pct") {
+                return d.RollingFdPct;
+            } else if (metric === "fb_fd") {
+                return d.RollingFbFdRatio;
+            } else if (metric === "win_pct") {
+                return d.RollingMatchWinPct;
+            } else if (metric === "rd_win_pct") {
+                return d.RollingRoundWinPct;
+            }
+        });
+
+        // Update chart data and labels
+        chart.data.labels = xLabels;
+        chart.data.datasets[0].data = yValues;
+
+        // Update the x-axis and y-axis scales
+        const xDomainMax = data.length;
+        const xDomainMin = Math.max(rollingAverageSize, 1);
+        xScale.domain([xDomainMin, xDomainMax]);
+
+        let yDomainMin, yDomainMax;
+
+        // Set y-axis domain based on metric
+        // Modify this section according to your specific data
+        if (metric === "acs") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingAvgCombatScore);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingAvgCombatScore);
+        } else if (metric === "adr") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingAvgDamage);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingAvgDamage);
+        } else if (metric === "kdr") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingKillDeathRatio);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingKillDeathRatio);
+        } else if (metric === "kpr") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingKillsPerRound);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingKillsPerRound);
+        } else if (metric === "k_pct") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingKillPct);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingKillPct);
+        } else if (metric === "fb_pct") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingFbPct);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingFbPct);
+        } else if (metric === "fd_pct") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingFdPct);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingFdPct);
+        } else if (metric === "fb_fd") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingFbFdRatio);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingFbFdRatio);
+        } else if (metric === "win_pct") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingMatchWinPct);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingMatchWinPct);
+        } else if (metric === "rd_win_pct") {
+            yDomainMin = d3.min(rollingData, (d) => d.RollingRoundWinPct);
+            yDomainMax = d3.max(rollingData, (d) => d.RollingRoundWinPct);
+        }
+
+        const yDomainPadding = (yDomainMax - yDomainMin) * 0.1;
+        yScale.domain([yDomainMin - yDomainPadding, yDomainMax + yDomainPadding]);
+
+        const metricTitles = {
+            acs: "Average Combat Score",
+            adr: "Average Damage",
+            kdr: "Kill Death Ratio",
+            kpr: "Kills Per Round",
+            k_pct: "Kill Percentage",
+            fb_pct: "First Blood Percentage",
+            fd_pct: "First Death Percentage",
+            fb_fd: "First Blood / Death Ratio",
+            win_pct: "Win Percentage",
+            rd_win_pct: "Round Win Percentage",
+        };
+
+        chart.options.plugins.title.text = `{{ username }}: ${metricTitles[metric]} Over Time`;
+        chart.options.plugins.subtitle.text = `${rollingAverageSize} Game Rolling Average`;
+        chart.options.scales.y.title.text = `${metricTitles[metric]}`;
+        chart.data.datasets[0].label = `${metricTitles[metric]}`;
+
+        chart.options.plugins.tooltip.callbacks.label = (tooltipItem) => {
+            const dataIndex = tooltipItem.dataIndex;
+
+            const matchStart = dataIndex + 1;
+            const matchEnd = dataIndex + rollingAverageSize;
+
+            const unixTimestampStart = data[matchStart - 1].MatchDate;
+            const unixTimestampEnd = data[matchEnd - 1].MatchDate;
+            const dateStart = new Date(unixTimestampStart).toLocaleDateString();
+            const dateEnd = new Date(unixTimestampEnd).toLocaleDateString();
+
+            const yValue = tooltipItem.parsed.y.toFixed(2);
+
+            const output = ['Match Range: ' + matchStart + ' to ' + matchEnd,
+                            'Date Range: ' + dateStart + ' to ' + dateEnd,
+                            `${metricTitles[metric]}: ` + yValue];
+
+            return output;
+        };
+
+        // Update the Chart.js chart
+        chart.update();
+    }
+
+    function updateRollingAverage(value) {
+        const rollingAverageSize = +value;
+
+        // Update the range input value
+        document.getElementById("rolling-average-input").value = rollingAverageSize;
+
+        // Update the number input value
+        document.getElementById("amount").value = rollingAverageSize;
+
+        // Update the chart
+        updateChart();
+    }
+
+    // Add event listener to the rolling average input
+    document.getElementById("rolling-average-input").addEventListener("input", updateChart);
+
+    // Draw initial chart
+    updateChart();
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+  <div class="p-2" style="width: fit-content; overflow: hidden; text-align: center; margin-left: auto; margin-right: auto;">
+    <div style="display: inline-block; vertical-align: middle;">
+      <img src="{{ topAgentImage }}" alt="{{ topAgent }}" height="60px" title="Most Played Agent: {{ topAgent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+    </div>
+    <div style="display: inline-block; vertical-align: middle; white-space: nowrap;">
+      <h1 style="font-weight:bold"
+      title="{{ User.Username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ User.DisplayName }}</h1>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-left: auto; margin-right: auto;">
+    <a class="hiddenLink" href="{% url 'player_gamelog' User.Username %}?mvp=1">
+    <span class="btn" style="background-color:white; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+          title="Most Valuable Player" data-bs-toggle="tooltip" data-bs-placement="top">
+      {{ mvps }}x MVP
+    </span>
+    </a>
+  </div>
+
+  <div class="mt-2" style="text-align: center; margin-left: auto; margin-right: auto;">
+    {% if award_counts.potm > 0 %}
+      <span class="btn" style="background-color:gold; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Player of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.potm }}x POTM
+      </span>
+    {% endif %}
+    {% if award_counts.potw > 0 %}
+      <span class="btn" style="background-color:#74a7f7; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Player of the Week" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.potw }}x POTW
+      </span>
+    {% endif %}
+  </div>
+  <div class="mt-2" style="text-align: center; margin-left: auto; margin-right: auto;">
+    {% if award_counts.cotm > 0 %}
+      <span class="btn" style="background-color:#f7a752; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Controller of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.cotm }}x COTM
+      </span>
+    {% endif %}
+    {% if award_counts.dotm > 0 %}
+      <span class="btn" style="background-color:#ed8080; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Duelist of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.dotm }}x DOTM
+      </span>
+    {% endif %}
+    {% if award_counts.iotm > 0 %}
+      <span class="btn" style="background-color:#b4fca4; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Initiator of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.iotm }}x IOTM
+      </span>
+    {% endif %}
+    {% if award_counts.sotm > 0 %}
+      <span class="btn" style="background-color:#d2d4d2; font-size:80% !important; border: 1px solid black; font-weight:bold;"
+            title="Sentinel of the Month" data-bs-toggle="tooltip" data-bs-placement="top">
+        {{ award_counts.sotm }}x SOTM
+      </span>
+    {% endif %}
+  </div>
+
+  <div id="buttons" class="mt-3" style="text-align:center;">
+    <div style="display: inline-block;">
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_detail' User.Username %}" role="button">Overview</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' User.Username %}" role="button">Splits</a>
+      <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_graphs' User.Username %}" role="button">Graphs</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' User.Username %}" role="button">Teammates</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ User.DisplayName }}=1" role="button">Matches</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' User.Username %}" role="button">Game Log</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2 style="text-align:center; font-weight:normal">Performance Over Time</h2>
+
+  <p style="padding-left: 200px; padding-right: 200px;">
+    Visualize this player's performance over time by toggling the <strong>Metric</strong> and <strong>Window</strong> filters.
+    Note that this tool is designed for players with a large sample size.
+    It is not particularly useful for players who have not played many games.
+  </p>
+
+  <div class="mt-3 d-flex justify-content-center">
+  <form style="display:flex;">
+    <div class="m-2">
+      <label for="metric-select" style="margin-right:2px">Metric:</label>
+      <select id="metric-select" onchange="updateChart()">
+          <option value="acs">Average Combat Score</option>
+          <option value="adr">Average Damage Per Round</option>
+          <option value="kdr">Kill Death Ratio</option>
+          <option value="kpr">Kills Per Round</option>
+          <option value="k_pct">Kill Percentage</option>
+          <option value="fb_pct">First Blood Percentage</option>
+          <option value="fd_pct">First Death Percentage</option>
+          <option value="fb_fd">First Blood / Death Ratio</option>
+          <option value="win_pct">Match Win Percentage</option>
+          <option value="rd_win_pct">Round Win Percentage</option>
+      </select>
+    </div>
+
+    <div class="m-2">
+        <label for="rolling-average-input" style="margin-right:2px">Window:</label>
+        <input id="rolling-average-input" type="range" min="1" max="{{ games_played }}" value="{{ default_window }}" oninput="updateRollingAverage(this.value)" />
+        <input id="amount" type="number" value="{{ default_window }}" min="1" max="{{ games_played }}" style="width:50px" oninput="updateRollingAverage(this.value)" />
+    </div>
+
+  </form></div>
+
+  <div class="chart-container table-responsive">
+      <canvas id="chart" class="table"></canvas>
+  </div>
+
+  <br>
+    
+</div>
+
+{% endblock %}

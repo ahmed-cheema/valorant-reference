@@ -178,6 +178,7 @@
     <div style="display: inline-block;">
       <a class="btn btn-outline-dark shadow-sm active" style="font-size:100%; margin:5px" href="{% url 'player_detail' User.Username %}" role="button">Overview</a>
       <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_splits' User.Username %}" role="button">Splits</a>
+      <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_graphs' User.Username %}" role="button">Graphs</a>
       <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_teammates' User.Username %}" role="button">Teammates</a>
       <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'match_list' %}?{{ User.DisplayName }}=1" role="button">Matches</a>
       <a class="btn btn-outline-dark shadow-sm" style="font-size:100%; margin:5px" href="{% url 'player_gamelog' User.Username %}" role="button">Game Log</a>

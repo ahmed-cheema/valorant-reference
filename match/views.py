@@ -26,6 +26,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.io as pio
 
+import json
+
 agent_map = {"41fb69c1-4189-7b37-f117-bcaf1e96f1bf":"Astra",
              "5f8d3a7f-467b-97f3-062c-13acf203c006":"Breach",
              "9f0d8ba9-4140-b941-57d3-a7ad57c6b417":"Brimstone",
@@ -145,69 +147,7 @@ def about(request):
     return render(request, 'match/about.html')
 
 def analysis(request):
-
-    """
-    nmd = Player.objects.filter(Username="jit#jits").values_list("Kills","Deaths","CombatScore","RoundsPlayed").order_by("Match__Date")
-
-    df = pd.DataFrame(nmd)
-    df.columns = ["Kills","Deaths","CombatScore","Rounds"]
-
-    WINDOW = 20
-    
-    df['CareerKDRatio'] = df['Kills'].cumsum() / (df['Deaths'].cumsum())
-    df['CareerACS'] = df['CombatScore'].cumsum() / (df['Rounds'].cumsum())
-
-    df['RollingKDRatio'] = (df['Kills'].rolling(window=WINDOW).sum()) / (df['Deaths'].rolling(window=WINDOW).sum())
-    df['RollingAvgCombatScore'] = (df['CombatScore'].rolling(window=WINDOW).sum()) / (df['Rounds'].rolling(window=WINDOW).sum())
-
-    df.reset_index(inplace=True)
-
-    df['GameNumber'] = df.index + 1
-
-    df2 = df.dropna()
-
-    df = df[df.GameNumber >= 20]
-
-    fig = make_subplots(rows=1, cols=2)
-
-    # Add trace for RollingKDRatio to the first column
-    fig.add_trace(go.Scatter(x=df['GameNumber'], y=df['CareerACS'], 
-                            mode='lines', name='Career ACS'), row=1, col=1)
-
-    # Add trace for RollingAvgCombatScore to the second column
-    fig.add_trace(go.Scatter(x=df2['GameNumber'], y=df2['RollingAvgCombatScore'], 
-                            mode='lines', name='Rolling ACS'), row=1, col=2)
-
-    # Update layout to include titles
-    fig.update_layout(title_text="nmd#219: The Decline?", title_x=0.5, template="simple_white",
-                      title_font=dict(size=22))
-
-    # Update xaxis and yaxis properties for the subplots
-    fig.update_xaxes(title_text="Game", row=1, col=1, title_font=dict(family="sans-serif",size=14))
-    fig.update_yaxes(title_text="Career ACS", row=1, col=1, title_font=dict(family="sans-serif",size=14))
-    fig.update_xaxes(title_text="Game", row=1, col=2, title_font=dict(family="sans-serif",size=14))
-    fig.update_yaxes(title_text="Rolling ACS", row=1, col=2, title_font=dict(family="sans-serif",size=14))
-
-    fig.add_annotation(text="Career ACS Over Time", 
-                   xref="paper", yref="paper", 
-                   x=0.16, y=1.1, showarrow=False, font=dict(family="sans-serif",size=14))
-
-    fig.add_annotation(text="20 Game Rolling ACS", 
-                   xref="paper", yref="paper", 
-                   x=0.835, y=1.1, showarrow=False, font=dict(family="sans-serif",size=14))
-    
-    fig.update_layout(showlegend=False)
-
-    fig_div = pio.to_html(fig, full_html=False)
-
-    pio.write_image(fig, 'rolling_averages_plot.svg', width=1400)
-
-    context = {
-        "fig":fig_div,
-    }
-    """
-
-    return render(request, 'match/analysis.html')#, context)
+    return render(request, 'match/analysis.html')
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, MatchID=match_id)
@@ -1526,6 +1466,67 @@ def player_splits(request, username):
     }
 
     return render(request, 'match/player/player_splits.html', context)
+
+def player_graphs(request, username):
+
+    players = Player.objects.filter(Username=username)\
+                           .values_list("Kills", "Deaths", "CombatScore", "TotalDamage", "ZeroKillRounds", "FirstBloods", "FirstDeaths",
+                                        "Match__TeamOneScore", "Match__TeamOneWon", "Match__MatchDraw", "RoundsPlayed", "Match__Date")\
+                           .order_by("Match__Date")
+    
+    if (players.count() == 0):
+        raise Http404
+    
+    agent_counter = Counter(Player.objects.filter(Username=username).values_list('Agent', flat=True))
+    topAgent = agent_counter.most_common(1)[0][0]
+    topAgentImage = AgentImage(topAgent)
+
+    df = pd.DataFrame(players)
+    df.columns = ["Kills", "Deaths", "CombatScore", "Damage", "ZeroKillRounds", "FirstBloods", "FirstDeaths", 
+                  "RoundsWon", "MatchWon", "MatchDraw", "Rounds", "MatchDate"]
+    
+    df["Match"] = 1
+
+    df["KillRounds"] = df.Rounds - df.ZeroKillRounds
+    df["AdjMatchWin"] = df.MatchWon+0.5*df.MatchDraw
+    del df["ZeroKillRounds"], df["MatchWon"], df["MatchDraw"]
+
+    player_data = df.to_json(orient="records")
+
+    games_played = df.shape[0]
+    default_window = 20 if games_played >= 100 else round(games_played / 5)
+
+    user = User.objects.filter(Username=username).first()
+
+    mvps = players.aggregate(
+        mvps=Sum('MVP')
+    )['mvps']
+
+    award_counts = {
+        'potw': user.Awards.filter(Name='Player of the Week').count(),
+        'potm': user.Awards.filter(Name='Player of the Month').count(),
+        'cotm': user.Awards.filter(Name='Controller of the Month').count(),
+        'dotm': user.Awards.filter(Name='Duelist of the Month').count(),
+        'iotm': user.Awards.filter(Name='Initiator of the Month').count(),
+        'sotm': user.Awards.filter(Name='Sentinel of the Month').count(),
+    }
+
+    context = {
+        'User': user,
+        'topAgent': topAgent,
+        'topAgentImage': topAgentImage,
+
+        'mvps': mvps,
+        'award_counts': award_counts,
+
+        "username": username,
+        "player_data": player_data,
+        "games_played": games_played,
+        "default_window": default_window,
+    }
+
+    return render(request, 'match/player/player_graphs.html', context)
+
 
 from dateutil.parser import parse
 def player_gamelog(request, username):
@@ -5996,6 +5997,9 @@ def get_mondays(start_date, end_date):
     # if end_date is not Sunday, adjust it to the Monday of next week
     if end_date.weekday() == 6:
         end_date = end_date + timedelta(days=1)
+
+    elif end_date.weekday() == 0:
+        end_date = end_date + timedelta(days=7)
 
     date = start_date
     while date <= end_date:
