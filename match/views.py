@@ -5997,8 +5997,7 @@ def get_mondays(start_date, end_date):
     # if end_date is not Sunday, adjust it to the Monday of next week
     if end_date.weekday() == 6:
         end_date = end_date + timedelta(days=1)
-
-    elif end_date.weekday() == 0:
+    else:
         end_date = end_date + timedelta(days=7)
 
     date = start_date
