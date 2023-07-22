@@ -1,0 +1,194 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Analysis · Impact
+{% endblock %}
+
+{% block css %}
+<style>
+    @media screen and (max-width: 768px) {
+        p, .adjust {
+            width: 100% !important;
+        }
+    }
+
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    td {
+        background-clip: padding-box !important;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    table.sortable tbody tr:nth-child(2n) td {
+        background: white;
+    }
+    table.sortable tbody tr:nth-child(2n+1) td {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .nav-link:not(.nav-custom) {
+        margin-right: 30px;
+    }
+
+    .nav-link#analysis {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+        border-bottom: none;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    button[aria-selected="true"] {
+        color: white !important;
+    }
+
+    .btn-outline-dark {
+        color: black !important;
+    }
+
+    .btn-outline-dark:hover {
+        color: white !important;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    span {
+        font-size:60% !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2>Impact Analysis</h2>
+
+    <p style="width: 800px">
+        Valorant has {{ playable_agents }} different playable agents which can each be classified into one of four roles.
+        Prior to a game, a team goes through "Agent Select," where each player picks the agent (and thus the role) that they'll play during the game.
+        Two players on the same team cannot play the same agent, and there are certain patterns that are generally maintained: at most two duelists, one sentinel, one controller, and at least one initiator.
+    </p>
+
+    <p style="width: 800px">
+        Not every role is equally desirable. Many players prefer to play duelist over controller, for example; some players end up with a role that they are essentially forced to play due to the rest of the team's selections.
+        Sometimes a player will "fill," or wait for their teammates to pick their agents and then make their decision based on the resulting vacancy that needs to be filled.
+    </p>
+
+    <p style="width: 800px">
+        The goal of this page is to identify the players who exhibit the most versatility by selecting different agents and roles.
+        On the other hand, there are some players who predominantly play on the same agent and role.
+        It is generally a commendable trait to be able to fit the needs of the team in different ways.
+    </p>
+
+    <p style="width: 800px">
+        I calculated a naive metric called <strong>Versatility Index</strong> for this purpose.
+        The versatility metric is a measure of diversity in a player's choice of agent or role, naively based on counts (not taking into account their performance). 
+        The measure we use is entropy, a concept from information theory. 
+        In the context of player versatility, entropy can be interpreted as the amount of "uncertainty" or "diversity" in the player's agent or role selection. 
+        The entropy \(V\) of a player's agent or role distribution is calculated as \(V=-\sum_{i}p_i\log_2(p_i)\), where \(p_i\) represents the proportion of times the \(i\)-th agent or role was chosen.
+        The entropy value will be larger when the distribution of selected agents or roles is more uniform, indicating higher versatility.
+        Conversely, a player who always chooses the same agent or role will have an entropy of zero, indicating low versatility.
+    </p>
+
+    <p style="width: 800px">
+        I'll repeat the fact that this metric does not take performance into account. It only considers the amount of times an agent or role was played.
+        The obvious problem with this approach is that a player who is very good at one role and very bad at the other three roles may be rated as equally versatile
+        as a player who is very good at every role (if their role counts are identical). In reality, the latter player is obviously more versatile.
+        It's important to understand what exactly a metric is capturing: in this case, it is capturing the amount of diversity in a player's agent or role selection.
+    </p>
+
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr id="ignore">
+                <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="3" style="text-align:center;">RAPM</th>
+            </tr>
+            <tr>
+                <th>Player</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
+                <th class="right" title="Percentage of Agents Played" data-bs-toggle="tooltip" data-bs-placement="top">Attack</th>
+                <th class="right" title="Agent Versatility Index" data-bs-toggle="tooltip" data-bs-placement="top">Defense</th>
+                <th class="right" title="Percentage of Roles Played" data-bs-toggle="tooltip" data-bs-placement="top">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in RAPM %}
+            <tr>
+                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><a href="{% url 'player_gamelog' p.Username %}">{{ p.TotalRounds }}</a></td>
+                <td class="right" style="{% if p.AttackRAPM > 0 %}color:green{% elif p.AgentPct == 0 %}{% else %}color:red{% endif %}">{{ p.AttackRAPM|floatformat:3 }}</td>
+                <td class="right" style="{% if p.DefenseRAPM > 0 %}color:green{% elif p.AgentPct == 0 %}{% else %}color:red{% endif %}">{{ p.DefenseRAPM|floatformat:3 }}</td>
+                <td class="right" style="{% if p.TotalRAPM > 0 %}color:green{% elif p.AgentPct == 0 %}{% else %}color:red{% endif %}">{{ p.TotalRAPM|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+    </div>
+      
+    <br>
+
+</div>
+
+{% endblock %}

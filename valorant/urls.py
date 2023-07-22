@@ -64,6 +64,7 @@ urlpatterns = [
     path('analysis/mvps/', views.leaderboard_analysis, name='leaderboard_analysis'),
     path('analysis/solo-duelists/', views.solo_duelists, name='solo_duelists'),
     path('analysis/versatility/', views.versatility, name='versatility'),
+    path('analysis/impact/', views.impact, name='impact'),
     
     path('about/', views.about, name='about')
 ]

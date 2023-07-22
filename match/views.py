@@ -7134,6 +7134,7 @@ def time_of_day(request):
     return render(request, 'match/analysis/time_of_day.html', context)
 
 import numpy as np
+from sklearn.linear_model import Ridge
 
 def versatility(request):
 
@@ -7190,3 +7191,107 @@ def versatility(request):
     }
 
     return render(request, 'match/analysis/versatility.html', context)
+
+def impact(request):
+
+    ALPHA = 100
+    MIN_ROUNDS = 500
+
+    usernames = Player.objects.filter(Team="Team A").values_list('Username', flat=True).distinct()
+    username_to_id = {username: i for i, username in enumerate(usernames)}
+
+    lineups = {}
+
+    for match in Match.objects.all():
+        players = Player.objects.filter(Match=match, Team="Team A")
+        lineup_key = ",".join(sorted(player.Username for player in players))
+
+        representative_player = players.first()
+
+        if lineup_key not in lineups:
+            lineups[lineup_key] = {
+                'attack_wins': 0,
+                'attack_rounds': 0,
+                'defense_wins': 0,
+                'defense_rounds': 0,
+                'attack_counts': [0] * len(usernames),
+                'defense_counts': [0] * len(usernames),
+            }
+
+        lineups[lineup_key]['attack_wins'] += representative_player.AttackWins
+        lineups[lineup_key]['attack_rounds'] += representative_player.AttackRounds
+        lineups[lineup_key]['defense_wins'] += representative_player.DefenseWins
+        lineups[lineup_key]['defense_rounds'] += representative_player.DefenseRounds
+
+        for player in players:
+            index = username_to_id[player.Username]
+            lineups[lineup_key]['attack_counts'][index] = 1
+            lineups[lineup_key]['defense_counts'][index] = 1
+
+    df_attack = pd.DataFrame({
+        'lineup': lineup,
+        'wins': lineup_data['attack_wins'],
+        'rounds': lineup_data['attack_rounds'],
+        **{f'attack_{i}': count for i, count in enumerate(lineup_data['attack_counts'])},
+        **{f'defense_{i}': 0 for i, count in enumerate(lineup_data['defense_counts'])},
+    } for lineup, lineup_data in lineups.items())
+    df_attack['type'] = 'attack'
+
+    df_defense = pd.DataFrame({
+        'lineup': lineup,
+        'wins': lineup_data['defense_wins'],
+        'rounds': lineup_data['defense_rounds'],
+        **{f'attack_{i}': 0 for i, count in enumerate(lineup_data['attack_counts'])},
+        **{f'defense_{i}': count for i, count in enumerate(lineup_data['defense_counts'])}
+    } for lineup, lineup_data in lineups.items())
+    df_defense['type'] = 'defense'
+
+    df = pd.concat([df_attack, df_defense])
+    df["winPct"] = df.wins/df.rounds
+
+    X = df[[f'attack_{i}' for i in range(len(usernames))] + 
+           [f'defense_{i}' for i in range(len(usernames))]]
+    y = df['winPct']
+    weights = df['rounds']
+    
+    model = Ridge(alpha=ALPHA)
+    model.fit(X, y, sample_weight=weights)
+
+    coefficients = model.coef_
+    attack_RAPM = coefficients[:len(usernames)]
+    defense_RAPM = coefficients[len(usernames):]
+
+    usernames_split = [username.split("#") for username in usernames]
+    display_names = [name for name, _ in usernames_split]
+    tags = ["#" + tag for _, tag in usernames_split]
+
+    agents = []
+    agent_images = []
+    for username in usernames:
+        agent_counter = Counter(Player.objects.filter(Team="Team A", Username=username).values_list('Agent', flat=True))
+        top_agent = agent_counter.most_common(1)[0][0] if agent_counter else None
+        agents.append(top_agent)
+        agent_images.append(AgentImage(top_agent) if top_agent else None)
+
+    total_rounds = [df[(df[f'attack_{i}'] == 1) | (df[f'defense_{i}'] == 1)].rounds.sum() for i in range(len(usernames))]
+
+    results = pd.DataFrame({
+        'Username': usernames,
+        'DisplayName': display_names,
+        'UserTag': tags,
+        'TopAgent': agents,
+        'TopAgentImage': agent_images,
+        'TotalRounds': total_rounds,
+        'AttackRAPM': attack_RAPM,
+        'DefenseRAPM': defense_RAPM,
+        'TotalRAPM': attack_RAPM + defense_RAPM,
+    })
+
+    output = results[results.TotalRounds >= MIN_ROUNDS].sort_values(by="TotalRAPM",ascending=False).reset_index(drop=True)
+    
+    context = {
+        "Stints": df,
+        "RAPM": output.to_dict('records'),
+    }
+
+    return render(request, 'match/analysis/impact.html', context)

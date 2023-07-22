@@ -201,7 +201,8 @@ def ScrapeMatch(match_id):
     browser = uc.Chrome(service=s, options=options)
     browser.get(url)
 
-    while(True):
+    i = 0
+    while(i <= 100):
         soup = bs.BeautifulSoup(browser.page_source, features="html.parser")
         body_class = soup.body.get('class')
         if body_class and 'skin-takeover' in body_class:
@@ -211,6 +212,7 @@ def ScrapeMatch(match_id):
             ((len(soup.find_all("div", {"id": "closeIconHit"})) == 0) and \
             (len(soup.find_all("div", {"id": "cpmstarvideosliderclose"})) == 0) and \
             (len(soup.find_all("div", {"class": "cpmsoutstreamclose"})) == 0)):
+                i += 1
                 continue
             else:
                 break
