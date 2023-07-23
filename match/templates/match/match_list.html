@@ -307,7 +307,7 @@ $(function() {
       {% for match in matches %}
         <tr class="{% if match.TeamOneWon %}table-success{% elif match.MatchDraw %}table-warning{% else %}table-danger{% endif %}">
           <td style="font-weight:bold"><a href="{% url 'match_detail' match.MatchID %}">{{ match.Date|date:"n/j/y" }} {{ match.Date|time:"g:i A" }}</a></td>
-          <td><a href="{% url 'map_detail' match.Map %}" %}>{{ match.Map }}</a></td>
+          <td><a href="{% url 'map_detail' match.Map %}">{{ match.Map }}</a></td>
           <td>{{ match.Score }}</td>
           <td>{{ match.MVP }} ({{ match.MVP_ACS }})</td>
           <td>{{ match.TopKiller }} ({{ match.MostKills }})</td>

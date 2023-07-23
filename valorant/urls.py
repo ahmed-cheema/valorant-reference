@@ -65,6 +65,7 @@ urlpatterns = [
     path('analysis/solo-duelists/', views.solo_duelists, name='solo_duelists'),
     path('analysis/versatility/', views.versatility, name='versatility'),
     path('analysis/impact/', views.impact, name='impact'),
+    path('analysis/opening-duels/', views.opening_duels, name='opening_duels'),
     
     path('about/', views.about, name='about')
 ]

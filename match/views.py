@@ -1527,7 +1527,6 @@ def player_graphs(request, username):
 
     return render(request, 'match/player/player_graphs.html', context)
 
-
 from dateutil.parser import parse
 def player_gamelog(request, username):
 
@@ -6769,7 +6768,6 @@ def leaderboard_analysis(request):
         avg_rank_loss=Avg(Case(When(MatchLost=1, then='ACS_Rank'), default=0, output_field=IntegerField())),
     ).order_by('-Username')
 
-
     for p in player_stats:
         filtered_players = Player.objects.filter(Team="Team A", 
                                                  Username=p['Username'])
@@ -7198,6 +7196,7 @@ def impact(request):
     MIN_ROUNDS = 500
 
     usernames = Player.objects.filter(Team="Team A").values_list('Username', flat=True).distinct()
+    player_count = len(usernames)
     username_to_id = {username: i for i, username in enumerate(usernames)}
 
     lineups = {}
@@ -7247,7 +7246,7 @@ def impact(request):
     df_defense['type'] = 'defense'
 
     df = pd.concat([df_attack, df_defense])
-    df["winPct"] = df.wins/df.rounds
+    df["winPct"] = 100*((df.wins-(df.rounds-df.wins))/df.rounds)
 
     X = df[[f'attack_{i}' for i in range(len(usernames))] + 
            [f'defense_{i}' for i in range(len(usernames))]]
@@ -7288,10 +7287,210 @@ def impact(request):
     })
 
     output = results[results.TotalRounds >= MIN_ROUNDS].sort_values(by="TotalRAPM",ascending=False).reset_index(drop=True)
+
+    print(df.head())
     
     context = {
-        "Stints": df,
+        "Stints": df.head(),
         "RAPM": output.to_dict('records'),
+        "player_count": player_count,
+        "col_count": player_count*2,
+        "ALPHA": ALPHA,
+        "MIN_ROUNDS": MIN_ROUNDS,
     }
 
     return render(request, 'match/analysis/impact.html', context)
+
+def opening_duels(request):
+
+    data = []
+
+    for match in Match.objects.all():
+
+        temp = Player.objects.filter(Match=match).values("Team").annotate(fbs=Sum("FirstBloods"))
+
+        if temp[0]["Team"] == "Team A":
+            row = {"FirstBloods_A": temp[0]["fbs"],
+                "FirstBloods_B": temp[1]["fbs"],
+                "FB_Diff": temp[0]["fbs"]-temp[1]["fbs"],
+                "Success": temp[0]["fbs"]/(temp[0]["fbs"]+temp[1]["fbs"]),
+                "ScoreDiff": match.ScoreDifferential,
+                "Score": match.Score,
+                "Won": match.TeamOneWon,
+                "Draw": match.MatchDraw,
+                "Map": match.Map,
+                "Date": match.Date,
+                "MatchID": match.MatchID,
+                }
+        else:
+            row = {"FirstBloods_A": temp[1]["fbs"],
+                "FirstBloods_B": temp[0]["fbs"],
+                "FB_Diff": temp[1]["fbs"]-temp[0]["fbs"],
+                "Success": temp[1]["fbs"]/(temp[1]["fbs"]+temp[0]["fbs"]),
+                "ScoreDiff": match.ScoreDifferential,
+                "Score": match.Score,
+                "Won": match.TeamOneWon,
+                "Draw": match.MatchDraw,
+                "Map": match.Map,
+                "Date": match.Date,
+                "MatchID": match.MatchID,
+                }
+            
+        data.append(row)
+
+    df = pd.DataFrame(data)
+    df["AdjWin"] = df.Won+0.5*df.Draw
+
+    heatmap = df.groupby(['FirstBloods_A', 'FirstBloods_B']).agg(
+        Win_Percentage=('AdjWin', 'mean'),
+        Matches_Count=('AdjWin', 'count')
+    ).reset_index()
+
+    #
+
+    mp = df.shape[0]
+    win_pct = df.AdjWin.mean()
+    win_pct_str = '{:.2%}'.format(win_pct)
+
+    more_fb_games = df[df.FB_Diff > 0].shape[0]
+    more_fb_games_str = '{:.2%}'.format(more_fb_games/mp)
+    fewer_fb_games = df[df.FB_Diff < 0].shape[0]
+    fewer_fb_games_str = '{:.2%}'.format(fewer_fb_games/mp)
+    equal_fb_games = df[df.FB_Diff == 0].shape[0]
+    equal_fb_games_str = '{:.2%}'.format(equal_fb_games/mp)
+
+    success_rate = df.FirstBloods_A.sum()/(df.FirstBloods_A.sum()+df.FirstBloods_B.sum())
+    success_rate_str = '{:.2%}'.format(success_rate) #a success rate
+
+    db = df[df.AdjWin == 1]
+    win_success_rate = db.FirstBloods_A.sum()/(db.FirstBloods_A.sum()+db.FirstBloods_B.sum())
+    win_success_rate_str = '{:.2%}'.format(win_success_rate) #a success rate in wins
+
+    db = df[df.AdjWin == 0]
+    loss_success_rate = db.FirstBloods_A.sum()/(db.FirstBloods_A.sum()+db.FirstBloods_B.sum())
+    loss_success_rate_str = '{:.2%}'.format(loss_success_rate) #a success rate in losses
+
+    team_A_more_FB_and_won = df[(df['FirstBloods_A'] > df['FirstBloods_B']) & (df['AdjWin'] == 1)].shape[0]
+    team_A_more_FB_and_draw = df[(df['FirstBloods_A'] > df['FirstBloods_B']) & (df['AdjWin'] == 0.5)].shape[0]
+    team_B_more_FB_and_won = df[(df['FirstBloods_B'] > df['FirstBloods_A']) & (df['AdjWin'] == 0)].shape[0]
+    team_B_more_FB_and_draw = df[(df['FirstBloods_B'] > df['FirstBloods_A']) & (df['AdjWin'] == 0.5)].shape[0]
+    team_A_more_FB = df[df['FirstBloods_A'] > df['FirstBloods_B']].shape[0]
+    team_B_more_FB = df[df['FirstBloods_B'] > df['FirstBloods_A']].shape[0]
+    win_rate = ((team_A_more_FB_and_won + team_B_more_FB_and_won) + 0.5 * (team_A_more_FB_and_draw + team_B_more_FB_and_draw)) / (team_A_more_FB + team_B_more_FB)
+    win_rate_str = '{:.2%}'.format(win_rate) #overall win rate w/ more fbs
+
+    A_win_rate = df[(df['FirstBloods_A'] > df['FirstBloods_B'])].AdjWin.mean()
+    A_win_rate_str = '{:.2%}'.format(A_win_rate) #a win rate w/ more fbs
+    B_win_rate = df[(df['FirstBloods_B'] > df['FirstBloods_A'])].AdjWin.mean()
+    B_win_rate_str = '{:.2%}'.format(B_win_rate) #b win rate w/ more fbs
+
+    equal_win_rate = df[(df['FirstBloods_B'] == df['FirstBloods_A'])].AdjWin.mean()
+    equal_win_rate_str = '{:.2%}'.format(equal_win_rate) #a win rate w/ tied fbs
+
+    #
+
+    def calculate_win_rate(group):
+        # Calculate the cases where the team with more FBs won or drew
+        team_A_more_FB_and_won = group[(group['FirstBloods_A'] > group['FirstBloods_B']) & (group['AdjWin'] == 1)].shape[0]
+        team_A_more_FB_and_draw = group[(group['FirstBloods_A'] > group['FirstBloods_B']) & (group['AdjWin'] == 0.5)].shape[0]
+
+        team_B_more_FB_and_won = group[(group['FirstBloods_B'] > group['FirstBloods_A']) & (group['AdjWin'] == 0)].shape[0]
+        team_B_more_FB_and_draw = group[(group['FirstBloods_B'] > group['FirstBloods_A']) & (group['AdjWin'] == 0.5)].shape[0]
+
+        # Calculate the total cases where a team had more FBs
+        team_A_more_FB = group[group['FirstBloods_A'] > group['FirstBloods_B']].shape[0]
+        team_B_more_FB = group[group['FirstBloods_B'] > group['FirstBloods_A']].shape[0]
+
+        # Calculate the win rate
+        win_rate = ((team_A_more_FB_and_won + team_B_more_FB_and_won) + 0.5 * (team_A_more_FB_and_draw + team_B_more_FB_and_draw)) / (team_A_more_FB + team_B_more_FB)
+        return win_rate
+
+    # Group by 'Map' and calculate the count (number of matches), mean of 'AdjWin' (win rate), and success rate
+    df_grouped = df.groupby('Map').agg({
+        'AdjWin': ['count', 'mean'],
+        'FirstBloods_A': 'sum',
+        'FirstBloods_B': 'sum',
+    })
+
+    # Calculate success rate and win rate for the team with more first bloods
+    df_grouped['SuccessRate'] = df_grouped['FirstBloods_A', 'sum'] / (df_grouped['FirstBloods_A', 'sum'] + df_grouped['FirstBloods_B', 'sum'])
+    df_grouped['MoreFBWinRate'] = df.groupby('Map').apply(calculate_win_rate)
+
+    df_grouped = df_grouped.reset_index(drop=False)
+
+    # Rename the columns for clarity
+    df_grouped.columns = ['Map', 'MatchesPlayed', 'WinRate', 'FirstBloods_A_sum', 'FirstBloods_B_sum', 'SuccessRate', 'MoreFBWinRate']
+
+    # Drop the intermediate sum columns
+    df_grouped.drop(['FirstBloods_A_sum', 'FirstBloods_B_sum'], axis=1, inplace=True)
+
+    ###
+
+    players = Player.objects.filter(Team="Team A")
+
+    player_stats = players.values('Username').annotate(
+        num_matches = Count("Match"),
+        opening_duels = Sum("FirstBloods")+Sum("FirstDeaths"),
+        total_rounds = Sum("RoundsPlayed"),
+        aggression = F("opening_duels") / Cast("total_rounds", FloatField()),
+        success_rate = Sum("FirstBloods") / Cast("opening_duels", FloatField()),
+    )
+
+    player_stats = player_stats.order_by("-num_matches").filter(num_matches__gte=10)
+
+    for p in player_stats:
+        filtered_players = Player.objects.filter(Team="Team A", Username=p['Username'])
+
+        tagSplit = p['Username'].split("#")
+
+        p['DisplayName'] = tagSplit[0]
+        p['UserTag'] = "#" + tagSplit[1]
+
+        agent_counter = Counter(filtered_players.values_list('Agent', flat=True))
+        if agent_counter:
+            p['TopAgent'] = agent_counter.most_common(1)[0][0]
+        p['TopAgentImage'] = AgentImage(p['TopAgent'])
+
+    ###
+
+    roles = Player.objects.filter(Team="Team A")
+
+    role_stats = roles.values('Role').annotate(
+        num_matches = Count("Match"),
+        opening_duels = Sum("FirstBloods")+Sum("FirstDeaths"),
+        total_rounds = Sum("RoundsPlayed"),
+        aggression = F("opening_duels") / Cast("total_rounds", FloatField()),
+        success_rate = Sum("FirstBloods") / Cast("opening_duels", FloatField()),
+    )
+
+    role_stats = role_stats.order_by("-num_matches")
+
+    context = {
+        "match_stats": df.to_dict("records"),
+        "map_stats": df_grouped.to_dict("records"),
+        "player_stats": player_stats,
+        "role_stats": role_stats,
+        "heatmap_data": heatmap.to_json(orient="records"),
+        "meta": {
+            "mp": mp,
+            "win_pct": win_pct,
+            "win_pct_str": win_pct_str,
+            "more_fb_games": more_fb_games,
+            "more_fb_games_str": more_fb_games_str,
+            "fewer_fb_games": fewer_fb_games,
+            "fewer_fb_games_str": fewer_fb_games_str,
+            "equal_fb_games": equal_fb_games,
+            "equal_fb_games_str": equal_fb_games_str,
+            "success_rate": success_rate,
+            "success_rate_str": success_rate_str,
+            "win_success_rate_str": win_success_rate_str,
+            "loss_success_rate_str": loss_success_rate_str,
+            "win_rate": win_rate,
+            "win_rate_str": win_rate_str,
+            "A_win_rate_str": A_win_rate_str,
+            "B_win_rate_str": B_win_rate_str,
+            "equal_win_rate_str": equal_win_rate_str,
+        }
+    }
+
+    return render(request, 'match/analysis/opening_duels.html', context)

@@ -123,38 +123,91 @@ Analysis · Impact
     <br>
     <h2>Impact Analysis</h2>
 
+    <h4>Background</h4>
+
     <p style="width: 800px">
-        Valorant has {{ playable_agents }} different playable agents which can each be classified into one of four roles.
-        Prior to a game, a team goes through "Agent Select," where each player picks the agent (and thus the role) that they'll play during the game.
-        Two players on the same team cannot play the same agent, and there are certain patterns that are generally maintained: at most two duelists, one sentinel, one controller, and at least one initiator.
+        A longlasting task in basketball analytics has been to quantify player impact beyond the box score - beyond the amount of points, rebounds, and assists they racked up.
+        It's obvious that a basketball player can do other things that impact winning which don't show up in the statsheet, and some of the things that do show up on the statsheet may not be all that important (i.e. a generally poor perimeter defender can average two steals per game because those steals may not outweigh the rest of their defensive possessions).
     </p>
 
     <p style="width: 800px">
-        Not every role is equally desirable. Many players prefer to play duelist over controller, for example; some players end up with a role that they are essentially forced to play due to the rest of the team's selections.
-        Sometimes a player will "fill," or wait for their teammates to pick their agents and then make their decision based on the resulting vacancy that needs to be filled.
+    A traditional way to represent player impact without box score stats is to just use base plus-minus. For example, Steph Curry had a +4.0 plus-minus per 100 possessions in the 2021 season. This number means that with Curry on the court, the Warriors outscored their opponents by four points per every 100 possessions. You can also compare this to his net plus-minus compared to when he’s off the floor. Steph had a +8.6 on-off plus-minus, meaning that the Warriors outscore their opponents by 8.6 more points when Steph is on the floor than when he is not.
+    </p>
+    
+    <p style="width: 800px">
+    While easy to understand, the traditional plus-minus metric is very flawed. If an inferior player’s minutes heavily aligned with Curry’s, their plus-minus would look far better than it should just because they get to play with Curry. In other words, base plus-minus does not adjust for the strength of your teammates. Furthermore, while a quick look at on-off plus-minus may let you know that a player is carrying their team, it tells you more about how strong a team’s bench is than anything else. James Harden posted an on-off plus-minus of +9.1 in 2020, which pales in comparison with his +0.2 mark in 2021 (albeit on a small sample size). Did he get that much better? Of course not – the Brooklyn Nets are just far more equipped to play at a high level without Harden on the floor than the Rockets were.
     </p>
 
     <p style="width: 800px">
-        The goal of this page is to identify the players who exhibit the most versatility by selecting different agents and roles.
-        On the other hand, there are some players who predominantly play on the same agent and role.
-        It is generally a commendable trait to be able to fit the needs of the team in different ways.
+    So, we need to adjust for the other players on the floor. That’s the idea of Adjusted Plus-Minus (APM) – solving the system of linear equations representing the players on a court and the associating plus-minus for their duration on the floor.
     </p>
 
     <p style="width: 800px">
-        I calculated a naive metric called <strong>Versatility Index</strong> for this purpose.
-        The versatility metric is a measure of diversity in a player's choice of agent or role, naively based on counts (not taking into account their performance). 
-        The measure we use is entropy, a concept from information theory. 
-        In the context of player versatility, entropy can be interpreted as the amount of "uncertainty" or "diversity" in the player's agent or role selection. 
-        The entropy \(V\) of a player's agent or role distribution is calculated as \(V=-\sum_{i}p_i\log_2(p_i)\), where \(p_i\) represents the proportion of times the \(i\)-th agent or role was chosen.
-        The entropy value will be larger when the distribution of selected agents or roles is more uniform, indicating higher versatility.
-        Conversely, a player who always chooses the same agent or role will have an entropy of zero, indicating low versatility.
+    Suppose that we have a matrix called \(A\) representing the players on the floor (one column for each player, a value of 1 if they’re on the floor for that stint and a value of 0 otherwise) and a vector \(b\) representing the plus-minus per 100 possessions for each stint.
+    We can then solve for \(x\) which is a vector of coefficients corresponding to each players representing their on-court value.
+    </p>
+      
+    <p style="width: 800px">
+        $$Ax=b$$
+        $$A^TAx=A^Tb$$
+        $$(A^TA)^{-1}(A^TA)x=(A^TA)^{-1}A^Tb$$
+        $$x=(A^TA)^{-1}A^Tb$$
     </p>
 
     <p style="width: 800px">
-        I'll repeat the fact that this metric does not take performance into account. It only considers the amount of times an agent or role was played.
-        The obvious problem with this approach is that a player who is very good at one role and very bad at the other three roles may be rated as equally versatile
-        as a player who is very good at every role (if their role counts are identical). In reality, the latter player is obviously more versatile.
-        It's important to understand what exactly a metric is capturing: in this case, it is capturing the amount of diversity in a player's agent or role selection.
+    That’s the adjusted plus-minus solution. As you might anticipate, it has its own drawbacks. Most notably a high degree of variance. This problem can be alleviated with the addition of a filtering term that essentially acts as a penalty for outliers – it converges all values towards zero.
+    </p>
+
+    <p style="width: 800px">
+    $$x=(A^TA+\lambda I)^{-1}A^Tb$$
+    </p>
+
+    <p style="width: 800px">
+    An optimal \(\lambda\) value can be found which yields an approximate solution to the original \(Ax=b\) problem. This equation is the method used to calculate regularized adjusted plus-minus (RAPM).
+    </p>
+
+    <h4>Valorant</h4>
+
+    <p style="width: 800px">
+        That was a lot of talk about basketball, but the same principles apply to Valorant. 
+        We can get a good sense of a player's quality by looking at some basic stats: kill death ratio, average combat score, etc.
+        As we all know, though, it's possible to inflate these numbers without making winning plays. Baiting your teammates, getting non-impact frags at the end of rounds, etc.
+        On the other hand, you can have a positive impact through plays that don't show up on the statsheet: strong util usage, game sense, leadership (making tactical decisions), etc.
+    </p>
+
+    <p style="width: 800px">
+        We can try and look at match win percentage or round win percentage, but this can be affected by the players you play with (just like in basketball).
+        Thus, we can calculate regularized adjusted plus-minus in a Valorant context.
+    </p>
+
+    <p style="width: 800px">
+        The first step is data preparation, and the goal is to generate a "stints" dataset which will be used for computation. 
+        With {{ player_count }} players to be analyzed, we generate {{ col_count }} binary player columns - each player has a corresponding attack and defense column. 
+        These columns are the independent variables of the model represented in the matrix \(A\). 
+    </p>
+
+    <p style="width: 800px">
+        The dependent variable represented in the vector \(b\) is round differential per 100 rounds. 
+        So, let's say a five player combination played five games together, during which they had a 23-18 record over 41 attack rounds. That's a round differential of \(23-18=5\), which we standardize to a 100 round sample: \((5/41)\cdot100\approx12.195\). 
+    </p>
+
+    <p style="width: 800px">
+        Each row of our input data represents a single lineup's performance on one side (attack or defense). 
+        The five players in that lineup will have their attack or defense columns set to 1, thus the sum of the {{ col_count }} binary player columns is always five.
+    </p>
+
+    <p style="width: 800px">
+        And that's essentially all there is to it. 
+        The one extra detail is that we keep track of rounds played ("lineup C played 47 rounds on attack when they had a round differential of 19.4 per 100 rounds") in order to be used as a weight. After all, an extremely high round differential is more significant if it's maintained over a large sample.
+        Afterwards, the actual ridge regression is run, spitting out {{ col_count }} coefficients - each player has an "attack" and "defense" coefficient representing their <strong>Attack RAPM</strong> and <strong>Defense RAPM</strong> respectively. 
+        These values can be summed to obtain their <strong>Total RAPM</strong>.
+    </p>
+
+    <h4>Results</h4>
+
+    <p style="width: 800px">
+        The following table shows the results with \(\lambda={{ ALPHA }}\). 
+        All players were included in the analysis, although only players with at least {{ MIN_ROUNDS }} rounds played are actually shown below.
     </p>
 
     <div class="table-responsive">
@@ -163,14 +216,14 @@ Analysis · Impact
         <thead>
             <tr id="ignore">
                 <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
-                <th colspan="3" style="text-align:center;">RAPM</th>
+                <th colspan="3" style="text-align:center;" title="Regularized Adjusted Plus-Minus" data-bs-toggle="tooltip" data-bs-placement="top">RAPM</th>
             </tr>
             <tr>
                 <th>Player</th>
                 <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
-                <th class="right" title="Percentage of Agents Played" data-bs-toggle="tooltip" data-bs-placement="top">Attack</th>
-                <th class="right" title="Agent Versatility Index" data-bs-toggle="tooltip" data-bs-placement="top">Defense</th>
-                <th class="right" title="Percentage of Roles Played" data-bs-toggle="tooltip" data-bs-placement="top">Total</th>
+                <th class="right" title="Attack RAPM" data-bs-toggle="tooltip" data-bs-placement="top">Attack</th>
+                <th class="right" title="Defense RAPM" data-bs-toggle="tooltip" data-bs-placement="top">Defense</th>
+                <th class="right" title="Total RAPM" data-bs-toggle="tooltip" data-bs-placement="top">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -186,6 +239,29 @@ Analysis · Impact
         </tbody>
         </table>
     </div>
+
+    <p style="width: 800px">
+        Great. And now for some quick caveats.
+    </p>
+
+    <p style="width: 800px">
+        One criticism of RAPM is that its values have no intuitive meaning and the relatively arbitrary choice of \(\lambda\) affects this value differently for different players (fewer rounds means stronger regularization towards zero). While methods of hyperparameter selection exist, this part of the methodology is still something to consider.
+    </p>
+
+    <p style="width: 800px">
+        Furthermore, no prior is used in this version of RAPM. While some modern NBA impact metrics like EPM and LEBRON are based on a box score and RAPM component in order to improve performance, NPI RAPM (non prior informed RAPM) is purely based on participation data.  
+    </p>
+
+    <p style="width: 800px">
+        Additionally, while RAPM traditionally takes both teammate and opponent strength into consideration, this version does not because 99% of the time, opponents are faced for one game and one game only. 
+        This data does not come from a controlled league environment like the NBA - it's more akin to a single traveling team facing diverse competition. Opponent strength is thus not accounted for.
+    </p>
+
+    <p style="width: 800px">
+        Overall, RAPM is not viewed as an end-all-be-all in basketball and it definitely shouldn't be in Valorant as well. 
+        It's an interesting way to analyze the game a little differently, though, and can provide some nuance to player evaluation.
+    </p>
+
       
     <br>
 

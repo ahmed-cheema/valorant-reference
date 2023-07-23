@@ -1,0 +1,480 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Analysis · Opening Duels
+{% endblock %}
+
+{% block css %}
+<style>
+    @media screen and (max-width: 768px) {
+        p, .adjust {
+            width: 100% !important;
+        }
+    }
+
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    td {
+        background-clip: padding-box !important;
+    }
+
+    tfoot tr {
+        background-color: #feffd6;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    table.sortable tbody tr:nth-child(2n) td {
+        background: white;
+    }
+    table.sortable tbody tr:nth-child(2n+1) td {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .nav-link:not(.nav-custom) {
+        margin-right: 30px;
+    }
+
+    .nav-link#analysis {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+        border-bottom: none;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    button[aria-selected="true"] {
+        color: white !important;
+    }
+
+    .btn-outline-dark {
+        color: black !important;
+    }
+
+    .btn-outline-dark:hover {
+        color: white !important;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .dataTable > thead > tr > th[class*="sort"]:before,
+    .dataTable > thead > tr > th[class*="sort"]:after {
+        content: "" !important;
+    }
+
+    span {
+        font-size:60% !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+
+<script>
+    const data = JSON.parse('{{ heatmap_data|escapejs }}');
+
+    const margin = {top: 80, right: 30, bottom: 70, left: 60},
+    width = 600 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select("#my_dataviz")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    const xLabels = [...new Set(data.map(d => d.FirstBloods_A))];
+    const yLabels = [...new Set(data.map(d => d.FirstBloods_B))].sort((a, b) => a - b);
+
+    const x = d3.scaleBand()
+    .range([ 0, width ])
+    .domain(xLabels)
+    .padding(0.05);
+    svg.append("g")
+    .style("font-size", 15)
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickSize(0))
+    .select(".domain").remove();
+
+    const y = d3.scaleBand()
+    .range([ height, 0 ])
+    .domain(yLabels)
+    .padding(0.05);
+    svg.append("g")
+    .style("font-size", 15)
+    .call(d3.axisLeft(y).tickSize(0))
+    .select(".domain").remove();
+
+    const winColorScale = d3.scaleLinear()
+        .range(["red", "yellow", "green"])
+        .domain([0, 0.5, 1]);
+
+    const countColorScale = d3.scaleLinear()
+        .range(["lightgray", "black"])
+        .domain([0, d3.max(data, d => d.Matches_Count)]);
+
+    const tooltip = d3.select("body")
+    .append("div")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px");
+
+    const mouseover = function(event, d) {
+        tooltip.style("opacity", 1)
+        d3.select(this)
+            .style("stroke", "black")
+            .style("opacity", 1)
+    }
+    const mousemove = function(event, d) {
+        tooltip
+        .html("First Bloods: " + (d.FirstBloods_A) + "<br>" + "First Deaths: " + (d.FirstBloods_B) + "<br>" + "Matches: " + d.Matches_Count + "<br>" + "Win Percentage: " + (d.Win_Percentage * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%")
+        .style("left", (event.pageX+20) + "px")
+        .style("top", (event.pageY-50) + "px");
+    }
+    const mouseleave = function(event, d) {
+        tooltip.style("opacity", 0)
+        d3.select(this)
+            .style("stroke", "none")
+            .style("opacity", 0.8)
+    }
+
+    svg.selectAll()
+    .data(data, function(d) {return d.FirstBloods_A+':'+d.FirstBloods_B;})
+    .enter()
+    .append("rect")
+    .attr("x", function(d) { return x(d.FirstBloods_A) })
+    .attr("y", function(d) { return y(d.FirstBloods_B) })
+    .attr("width", x.bandwidth())
+    .attr("height", y.bandwidth())
+    .style("fill", function(d) { return winColorScale(d.Win_Percentage)} )
+    .style("stroke-width", 4)
+    .style("stroke", "none")
+    .style("opacity", 0.8)
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave)
+    .classed("heatmap-rect", true);  // add class for easier selection later
+
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", -50)
+        .attr("text-anchor", "left")
+        .style("font-size", "22px")
+        .text("Opening Duels");
+
+    svg.append("text")
+            .attr("x", 0)
+            .attr("y", -20)
+            .attr("text-anchor", "left")
+            .style("font-size", "14px")
+            .style("fill", "grey")
+            .style("max-width", 400)
+            .text("X: First Bloods, Y: First Deaths");
+
+    d3.selectAll("input[name='color']").on('change', function() {
+        redrawHeatmap(this.value);
+    });
+
+    function redrawHeatmap(colorBy) {
+        svg.selectAll('.heatmap-rect')
+        .transition()
+        .duration(500)
+        .style("fill", function(d) { 
+            return colorBy === 'win' ? winColorScale(d.Win_Percentage) : countColorScale(d.Matches_Count)
+        });
+    }
+
+    // call the function initially with 'win'
+    redrawHeatmap('win');
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#Matches').DataTable( {
+            columnDefs: [
+                { orderable: false,
+                  targets: [1] },
+                { orderData: [3],
+                  targets: [2] },
+                { 'targets': [3],
+                  'visible': false,
+                  'searchable': false },
+            ],
+            info: false,
+            order: [[7, 'desc']],
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2>Opening Duels</h2>
+
+    <p style="width: 800px">
+        At some point in every round of every match in Valorant, a gunfight will occur between opposing players. 
+        The first decisive gunfight (one in which a player dies) in each round is known as the <strong>opening duel</strong>.
+        Suppose the first combat action of a round is Player A killing Player B. Then, Player A earns a <strong>First Blood (FB)</strong> and Player B is given a <strong>First Death (FD)</strong>.
+        Exactly one FB and one FD is given in each round.
+    </p>
+
+    <p style="width: 800px">
+        Naturally, the opening duel of a Valorant round is considered an extremely important event. 
+        Which its significance varies depending on the result (whether the attacker or defender wins the duel and/or whether the killer is traded), a team will always hope to get that first kill and create a 5v4 situation.
+        But let's dive deeper into the data and see just how important it is.
+    </p>
+
+    <p style="width: 800px">
+        First, we'll go through some summary statistics. 
+        The term <strong>success rate</strong> will be used to refer to the proportion of opening duels won by a given team.
+    </p>
+        
+    <p style="width: 800px">
+        Across {{ meta.mp }} matches played, the team boasts a {{ meta.win_pct_str }} win rate and {{meta.success_rate_str}} success rate.
+        The team's success rate in wins is {{ meta.win_success_rate_str }} versus {{ meta.loss_success_rate_str }} in losses.
+        The team finished with a positive success rate in {{ meta.more_fb_games }} games ({{ meta.more_fb_games_str }} of games),
+        a negative success rate in {{ meta.fewer_fb_games }} games ({{ meta.fewer_fb_games_str }} of games),
+        and an even success rate in {{ meta.equal_fb_games }} games ({{ meta.equal_fb_games_str }} of games).
+    </p>
+
+    <p style="width: 800px">
+        In games with a positive success rate, the team has a win percentage of {{ meta.A_win_rate_str }}.
+        In games with a negative success rate, the team has a win percentage of {{ meta.B_win_rate_str }}.
+        And in games with an even success rate, the team has a win percentage of {{ meta.equal_win_rate_str }}.
+        Overall, the more successful team in opening duels wins {{ meta.win_rate_str }} of games.
+    </p>
+
+    <p style="width: 800px">
+        We can get more granular by splitting this analysis by map. 
+        After all, it's not hard to imagine the opening duel being more important in one map than another.
+        Or that our team may be more successful in opening duels on some maps. 
+        Let's take a peek. 
+    </p>
+
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr id="ignore">
+                <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="2" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Match Win%</th>
+                <th></th>
+            </tr>
+            <tr>
+                <th>Map</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">All</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Percentage of Matches Won by Team With More First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">More FBs</th>
+                <th class="right" title="Success Rate in Opening Duels" data-bs-toggle="tooltip" data-bs-placement="top">Success</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in map_stats %}
+            <tr>
+                <td><a href="{% url 'map_detail' p.Map %}">{{ p.Map }}</a></td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><a href="{% url 'match_list' %}?map={{ p.Map }}">{{ p.MatchesPlayed }}</a></td>
+                <td class="right" style="{% if p.WinRate > 0.5 %}color:green{% elif p.WinRate == 0.5 %}{% else %}color:red{% endif %}">{{ p.WinRate|floatformat:3 }}</td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230); {% if p.MoreFBWinRate > 0.5 %}color:green{% elif p.MoreFBWinRate == 0.5 %}{% else %}color:red{% endif %}">{{ p.MoreFBWinRate|floatformat:3 }}</td>
+                <td class="right" style="{% if p.SuccessRate > 0.5 %}color:green{% elif p.SuccessRate == 0.5 %}{% else %}color:red{% endif %}">{{ p.SuccessRate|floatformat:3 }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th>All Maps</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ meta.mp }}</th>
+                <th class="right">{{ meta.win_pct|floatformat:3 }}</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ meta.win_rate|floatformat:3 }}</th>
+                <th class="right">{{ meta.success_rate|floatformat:3 }}</th>
+            </tr>
+        </tfoot>
+        </table>
+    </div>
+
+    <p style="width: 800px">
+        At the time of this writing, the team clearly has a high win percentage on the maps that they perform best in opening duels.
+        There is some variance in how often the team that wins more opening duels wins the match, but it's not clear how much of this is just noise. 
+        In general, it does seem to hover between 70 and 80 percent.
+    </p>
+
+    <p style="width: 800px">
+        Another way to assess the importance of the opening duel is through a visualization. 
+        The heat map below shows the team's first bloods on the x-axis and first deaths on the y-axis along with color scales for win percentage and match frequency.
+    </p>
+
+    <div>
+        <div id="buttons" style="display:flex;">
+            <span style="font-size: 100% !important; font-weight:bold;">Color by: </span>
+            <input class="m-2" type="radio" id="win" name="color" value="win" checked>
+            <label for="win">Win Percentage</label><br>
+            <input class="m-2" type="radio" id="count" name="color" value="count">
+            <label for="count">Match Count</label><br>
+        </div>
+        <div id="my_dataviz"></div>
+    </div>
+
+    <p style="width: 800px">
+        While there are some outliers, there are clear "green" and "red" regions when using a color scale on win percentage.
+        It stands to reason that winning more opening duels generally leads to success.
+        Those outliers (matches where a lopsided opening duel success rate does not determine the match outcome) can be found in the raw data below.
+    </p>
+
+    <div style="display: inline-block;" class="table-responsive-lg mt-2 mb-3">
+        <table id="Matches" class="table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Map</th>
+                    <th>Score</th>
+                    <th></th>
+                    <th class="right" title="First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+                    <th class="right" title="First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+                    <th class="right" title="First Bloods minus First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">Diff</th>
+                    <th class="right" title="Success Rate in Opening Duels" data-bs-toggle="tooltip" data-bs-placement="top">Success</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in match_stats %}
+                <tr class="{% if p.AdjWin == 1.0 %}table-success{% elif p.AdjWin == 0.5 %}table-warning{% else %}table-danger{% endif %}">
+                    <td style="font-weight:bold"><a href="{% url 'match_detail' p.MatchID %}">{{ p.Date|date:"n/j/y" }} {{ p.Date|time:"g:i A" }}</a></td>
+                    <td><a href="{% url 'map_detail' p.Map %}">{{ p.Map }}</a></td>
+                    <td>{{ p.Score }}</td>
+                    <td>{{ p.ScoreDiff }}</td>
+                    <td class="right">{{ p.FirstBloods_A }}</td>
+                    <td class="right">{{ p.FirstBloods_B }}</td>
+                    <td class="right">{{ p.FB_Diff }}</td>
+                    <td class="right">{{ p.Success|floatformat:3 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p style="width: 800px">
+        Next, we'll take look at the data of individual players. 
+        Along with their success rate in opening duels, we will consider their <strong>aggression</strong>, or the percentage of rounds in which they participated in the opening duel (whether they won it or not).
+    </p>
+    
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Percentage of Rounds with Opening Duel" data-bs-toggle="tooltip" data-bs-placement="top">Aggression</th>
+                <th class="right" title="Success Rate in Opening Duels" data-bs-toggle="tooltip" data-bs-placement="top">Success</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in player_stats %}
+            <tr>
+                <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> <a class="hiddenLink" href="{% url 'player_detail' p.Username %}">{{ p.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ p.UserTag }}</span></a></td>
+                <td class="right" ><a href="{% url 'player_gamelog' p.Username %}">{{ p.num_matches }}</a></td>
+                <td class="right" style="{% if p.aggression > 0.2 %}color:green{% elif p.aggression == 0.2 %}{% else %}color:red{% endif %}">{{ p.aggression|floatformat:3 }}</td>
+                <td class="right" style="{% if p.success_rate > 0.5 %}color:green{% elif p.success_rate == 0.5 %}{% else %}color:red{% endif %}">{{ p.success_rate|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+    <p style="width: 800px">
+        A necessary caveat here is that a player's role matters. 
+        We would obviously expect an entry fragger to be more aggressive than someone playing smokes.
+        Here's the average aggression and success rate of each role. 
+    </p>
+
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th class="right" title="Individual Performances" data-bs-toggle="tooltip" data-bs-placement="top">P</th>
+                <th class="right" title="Percentage of Rounds with Opening Duel" data-bs-toggle="tooltip" data-bs-placement="top">Aggression</th>
+                <th class="right" title="Success Rate in Opening Duels" data-bs-toggle="tooltip" data-bs-placement="top">Success</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in role_stats %}
+            <tr>
+                <td><a href="{% url 'role_detail' p.Role %}">{{ p.Role }}</td>
+                <td class="right"><a href="{% url 'gamelog' %}?role={{ p.Role }}">{{ p.num_matches }}</a></td>
+                <td class="right" style="{% if p.aggression > 0.2 %}color:green{% elif p.aggression == 0.2 %}{% else %}color:red{% endif %}">{{ p.aggression|floatformat:3 }}</td>
+                <td class="right" style="{% if p.success_rate > 0.5 %}color:green{% elif p.success_rate == 0.5 %}{% else %}color:red{% endif %}">{{ p.success_rate|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+    </div>
+      
+    <br>
+
+</div>
+
+{% endblock %}
