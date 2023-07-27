@@ -133,7 +133,7 @@ InvalidMatches = ["6fa64508-aa14-4600-9a0c-969d6d580398", # Competitive: Xanns p
                   "7062b7bd-89fa-40ac-a832-89a8c2613573", # Premier: Xanns played on Noel's acc
                  ]
 
-with open('match/squad.json', 'r') as f:
+with open('match/squad.json', 'r', encoding='utf8') as f:
     squad = json.load(f)
 
 def GetNewMatches(username):
