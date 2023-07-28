@@ -201,7 +201,7 @@ def ScrapeMatch(match_id):
 
     s = Service(executable_path="C:/Users/cheem/chromedriver.exe")
 
-    browser = webdriver.Chrome(service=s,
+    browser = uc.Chrome(service=s,
                                options=options)
     browser.get(url)
 
