@@ -7287,8 +7287,6 @@ def impact(request):
     })
 
     output = results[results.TotalRounds >= MIN_ROUNDS].sort_values(by="TotalRAPM",ascending=False).reset_index(drop=True)
-
-    print(df.head())
     
     context = {
         "Stints": df.head(),

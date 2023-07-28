@@ -181,6 +181,9 @@ def GetNewMatches(username):
 
     return match_ids
 
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+
 def ScrapeMatch(match_id):
 
     if Match.objects.filter(MatchID=match_id).exists():
@@ -198,7 +201,8 @@ def ScrapeMatch(match_id):
 
     s = Service(executable_path="C:/Users/cheem/chromedriver.exe")
 
-    browser = uc.Chrome(service=s, options=options)
+    browser = webdriver.Chrome(service=s,
+                               options=options)
     browser.get(url)
 
     i = 0
