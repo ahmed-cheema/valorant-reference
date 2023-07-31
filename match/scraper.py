@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import bs4 as bs
+from bs4 import Tag
 import json
 import time
 
@@ -131,55 +132,11 @@ role_map = {"Astra":"Controller",
 InvalidMatches = ["6fa64508-aa14-4600-9a0c-969d6d580398", # Competitive: Xanns played on Noel's acc
                   "ee175228-811f-4905-af0e-ce922d1b4788", # Premier: Xanns played on Noel's acc
                   "7062b7bd-89fa-40ac-a832-89a8c2613573", # Premier: Xanns played on Noel's acc
+                  "739ef85a-1c23-4b4d-a5cc-f258f04725f0", # Competitive: Lan played on Jake's acc
                  ]
 
 with open('match/squad.json', 'r', encoding='utf8') as f:
     squad = json.load(f)
-
-def GetNewMatches(username):
-
-    url = "https://tracker.gg/valorant/profile/riot/{}/matches".format(username.replace("#","%23"))
-
-    options = Options()
-    options.add_argument("Window-size=1920,1080")
-
-    s = Service(executable_path='C:/Users/cheem/chromedriver.exe')
-
-    browser = webdriver.Chrome(service=s, options=options)
-
-    while(True):
-        soup = bs.BeautifulSoup(browser.page_source)
-        if len(soup.find_all("div",{"class": "trn-match-row"})) == 0:
-            continue
-        else:
-            break
-
-    match_rows = browser.find_elements(By.CLASS_NAME, "trn-match-row")
-
-    match_ids = []
-
-    for match in match_rows:
-        match.click()
-        
-        while(True):
-            soupMatch = bs.BeautifulSoup(browser.page_source)
-            if len(soupMatch.find_all("a",{"class": "trn-button trn-button--transparent"})) == 0:
-                continue
-            else:
-                break
-
-        match_id = soupMatch.find("a",{"class": "trn-button trn-button--transparent"})["href"].split("match/")[1]
-
-        if Match.objects.filter(MatchID=match_id).exists():
-            print("Obtained {} new Match IDs prior to last match in database".format(len(match_ids)))
-            browser.quit()
-            break
-
-        match_ids.append(match_id)
-
-        browser.find_element(By.CLASS_NAME, "trn-button-close").click()
-
-    return match_ids
 
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
@@ -257,6 +214,49 @@ def ScrapeMatch(match_id):
 
     won = ([int(teamOneScore > teamTwoScore)] * 5) + ([int(teamTwoScore > teamOneScore)] * 5)
 
+    surrender = False
+    surrender_image = 'https://trackercdn.com/cdn/tracker.gg/valorant/icons/earlysurrender-flag.png'
+
+    if len(soup.find_all("img", src=surrender_image)) > 0:
+
+        surrender = True
+
+        entries = soup.find_all('div', class_='entry')
+
+        team_a_wins = 0
+        team_b_wins = 0
+        surrenders = 0
+        surrender_wins_team_a = 0
+        surrender_wins_team_b = 0
+
+        for entry in entries:
+            # Find all children within the entry
+            children = entry.findChildren(recursive=False)
+
+            # Flag to keep track of whether the round was a surrender
+            is_surrender = any(isinstance(child, Tag) and child.name == 'img' and child['src'] == surrender_image for child in children)
+
+            for i in range(len(children)):
+                child = children[i]
+
+                if isinstance(child, Tag) and child.name == 'div' and child.text == '•':
+                    if i == 0: 
+                        team_b_wins += 1 if not is_surrender else 0
+                        surrender_wins_team_b += 1 if is_surrender else 0
+                    elif i == 1:
+                        team_a_wins += 1 if not is_surrender else 0
+                        surrender_wins_team_a += 1 if is_surrender else 0
+
+            surrenders += is_surrender
+
+        teamOneScore = team_a_wins
+        teamTwoScore = team_b_wins
+
+        if surrender_wins_team_a > 0:
+            won = [1,1,1,1,1,0,0,0,0,0]
+        else:
+            won = [0,0,0,0,0,1,1,1,1,1]
+
     rounds = [teamOneScore+teamTwoScore] * 10
     roundsWon = ([teamOneScore] * 5) + ([teamTwoScore] * 5)
     roundsLost = ([teamTwoScore] * 5) + ([teamOneScore] * 5)
@@ -321,6 +321,9 @@ def ScrapeMatch(match_id):
         hs_pct = np.round(float(perfSoup.select('div.stat > div.label:-soup-contains("HS%") + div.value')[0].text.strip().replace("%",""))/100,3)
 
         rounds = perfSoup.select("div[class='round']")
+
+        if surrender:
+            rounds = rounds[:(teamOneScore+teamTwoScore)]
 
         WK, WD, WDMG, LK, LD, LDMG, ADMG, ARds, DDMG, DRds, k0, k1, k2, k3, k4, k5, k6, AW, AL, DW, DL = [0] * 21
         for r in rounds:
@@ -446,6 +449,7 @@ def ScrapeMatch(match_id):
     browser.quit()
 
     teamA_df = db[db.Team == "Team A"].reset_index(drop=True)
+    teamB_df = db[db.Team == "Team B"].reset_index(drop=True)
     role_vc = teamA_df.Role.value_counts()
     
     teamA_score = teamA_df.RoundsWon.max()
@@ -464,10 +468,11 @@ def ScrapeMatch(match_id):
                   Score = str(teamA_score)+"-"+str(teamB_score),
                   TeamOneScore = teamA_score,
                   TeamTwoScore = teamB_score,
-                  TeamOneWon = int(teamA_score > teamB_score),
-                  TeamOneLost = int(teamA_score < teamB_score),
+                  TeamOneWon = teamA_df.GameWon.max(),
+                  TeamOneLost = teamB_df.GameWon.max(),
                   ScoreDifferential = teamA_score - teamB_score,
-                  MatchDraw = int(teamA_score == teamB_score),
+                  MatchDraw = int(teamA_df.GameWon.max() == teamB_df.GameWon.max()),
+                  Surrender = int(surrender),
                   RoundsPlayed = teamA_score+teamB_score,
                   Players = players,
                   MVP = teamA_df.DisplayName[0],

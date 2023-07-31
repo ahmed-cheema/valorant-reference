@@ -34,6 +34,7 @@ class Match(models.Model):
     TeamOneWon = models.IntegerField()
     TeamOneLost = models.IntegerField()
     MatchDraw = models.IntegerField()
+    Surrender = models.IntegerField(default=0)
     RoundsPlayed = models.IntegerField()
     Players = models.CharField(max_length=500)
     MVP = models.CharField(max_length=200)

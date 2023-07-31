@@ -254,7 +254,7 @@ def match_list(request):
     return render(request, 'match/match_list.html', context)
 
 def gamelog(request):
-    players = Player.objects.filter(Team="Team A").order_by('-ACS').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('-ACS').annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'), FloatField()))
 
     unique_maps = sorted(list(Match.objects.values_list("Map", flat=True).distinct()))
     unique_agents = sorted(list(Player.objects.values_list("Agent", flat=True).distinct()))
@@ -562,7 +562,7 @@ def player_detail(request, username):
     last_twenty_aggregates["Label"] = "Last 20 Matches"
     all_aggregates["Label"] = "All Matches"
 
-    mvps = players.aggregate(
+    mvps = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username).aggregate(
         mvps=Sum('MVP')
     )['mvps']
 
@@ -1436,7 +1436,7 @@ def player_splits(request, username):
         p['max_fb_id'] = filtered_players.filter(FirstBloods=p['max_fb']).values('Match__MatchID').first()['Match__MatchID']
         p['max_fd_id'] = filtered_players.filter(FirstDeaths=p['max_fd']).values('Match__MatchID').first()['Match__MatchID']
 
-    mvps = players.aggregate(
+    mvps = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username).aggregate(
         mvps=Sum('MVP')
     )['mvps']
 
@@ -1498,7 +1498,7 @@ def player_graphs(request, username):
 
     user = User.objects.filter(Username=username).first()
 
-    mvps = players.aggregate(
+    mvps = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username).aggregate(
         mvps=Sum('MVP')
     )['mvps']
 
@@ -1530,12 +1530,12 @@ def player_graphs(request, username):
 from dateutil.parser import parse
 def player_gamelog(request, username):
 
-    players = Player.objects.filter(Team="Team A", Username=username)
+    players = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username)
 
     if (players.count() == 0):
         raise Http404
     
-    mvps = players.aggregate(
+    mvps = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username).aggregate(
         mvps=Sum('MVP')
     )['mvps']
 
@@ -4199,7 +4199,7 @@ from datetime import timedelta, date
 from collections import defaultdict
 
 def BestActiveStreak(field, value, op):
-    players = Player.objects.filter(Team="Team A").order_by('Username', '-Match__Date').select_related('Match')
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('Username', '-Match__Date').select_related('Match')
 
     # Use defaultdict to group users and their matches.
     user_groups = defaultdict(list)
@@ -4259,7 +4259,7 @@ def BestActiveStreak(field, value, op):
     return top_active_streaks
 
 def BestStreak(field, value, op):
-    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('Username', 'Match__Date').select_related('Match')
 
     # Use defaultdict to group users and their matches.
     user_groups = defaultdict(list)
@@ -4324,9 +4324,9 @@ def BestStreak(field, value, op):
 def BestGame(field,sort="desc",model="Player"):
     if model == "Player":
         if sort == "desc":
-            players = Player.objects.filter(Team="Team A").order_by('-'+field)
+            players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('-'+field)
         else:
-            players = Player.objects.filter(Team="Team A").order_by(field)
+            players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by(field)
         top_field = getattr(players[0],field) if players else None
         qual_players = players.filter(**{field:top_field})
         top_games = [{'Username': player.Username,
@@ -4363,7 +4363,7 @@ def BestGame(field,sort="desc",model="Player"):
 
 from collections import deque
 def BestSpan(field, n, maximum=True):
-    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('Username', 'Match__Date').select_related('Match')
 
     user_groups = defaultdict(list)
     for player in players:
@@ -4414,7 +4414,7 @@ def BestSpan(field, n, maximum=True):
     return top_spans
 
 def BestSpanRatio(field1, field2, n, maximum=True):
-    players = Player.objects.filter(Team="Team A").order_by('Username', 'Match__Date').select_related('Match')
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('Username', 'Match__Date').select_related('Match')
 
     user_groups = defaultdict(list)
     for player in players:
@@ -4557,7 +4557,7 @@ def record_overview(request):
 
 @cache_page(60*10)
 def record_game(request):
-    players = Player.objects.filter(Team="Team A").annotate(
+    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).annotate(
         k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
         fb_pct = (Sum('FirstBloods')) / (Cast(Sum('RoundsPlayed'), FloatField())),
         fd_pct = (Sum('FirstDeaths')) / (Cast(Sum('RoundsPlayed'), FloatField())),
@@ -5104,10 +5104,10 @@ def record_rounds(request):
     max_kills_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
 
     for rounds in rounds_played_values:
-        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-Kills', 'RoundsPlayed')
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds, Match__RoundsPlayed__gte=13).order_by('-Kills', 'RoundsPlayed')
 
         if players_in_round.exists():
             top_player = players_in_round.first()
@@ -5149,10 +5149,10 @@ def record_rounds(request):
     max_kills_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
 
     for rounds in rounds_played_values:
-        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-Assists', 'RoundsPlayed')
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds, Match__RoundsPlayed__gte=13).order_by('-Assists', 'RoundsPlayed')
 
         if players_in_round.exists():
             top_player = players_in_round.first()
@@ -5194,10 +5194,10 @@ def record_rounds(request):
     max_kills_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
 
     for rounds in rounds_played_values:
-        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-FirstBloods', 'RoundsPlayed')
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds, Match__RoundsPlayed__gte=13).order_by('-FirstBloods', 'RoundsPlayed')
 
         if players_in_round.exists():
             top_player = players_in_round.first()
@@ -5239,10 +5239,10 @@ def record_rounds(request):
     max_kills_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('RoundsPlayed')
 
     for rounds in rounds_played_values:
-        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds).order_by('-FirstDeaths', 'RoundsPlayed')
+        players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__lte=rounds, Match__RoundsPlayed__gte=13).order_by('-FirstDeaths', 'RoundsPlayed')
 
         if players_in_round.exists():
             top_player = players_in_round.first()
@@ -5284,7 +5284,7 @@ def record_rounds(request):
     max_acs_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
 
     for rounds in rounds_played_values:
         players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-ACS', '-RoundsPlayed')
@@ -5331,7 +5331,7 @@ def record_rounds(request):
     max_acs_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
 
     for rounds in rounds_played_values:
         players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-AverageDamage', '-RoundsPlayed')
@@ -5378,7 +5378,7 @@ def record_rounds(request):
     max_acs_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
 
     for rounds in rounds_played_values:
         players_in_round = Player.objects.filter(Team="Team A", RoundsPlayed__gte=rounds).order_by('-KillDeathRatio', '-RoundsPlayed')
@@ -5425,7 +5425,7 @@ def record_rounds(request):
     max_acs_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
 
     for rounds in rounds_played_values:
         players_in_round = Player.objects.filter(Team="Team A",RoundsPlayed__gte=rounds).annotate(KPR=F('Kills')/Cast(F('RoundsPlayed'),FloatField())).order_by('-KPR','-RoundsPlayed')
@@ -5472,7 +5472,7 @@ def record_rounds(request):
     max_acs_cumulative = 0
     best_performance = None
 
-    rounds_played_values = Player.objects.values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
+    rounds_played_values = Player.objects.filter(Match__RoundsPlayed__gte=13).values_list('RoundsPlayed', flat=True).distinct().order_by('-RoundsPlayed')
 
     for rounds in rounds_played_values:
         players_in_round = Player.objects.filter(Team="Team A",RoundsPlayed__gte=rounds).annotate(k_pct=(F('RoundsPlayed')-F('ZeroKillRounds'))/Cast(F('RoundsPlayed'),FloatField())).order_by('-k_pct','-RoundsPlayed')
@@ -5768,7 +5768,7 @@ def player_teammates(request, username):
 
     UserPerformances = sorted(UserPerformances, key=lambda d: d['num_matches'], reverse=True) 
 
-    mvps = players.aggregate(
+    mvps = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13, Username=username).aggregate(
         mvps=Sum('MVP')
     )['mvps']
 
@@ -6746,7 +6746,7 @@ def solo_duelists(request):
     return render(request, 'match/analysis/solo_duelists.html', context)
 
 def leaderboard_analysis(request):
-    players = Player.objects.filter(Team="Team A")
+    players = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13)
 
     player_stats = players.values('Username').annotate(
         num_matches=Count('Match'),
