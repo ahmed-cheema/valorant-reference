@@ -4324,9 +4324,9 @@ def BestStreak(field, value, op):
 def BestGame(field,sort="desc",model="Player"):
     if model == "Player":
         if sort == "desc":
-            players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by('-'+field)
+            players = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13).order_by('-'+field)
         else:
-            players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).order_by(field)
+            players = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13).order_by(field)
         top_field = getattr(players[0],field) if players else None
         qual_players = players.filter(**{field:top_field})
         top_games = [{'Username': player.Username,
@@ -4557,7 +4557,7 @@ def record_overview(request):
 
 @cache_page(60*10)
 def record_game(request):
-    players = Player.objects.filter(Team="Team A",Match__RoundsPlayed__gte=13).annotate(
+    players = Player.objects.filter(Team="Team A", Match__RoundsPlayed__gte=13).annotate(
         k_pct = (Sum('RoundsPlayed') - Sum('ZeroKillRounds')) / (Cast(Sum('RoundsPlayed'), FloatField())),
         fb_pct = (Sum('FirstBloods')) / (Cast(Sum('RoundsPlayed'), FloatField())),
         fd_pct = (Sum('FirstDeaths')) / (Cast(Sum('RoundsPlayed'), FloatField())),
