@@ -197,9 +197,19 @@ Analysis · Impact
     </p>
 
     <p style="width: 800px">
+        Two other features are included in the model to improve fit: <strong>Map</strong> and <strong>Average Opponent Rank</strong>. 
+        So to be precise, each row in the input data represents a single lineup's performance on one side (attack or defense), on one map (ex: Haven), against teams with one average rank (ex: Ascendant).
+        Yeah, it gets a bit complicated. But I found this to be necessary. 
+        Some maps are more biased towards attack or defense than others, so the model should be able to account for that.
+        Furthermore, not considering the average opponent rank means there is absolutely no consideration for opponent strength at all. 
+        This penalizes higher ranked players (who will play better players) and inflates lower ranked players (who will play worse players) based on how Valorant matchmaking works. 
+        The average ranks are simplified - opposing teams with an exact average rank of "Diamond 1" and "Diamond 3" are both treated as "Diamond" in order to have a parsimonious model.
+    </p>
+
+    <p style="width: 800px">
         And that's essentially all there is to it. 
-        The one extra detail is that we keep track of rounds played ("lineup C played 47 rounds on attack when they had a round differential of 19.4 per 100 rounds") in order to be used as a weight. After all, an extremely high round differential is more significant if it's maintained over a large sample.
-        Afterwards, the actual ridge regression is run, spitting out {{ col_count }} coefficients - each player has an "attack" and "defense" coefficient representing their <strong>Attack RAPM</strong> and <strong>Defense RAPM</strong> respectively. 
+        The one extra detail is that we keep track of rounds played in order to be used as a weight. After all, an extremely high round differential is more significant if it's maintained over a large sample.
+        Afterwards, the actual ridge regression is run, spitting out {{ col_count }} coefficients of interest (disregarding map and average rank coefficients) - each player has an "attack" and "defense" coefficient representing their <strong>Attack RAPM</strong> and <strong>Defense RAPM</strong> respectively. 
         These values can be summed to obtain their <strong>Total RAPM</strong>.
     </p>
 
@@ -253,8 +263,13 @@ Analysis · Impact
     </p>
 
     <p style="width: 800px">
-        Additionally, while RAPM traditionally takes both teammate and opponent strength into consideration, this version does not because 99% of the time, opponents are faced for one game and one game only. 
-        This data does not come from a controlled league environment like the NBA - it's more akin to a single traveling team facing diverse competition. Opponent strength is thus not accounted for.
+        Additionally, while RAPM traditionally takes both teammate and opponent strength into consideration by having all players as features in the model, this version does not because 99% of the time, opponents are faced for one game and one game only. 
+        This data does not come from a controlled league environment like the NBA - it's more akin to a single traveling team facing diverse competition. 
+        While opponent strength is somewhat considered by including a feature for the opponent team's average rank, it's not quite the same for a few reasons. 
+        One, rank fluctuates over time simply due to the phase of the game - at the start of every "Episode", players are assigned a lower rank so that they can work their way back up again.
+        Also, it doesn't consider individual players. 
+        Is there a difference in quality between a team with two Immortals and two Silvers versus a team filled with fringe Platinum/Diamonds? 
+        Maybe, but we won't know that by taking a simple average of opponent rank.
     </p>
 
     <p style="width: 800px">
