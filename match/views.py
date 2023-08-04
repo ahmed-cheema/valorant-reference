@@ -7190,6 +7190,34 @@ def versatility(request):
 
     return render(request, 'match/analysis/versatility.html', context)
 
+def average_rank(ranks, number=True):
+    rank_mapping = {
+        "Iron 1": 0, "Iron 2": 1, "Iron 3": 2,
+        "Bronze 1": 3, "Bronze 2": 4, "Bronze 3": 5,
+        "Silver 1": 6, "Silver 2": 7, "Silver 3": 8,
+        "Gold 1": 9, "Gold 2": 10, "Gold 3": 11,
+        "Platinum 1": 12, "Platinum 2": 13, "Platinum 3": 14,
+        "Diamond 1": 15, "Diamond 2": 16, "Diamond 3": 17,
+        "Ascendant 1": 18, "Ascendant 2": 19, "Ascendant 3": 20,
+        "Immortal 1": 21, "Immortal 2": 22, "Immortal 3": 23,
+        "Radiant": 24
+    }
+
+    reverse_mapping = {v: k for k, v in rank_mapping.items()}
+
+    valid_ranks = [rank for rank in ranks if rank != "N/A"]
+
+    if not valid_ranks:
+        return "None"
+
+    rank_numbers = [rank_mapping[rank] for rank in valid_ranks]
+    average_rank_number = round(sum(rank_numbers) / len(valid_ranks))
+
+    if number:
+        return reverse_mapping[average_rank_number]
+    else:
+        return reverse_mapping[average_rank_number][0:-2]
+
 def impact(request):
 
     ALPHA = 100
@@ -7203,12 +7231,21 @@ def impact(request):
 
     for match in Match.objects.all():
         players = Player.objects.filter(Match=match, Team="Team A")
-        lineup_key = ",".join(sorted(player.Username for player in players))
+        opponentRanks = list(Player.objects.filter(Match=match, Team="Team B").values_list("Rank",flat=True))
+        map_name = match.Map
+        avg_rank = average_rank(opponentRanks,number=False)
+        lineup_key = ",".join(sorted(player.Username for player in players)) + f", map={map_name}, opp_rank={avg_rank}"
+
+        #if len(players.filter(Username="cheemsta#NA1")) > 0:
+        #    if len(players.filter(Username="cheemsta#NA1",Agent="Reyna")) == 0:
+        #        continue
 
         representative_player = players.first()
 
         if lineup_key not in lineups:
             lineups[lineup_key] = {
+                'map': map_name,
+                'opp_rank': avg_rank,
                 'attack_wins': 0,
                 'attack_rounds': 0,
                 'defense_wins': 0,
@@ -7229,6 +7266,8 @@ def impact(request):
 
     df_attack = pd.DataFrame({
         'lineup': lineup,
+        'map': lineup_data['map'],
+        'rank': lineup_data['opp_rank'],
         'wins': lineup_data['attack_wins'],
         'rounds': lineup_data['attack_rounds'],
         **{f'attack_{i}': count for i, count in enumerate(lineup_data['attack_counts'])},
@@ -7238,6 +7277,8 @@ def impact(request):
 
     df_defense = pd.DataFrame({
         'lineup': lineup,
+        'map': lineup_data['map'],
+        'rank': lineup_data['opp_rank'],
         'wins': lineup_data['defense_wins'],
         'rounds': lineup_data['defense_rounds'],
         **{f'attack_{i}': 0 for i, count in enumerate(lineup_data['attack_counts'])},
@@ -7246,11 +7287,17 @@ def impact(request):
     df_defense['type'] = 'defense'
 
     df = pd.concat([df_attack, df_defense])
-    df["winPct"] = 100*((df.wins-(df.rounds-df.wins))/df.rounds)
+    df = pd.get_dummies(df, columns=['map'])
+    df = pd.get_dummies(df, columns=['rank'])
+    df["winsPer100"] = 100*((df.wins-(df.rounds-df.wins))/df.rounds)
+
+    df = df.dropna().reset_index(drop=True)
 
     X = df[[f'attack_{i}' for i in range(len(usernames))] + 
-           [f'defense_{i}' for i in range(len(usernames))]]
-    y = df['winPct']
+           [f'defense_{i}' for i in range(len(usernames))] +
+           [col for col in df.columns if col.startswith('map_')] +
+           [col for col in df.columns if col.startswith('rank_')]]
+    y = df['winsPer100']
     weights = df['rounds']
     
     model = Ridge(alpha=ALPHA)
@@ -7258,7 +7305,7 @@ def impact(request):
 
     coefficients = model.coef_
     attack_RAPM = coefficients[:len(usernames)]
-    defense_RAPM = coefficients[len(usernames):]
+    defense_RAPM = coefficients[len(usernames):len(usernames)*2]
 
     usernames_split = [username.split("#") for username in usernames]
     display_names = [name for name, _ in usernames_split]
