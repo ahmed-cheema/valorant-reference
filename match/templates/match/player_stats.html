@@ -184,6 +184,21 @@ Player Statistics
   
   });
 </script>
+
+<script type="text/javascript">
+  function updateMinMatches(value) {
+    const minMatchesValue = +value;
+
+    // Update the range input value
+    document.getElementById("minMP").value = minMatchesValue;
+
+    // Update the number input value
+    document.getElementById("minMPAmount").value = minMatchesValue;
+
+    // Update the range value label
+    document.getElementById("rangeval").innerText = minMatchesValue;
+  }
+</script>
 {% endblock %}
 
 {% block content %}
@@ -238,36 +253,43 @@ Player Statistics
         </select>
       </div>
 
-      <div class="col-md-2">
-        <label for="minMP" class="form-label">Minimum Matches: 
-          <span id="rangeval" style="font-size:100% !important;">
-            {% if mp_filter is None %} 0 {% else %} {{ mp_filter }} {% endif %}
-          </span>
+      <div class="col">
+        <label for="minMP" class="form-label">
+          Minimum Matches: 
         </label>
-        <input type="range" 
-          class="form-control-range" 
-          name="minMP"
-          id="minMP" 
-          onChange="document.getElementById('rangeval').innerText = document.getElementById('minMP').value"
-          {% if mp_filter is None %} value=0 {% else %} value={{ mp_filter }} {% endif %}
-          min = 0
-          max = {{ max_matches }}>
+    
+        <div class="d-flex">
+          <input type="number"
+            class="form-select-clone"
+            id="minMPAmount"
+            value="{% if mp_filter is None %}0{% else %}{{ mp_filter }}{% endif %}"
+            min="0"
+            max="{{ max_matches }}"
+            oninput="updateMinMatches(this.value)"
+            style="width: 70px;" />
+    
+          <input type="range" 
+              class="form-control-range" 
+              style="margin-left:1%;"
+              name="minMP" 
+              id="minMP" 
+              oninput="updateMinMatches(this.value)"
+              value="{% if mp_filter is None %}0{% else %}{{ mp_filter }}{% endif %}"
+              min="0"
+              max="{{ max_matches }}" />
+        </div>
       </div>
-
+    
     </div>
 
-    <div class="row mb-3">
-
-      <div class="col-md-4">
-        <label for="dateRange" class="form-label">Date Range:</label>
-        <br>
-        <input type="text" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
-      </div>
-
+    <div class="mb-2">
+      <label for="dateRange" class="form-label">Date Range:</label>
+      <br>
+      <input type="text" style="width:210px" id="dateRange" name="dateRange" class="form-select-clone" {% if date_filter is None %} value="" {% else %} value={{ date_filter }} {% endif %}/>
     </div>
 
-    <button type="submit" class="btn btn-primary">Filter</button>
-    <button type="button" class="btn btn-secondary" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
+    <button type="submit" class="btn btn-primary mt-2">Filter</button>
+    <button type="button" class="btn btn-secondary mt-2" href="{% url 'player_stats' %}" onclick="resetFilter()">Reset</button>
   </form>
   </div>
 

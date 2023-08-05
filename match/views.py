@@ -7131,6 +7131,73 @@ def time_of_day(request):
 
     return render(request, 'match/analysis/time_of_day.html', context)
 
+def maps_analysis(request):
+
+    maps = Player.objects.values("Match__Map").annotate(
+        N_Matches = Count("Match",distinct=True),
+
+        AttackWins = Sum("AttackWins")/5,
+        AttackLosses = Sum("AttackLosses")/5,
+        AttackRounds = Sum("AttackRounds")/5,
+
+        DefenseWins = Sum("DefenseWins")/5,
+        DefenseLosses = Sum("DefenseLosses")/5,
+        DefenseRounds = Sum("DefenseRounds")/5,
+
+        AttackWinPct = F("AttackWins") / Cast(F("AttackRounds"), FloatField()),
+        DefenseWinPct = F("DefenseWins") / Cast(F("DefenseRounds"), FloatField()),
+        Diff = F("AttackWinPct")-F("DefenseWinPct"),
+    )
+
+    for p in maps:
+        p["AttackRecord"] = "{}-{}".format(p["AttackWins"],p["AttackLosses"])
+        p["DefenseRecord"] = "{}-{}".format(p["DefenseWins"],p["DefenseLosses"])
+
+        Z=1.96
+        attack_temp = p["AttackWinPct"]*(1-p["AttackWinPct"])/p["AttackRounds"]
+        defense_temp = p["DefenseWinPct"]*(1-p["DefenseWinPct"])/p["DefenseRounds"]
+        
+        atk_plus_minus = Z*np.sqrt(attack_temp)
+        p["AttackLowerBound"] = p["AttackWinPct"] - atk_plus_minus
+        p["AttackUpperBound"] = p["AttackWinPct"] + atk_plus_minus
+
+        def_plus_minus = Z*np.sqrt(defense_temp)
+        p["DefenseLowerBound"] = p["DefenseWinPct"] - def_plus_minus
+        p["DefenseUpperBound"] = p["DefenseWinPct"] + def_plus_minus
+        
+        diff_plus_minus = Z*np.sqrt(attack_temp + defense_temp)
+        p["DiffLowerBound"] = p["Diff"] - diff_plus_minus
+        p["DiffUpperBound"] = p["Diff"] + diff_plus_minus
+        print(p)
+        
+    maps = pd.DataFrame(maps).to_dict("records")
+
+    maps_totals = Player.objects.values().aggregate(
+        N_Matches = Count("Match",distinct=True),
+
+        AttackWins = Sum("AttackWins")/5,
+        AttackLosses = Sum("AttackLosses")/5,
+        AttackRounds = Sum("AttackRounds")/5,
+
+        DefenseWins = Sum("DefenseWins")/5,
+        DefenseLosses = Sum("DefenseLosses")/5,
+        DefenseRounds = Sum("DefenseRounds")/5,
+    )
+
+    maps_totals["AttackWinPct"] = maps_totals["AttackWins"] / maps_totals["AttackRounds"]
+    maps_totals["DefenseWinPct"] = maps_totals["DefenseWins"] / maps_totals["DefenseRounds"]
+    maps_totals["Diff"] = maps_totals["AttackWinPct"] - maps_totals["DefenseWinPct"]
+    maps_totals["AttackRecord"] = "{}-{}".format(maps_totals["AttackWins"],maps_totals["AttackLosses"])
+    maps_totals["DefenseRecord"] = "{}-{}".format(maps_totals["DefenseWins"],maps_totals["DefenseLosses"])
+
+    context = {
+        "maps": maps,
+        "totals": maps_totals,
+    }
+
+    return render(request, 'match/analysis/maps.html', context)
+
+
 import numpy as np
 from sklearn.linear_model import Ridge
 

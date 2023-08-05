@@ -1,0 +1,388 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Analysis · Maps
+{% endblock %}
+
+{% block css %}
+<style>
+    @media screen and (max-width: 768px) {
+        p, .adjust {
+            width: 100% !important;
+        }
+    }
+
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    td {
+        background-clip: padding-box !important;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    table.sortable tbody tr:nth-child(2n) td {
+        background: white;
+    }
+    table.sortable tbody tr:nth-child(2n+1) td {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .nav-link:not(.nav-custom) {
+        margin-right: 30px;
+    }
+
+    .nav-link#analysis {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+        border-bottom: none;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    button[aria-selected="true"] {
+        color: white !important;
+    }
+
+    .btn-outline-dark {
+        color: black !important;
+    }
+
+    .btn-outline-dark:hover {
+        color: white !important;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    span {
+        font-size:60% !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+
+<script>
+    const data = {{ maps|safe }};
+
+    const width = 800;
+    const height = 500;
+    const margin = { top: 80, right: 30, bottom: 30, left: 60 };
+
+    function drawChart(mode = "Diff") {
+        const prefix = mode === "Diff" ? "Diff" : mode + "WinPct";
+        const lowerBoundKey = mode + "LowerBound";
+        const upperBoundKey = mode + "UpperBound";
+        const pointKey = mode === "Diff" ? "Diff" : mode + "WinPct";
+        const zeroLineValue = mode === "Diff" ? 0 : 0.5;
+
+        // Remove the existing chart
+        d3.select("#my_dataviz").html("");
+
+        let x;
+        if (mode === "Diff") {
+            const maxAbsValue = Math.max(
+                Math.abs(d3.min(data, d => d[lowerBoundKey])),
+                Math.abs(d3.max(data, d => d[upperBoundKey]))
+            );
+            x = d3.scaleLinear()
+                .domain([-maxAbsValue, maxAbsValue])
+                .range([margin.left, width - margin.right]);
+        } else {
+            const maxDeviation = Math.max(
+                Math.abs(0.5 - d3.max(data, d => d[upperBoundKey])),
+                Math.abs(0.5 - d3.min(data, d => d[lowerBoundKey]))
+            );
+            x = d3.scaleLinear()
+                .domain([0.5 - maxDeviation-0.01, 0.5 + maxDeviation+0.01])
+                .range([margin.left, width - margin.right]);
+        }
+
+        // Sort the data based on the selected mode
+        data.sort((a, b) => b[pointKey] - a[pointKey]);
+
+        const y = d3.scaleBand()
+            .domain(data.map(d => d.Match__Map))
+            .range([margin.top, height - margin.bottom])
+            .padding(0.1);
+
+        const svg = d3.select("#my_dataviz").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Confidence intervals
+        svg.selectAll("rect")
+            .data(data)
+            .join("rect")
+            .attr("x", d => x(d[lowerBoundKey])) // Use dynamic key
+            .attr("y", d => y(d.Match__Map))
+            .attr("width", d => x(d[upperBoundKey]) - x(d[lowerBoundKey])) // Use dynamic key
+            .attr("height", y.bandwidth())
+            .attr("style", "outline: thin solid black")
+            .attr("fill", d => {
+                if (d[lowerBoundKey] > zeroLineValue && d[upperBoundKey] > zeroLineValue) return "#b2e8a2";
+                if (d[lowerBoundKey] < zeroLineValue && d[upperBoundKey] < zeroLineValue) return "#f0a3a3";
+                return "#f4f5b0";
+            })
+            .on("mouseover", function (event, d) {
+                // Show the tooltip
+                tooltip
+                    .style("visibility", "visible")
+                    .html(`<b>Map:</b> ${d.Match__Map}<br><b>Matches:</b> ${d.N_Matches}<br><b>Attack Win Pct:</b> ${(d.AttackWinPct * 100).toFixed(2)}%<br><b>Defense Win Pct:</b> ${(d.DefenseWinPct * 100).toFixed(2)}%<br><b>Difference:</b> ${(d.Diff * 100).toFixed(2)}%`);
+            })
+            .on("mousemove", function (event) {
+                // Update the tooltip position
+                tooltip
+                    .style("top", (event.pageY - 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
+            })
+            .on("mouseout", function () {
+                // Hide the tooltip
+                tooltip.style("visibility", "hidden");
+            });
+
+        // Midpoints
+        svg.selectAll("circle")
+            .data(data)
+            .join("circle")
+            .attr("cx", d => x(d[pointKey])) // Use dynamic key
+            .attr("cy", d => y(d.Match__Map) + y.bandwidth() / 2)
+            .attr("r", 4)
+            .attr("fill", "black")
+            .on("mouseover", function (event, d) {
+                // Show the tooltip
+                tooltip
+                    .style("visibility", "visible")
+                    .html(`<b>Map:</b> ${d.Match__Map}<br><b>Matches:</b> ${d.N_Matches}<br><b>Attack Win Pct:</b> ${(d.AttackWinPct * 100).toFixed(2)}%<br><b>Defense Win Pct:</b> ${(d.DefenseWinPct * 100).toFixed(2)}%<br><b>Difference:</b> ${(d.Diff * 100).toFixed(2)}%`);
+            })
+            .on("mousemove", function (event) {
+                // Update the tooltip position
+                tooltip
+                    .style("top", (event.pageY - 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
+            })
+            .on("mouseout", function () {
+                // Hide the tooltip
+                tooltip.style("visibility", "hidden");
+            });
+
+        
+        const tooltip = d3.select("body")
+            .append("div")
+            .style("position", "absolute")
+            .style("z-index", "10")
+            .style("visibility", "hidden")
+            .style("background", "white")
+            .style("padding", "5px")
+            .style("border", "1px solid black");
+
+        // X-axis
+        svg.append("g")
+            .attr("transform", `translate(0, ${height - margin.bottom})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text") // Select all text elements
+            .style("font-size", "12px"); // Set the font size
+
+        // Y-axis
+        svg.append("g")
+            .attr("transform", `translate(${margin.left}, 0)`)
+            .call(d3.axisLeft(y))
+            .selectAll("text") // Select all text elements
+            .style("font-size", "14px"); // Set the font size
+
+        // Threshold line
+        svg.append("line")
+            .attr("x1", x(zeroLineValue))
+            .attr("y1", margin.top)
+            .attr("x2", x(zeroLineValue))
+            .attr("y2", height - margin.bottom)
+            .style("stroke", "gray")
+            .style("stroke-dasharray", "3,3");
+
+        svg.append("text")
+            .attr("x", 60)
+            .attr("y", 40)
+            .attr("text-anchor", "left")
+            .style("font-size", "22px")
+            .text("Win Percentage by Map");
+
+        svg.append("text")
+            .attr("x", 60)
+            .attr("y", 65)
+            .attr("text-anchor", "left")
+            .style("font-size", "14px")
+            .style("fill", "grey")
+            .style("max-width", 400)
+            .text("green / red indicates statistical significance in + or - direction | p=0.05");
+    }
+
+    // Initialize the chart
+    drawChart();
+
+    // Add event listeners to the radio buttons
+    d3.selectAll("#options input").on("change", function() {
+        drawChart(this.value);
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2>Maps</h2>
+
+    <p style="width: 800px">
+        Prior to every Valorant match, a random "map" is selected for that match to played on. 
+        The map can be thought of as the setting or playing field.
+        Everything is affected by this random selection: What agent do I play? How should we approach attack and defense as a team? It all comes down to the map.
+    </p>
+
+    <p style="width: 800px">
+        Each map is different than the others. 
+        Haven and Lotus have three bomb sites rather than the traditional two and Lotus has large gates that can be opened via a button. 
+        Split and Bind have a lot of tight areas promoting close-quarters combat while Breeze is an extremely open and spacious map leading to long-range gunfights.
+        Bind has portals that let you teleport across the map instantaneously. Fracture has a long zipline that lets attackers start a round on either side of the map. 
+        You get the idea. Clearly, the developers of Valorant made an effort to spice up the maps in order to ensure that gameplay doesn't get stale.
+    </p>
+
+    <p style="width: 800px">
+        Another goal of the map designers is to have balanced gameplay - being on attack or defense shouldn't be massively advantageous on a map.
+        They're generally successful in that regard. None of the maps currently are significantly lopsided. But there are still some skews, and that's what we'll look at here.
+        What is the attack and defense win rate on each map? The data below encompasses every game in the database and for both teams. 
+    </p>
+
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr id="ignore">
+                <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="3" style="text-align:center;" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win Pct</th>
+            </tr>
+            <tr>
+                <th>Map</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Percentage of Attack Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Attack</th>
+                <th class="right" title="Percentage of Defense Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Defense</th>
+                <th class="right" title="Attack Win Pct - Defense Win Pct" data-bs-toggle="tooltip" data-bs-placement="top">Diff</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in maps %}
+            <tr>
+                <td><a class="hiddenLink" href="{% url 'map_detail' p.Match__Map %}">{{ p.Match__Map }}</a></td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><a href="{% url 'match_list' %}?map={{ p.Match__Map }}">{{ p.N_Matches }}</a></td>
+                <td class="right" style="{% if p.AttackWinPct > 0.5 %}color:green{% elif p.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.AttackWinPct|floatformat:3 }}</td>
+                <td class="right" style="{% if p.DefenseWinPct > 0.5 %}color:green{% elif p.DefenseWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.DefenseWinPct|floatformat:3 }}</td>
+                <td class="right" style="{% if p.Diff > 0 %}color:green{% elif p.Diff == 0 %}{% else %}color:red{% endif %}">{{ p.Diff|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+            {% with totals as d %}
+            <tr style="background-color: #feffd6">
+                <th>Totals</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ d.N_Matches }}</th>
+                <th class="right" style="{% if d.AttackWinPct > 0.5 %}color:green{% elif d.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ d.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ d.AttackWinPct|floatformat:3 }}</th>
+                <th class="right" style="{% if d.DefenseWinPct > 0.5 %}color:green{% elif d.DefenseWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ d.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ d.DefenseWinPct|floatformat:3 }}</th>
+                <th class="right" style="{% if d.Diff > 0 %}color:green{% elif d.Diff == 0 %}{% else %}color:red{% endif %}">{{ d.Diff|floatformat:3 }}</th>
+            </tr>
+            {% endwith %}
+        </tfoot>
+        </table>
+    </div>
+
+    <p style="width: 800px">
+        At the time of this writing (and I doubt this will ever change), attackers tend to win more than defenders. 
+        That isn't true on every map, but it is in totality.
+    </p>
+
+    <p style="width: 800px">
+        Next, let's visualize this and throw in some confidence intervals. After all, some of these margins are awfully tight.
+    </p>
+
+    <div class="table-responsive-lg">
+        <div id="options" style="white-space: nowrap;">
+            <span style="font-size: 100% !important; font-weight:bold;">Win Percentage: </span>
+            <input type="radio" name="mode" value="Attack"> Attack
+            <input type="radio" name="mode" value="Defense"> Defense
+            <input type="radio" name="mode" value="Diff" checked> Difference
+        </div>
+        <div id="my_dataviz"></div>
+    </div>
+
+    <p style="width: 800px" class="mt-1">
+        Great. I think that sums it up. Now, time for some discussion.
+    </p>
+
+    <p style="width: 800px">    
+        It would be remiss of me not to warn those looking for representative analysis on map balance to search elsewhere.
+        After all, every game in this analysis included five players from a single group of 20 or so teammates.
+        If our team specifically is weak at Bind attack, then that will make Bind look attack sided. If our team specifically is weak at Pearl defense, then that will make Pearl look defense sided.
+        Websites like thespike.gg offer comprehensive data from professional matches which would be a better source of a representative analysis.
+    </p>
+
+    <p style="width: 800px">
+        Additionally, the fact that the developers can (and do) update and re-work these maps is completely ignored in this analysis.
+        For instance, Pearl received significant updates in order to improve balancing. Does this analysis split Pearl data before and after that update? Not at all.
+        So, that's something to consider as well. 
+    <br>
+
+</div>
+
+{% endblock %}

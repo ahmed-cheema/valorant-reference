@@ -6,47 +6,47 @@
 
 {% block css %}
 <style>
-  @media screen and (max-width: 768px) {
-    p {
-      padding-left: 0px !important;
-      padding-right: 0px !important;
+    @media screen and (max-width: 768px) {
+        p {
+            padding-left: 0px !important;
+            padding-right: 0px !important;
+        }
+        form {
+            display: block !important;
+        }
     }
-    form {
-      display: block !important;
+
+    .nav-link {
+        margin-right: 30px;
     }
-  }
 
-  .nav-link {
-      margin-right: 30px;
-  }
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
 
-  .hover-nav:hover {
-      color:rgb(220,53,69) !important;
-      border-bottom: solid 3px rgb(220,53,69) !important;
-  }
+    /* Add this CSS to style the chart */
+        .line {
+        fill: none;
+        stroke-width: 2px;
+    }
 
-  /* Add this CSS to style the chart */
-  .line {
-  fill: none;
-  stroke-width: 2px;
-  }
+    .career-line {
+        stroke: blue;
+    }
 
-  .career-line {
-  stroke: blue;
-  }
+    .rolling-line {
+        stroke: red;
+    }
 
-  .rolling-line {
-  stroke: red;
-  }
+    .axis text {
+        font-size: 12px;
+    }
 
-  .axis text {
-  font-size: 12px;
-  }
-
-  .chart-title {
-  font-size: 16px;
-  text-anchor: middle;
-  }
+    .chart-title {
+        font-size: 16px;
+        text-anchor: middle;
+    }
 </style>
 {% endblock %}
 
@@ -107,7 +107,7 @@
         },
         options: {
             responsive: false,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             scales: {
                 x: {
                     grid: {
@@ -477,35 +477,37 @@
     It is not particularly useful for players who have not played many games.
   </p>
 
-  <div class="mt-3 d-flex justify-content-center">
-  <form style="display:flex;">
-    <div class="m-2">
-      <label for="metric-select" style="margin-right:2px">Metric:</label>
-      <select id="metric-select" onchange="updateChart()">
-          <option value="acs">Average Combat Score</option>
-          <option value="adr">Average Damage Per Round</option>
-          <option value="kdr">Kill Death Ratio</option>
-          <option value="kpr">Kills Per Round</option>
-          <option value="k_pct">Kill Percentage</option>
-          <option value="fb_pct">First Blood Percentage</option>
-          <option value="fd_pct">First Death Percentage</option>
-          <option value="fb_fd">First Blood / Death Ratio</option>
-          <option value="win_pct">Match Win Percentage</option>
-          <option value="rd_win_pct">Round Win Percentage</option>
-      </select>
+    <div class="mt-3 d-flex justify-content-center">
+        <form style="display:flex;">
+            <div class="m-2">
+                <label for="metric-select" style="margin-right:2px">Metric:</label>
+                <select id="metric-select" onchange="updateChart()">
+                    <option value="acs">Average Combat Score</option>
+                    <option value="adr">Average Damage Per Round</option>
+                    <option value="kdr">Kill Death Ratio</option>
+                    <option value="kpr">Kills Per Round</option>
+                    <option value="k_pct">Kill Percentage</option>
+                    <option value="fb_pct">First Blood Percentage</option>
+                    <option value="fd_pct">First Death Percentage</option>
+                    <option value="fb_fd">First Blood / Death Ratio</option>
+                    <option value="win_pct">Match Win Percentage</option>
+                    <option value="rd_win_pct">Round Win Percentage</option>
+                </select>
+            </div>
+
+            <div class="m-2">
+                <label for="rolling-average-input" style="margin-right:2px">Window:</label>
+                <input id="rolling-average-input" type="range" min="1" max="{{ games_played }}" value="{{ default_window }}" oninput="updateRollingAverage(this.value)" />
+                <input id="amount" type="number" value="{{ default_window }}" min="1" max="{{ games_played }}" style="width:50px" oninput="updateRollingAverage(this.value)" />
+            </div>
+        </form>
     </div>
 
-    <div class="m-2">
-        <label for="rolling-average-input" style="margin-right:2px">Window:</label>
-        <input id="rolling-average-input" type="range" min="1" max="{{ games_played }}" value="{{ default_window }}" oninput="updateRollingAverage(this.value)" />
-        <input id="amount" type="number" value="{{ default_window }}" min="1" max="{{ games_played }}" style="width:50px" oninput="updateRollingAverage(this.value)" />
+    <div>
+        <div class="table-responsive-lg" style="min-width:800px">
+            <canvas id="chart" class="table"></canvas>
+        </div>
     </div>
-
-  </form></div>
-
-  <div class="chart-container table-responsive">
-      <canvas id="chart" class="table"></canvas>
-  </div>
 
   <br>
     

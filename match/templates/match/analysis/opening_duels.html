@@ -187,7 +187,7 @@ Analysis · Opening Duels
     }
     const mousemove = function(event, d) {
         tooltip
-        .html("First Bloods: " + (d.FirstBloods_A) + "<br>" + "First Deaths: " + (d.FirstBloods_B) + "<br>" + "Matches: " + d.Matches_Count + "<br>" + "Win Percentage: " + (d.Win_Percentage * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%")
+        .html("<b>First Bloods:</b> " + (d.FirstBloods_A) + "<br>" + "<b>First Deaths:</b> " + (d.FirstBloods_B) + "<br>" + "<b>Matches:</b> " + d.Matches_Count + "<br>" + "<b>Win Percentage:</b> " + (d.Win_Percentage * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%")
         .style("left", (event.pageX+20) + "px")
         .style("top", (event.pageY-50) + "px");
     }
