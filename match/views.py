@@ -7131,6 +7131,70 @@ def time_of_day(request):
 
     return render(request, 'match/analysis/time_of_day.html', context)
 
+def ListSharedElements(list1,list2):
+    if (list1 is None) or (list2 is None):
+        return
+    return len(list(set(list1).intersection(list2)))
+
+def sessions(request):
+
+    matches = Match.objects.all().order_by('Date')
+
+    match_data = []
+    session_id = 0
+    current_session = []
+    previous_match_start_time = None
+    previous_match_players = None
+
+    for match in matches:
+        if not previous_match_start_time or not previous_match_players or ((match.Date - previous_match_start_time <= timedelta(hours=2)) &\
+                                                                            (ListSharedElements(match.Players.split(", "), previous_match_players) >= 3)):
+            current_session.append(match)
+        else:
+            session_id += 1
+            for s_match in current_session:
+                result = 'W' if s_match.TeamOneWon == 1 else ('T' if s_match.MatchDraw else 'L')
+                match_data.append([s_match.id, session_id, result, s_match.Date])
+            
+            current_session = [match]
+
+        previous_match_start_time = match.Date
+        previous_match_players = match.Players.split(", ")
+
+    if current_session:
+        session_id += 1
+        for s_match in current_session:
+            result = 'W' if s_match.TeamOneWon == 1 else ('T' if s_match.MatchDraw else 'L')
+            match_data.append([s_match.id, session_id, result, s_match.Date])
+
+    df = pd.DataFrame(match_data, columns=['MatchID', 'SessionID', 'Result', 'Date'])
+
+    ### SESSION LENGTH DISTRIBUTION
+
+    session_lengths = df.groupby('SessionID').size()
+    session_length_distribution = session_lengths.value_counts().sort_index()
+
+    session_length_data = {
+        'labels': list(session_length_distribution.index.tolist()),
+        'data': list(session_length_distribution.values.tolist())
+    }
+    session_length_json = json.dumps(session_length_data)
+
+    print(session_length_json)
+
+    ### SESION ENDING ANALYSIS
+
+    last_match_results = df.drop_duplicates('SessionID', keep='last')
+    ending_distribution = last_match_results['Result'].value_counts()
+
+    print(ending_distribution)
+
+    context = {
+        "session_length_json": session_length_json,
+    }
+
+    return render(request, 'match/analysis/sessions.html', context)
+
 def maps_analysis(request):
 
     maps = Player.objects.values("Match__Map").annotate(
@@ -7196,7 +7260,6 @@ def maps_analysis(request):
     }
 
     return render(request, 'match/analysis/maps.html', context)
-
 
 import numpy as np
 from sklearn.linear_model import Ridge

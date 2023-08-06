@@ -1,0 +1,227 @@
+{% extends 'match/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Analysis · Sessions
+{% endblock %}
+
+{% block css %}
+<style>
+    @media screen and (max-width: 768px) {
+        p, .adjust {
+            width: 100% !important;
+        }
+    }
+
+    table {
+        table-layout: auto !important;
+        width: 1px !important;
+        overflow: visible !important;
+    }
+
+    td, th {
+        max-width:100%;
+        white-space:nowrap;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    td {
+        background-clip: padding-box !important;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    table.sortable tbody tr:nth-child(2n) td {
+        background: white;
+    }
+    table.sortable tbody tr:nth-child(2n+1) td {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .nav-link:not(.nav-custom) {
+        margin-right: 30px;
+    }
+
+    .nav-link#analysis {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .hover-nav:hover {
+        color:rgb(220,53,69) !important;
+        border-bottom: solid 3px rgb(220,53,69) !important;
+    }
+
+    .nav-tabs {
+        width: 75%;
+        border-bottom: none;
+    }
+
+    .nav-custom {
+        color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    a.active, .nav-custom:hover {
+        color: white !important;
+        background-color: black !important;
+        border: solid 1px rgb(168, 168, 168) !important;
+        border-bottom: none !important;
+    }
+
+    button[aria-selected="true"] {
+        color: white !important;
+    }
+
+    .btn-outline-dark {
+        color: black !important;
+    }
+
+    .btn-outline-dark:hover {
+        color: white !important;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    span {
+        font-size:60% !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+
+<script type="text/javascript">
+    function showTable(tableId) {
+      // Hide all table divs
+      document.querySelectorAll('.tab-pane').forEach(function(div) {
+        div.style.display = 'none';
+      });
+      
+      // Show the selected table div
+      document.getElementById('table-' + tableId).style.display = 'block';
+    }
+</script>
+
+<script>
+    var sessionData = {{ session_length_json|safe }};
+
+    var ctx = document.getElementById('sessionLengthChart').getContext('2d');
+    var sessionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sessionData.labels,
+            datasets: [{
+                label: 'Number of Sessions',
+                data: sessionData.data,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h2>Sessions</h2>
+
+    <p style="width: 800px">
+        The quintessential Valorant sitting is playing a sequence of matches with your friends. 
+        At least it is for this friend group. The rule of thumb is that the best way to follow up a Valorant game is to play another one.
+    </p>
+
+    <p style="width: 800px">
+        In this analysis, we'll take a deep dive into the dynamics of a Valorant session. How do they start? How long are they? How do they end?
+        The first step is to form a clear definition for a session. That's a tricky and arbitary task. 
+        Suppose five users play two games together back-to-back, take a break for an hour, and come back to play a third game.
+        Does that constitute one long session? Or does the one hour hiatus prevent it from reaching session status? 
+        What if one of the five players had to leave during that break and was subsequently replaced for the third game? What if two players had to leave?
+    </p>
+
+    <p style="width: 800px">
+        Some people might think all of those hypotheticals should qualify as sessions. Or maybe none should. Or something in between. 
+        I think these are all legitimately valid approaches, but I went in a more generous route. 
+        I defined a session as a sequence of games with no more than a two hour gap between game start times (so if game one took 40 minutes, game two must start within 80 minutes for it to be considered a session) 
+        and with at least three players on the team remaining. If the majority of the team is maintained, a couple of changes here and there can be tolerated. 
+        We just don't want to make the mistake of throwing session status on two games that start in the same hour when the teams were completely different.
+    </p>
+
+    <p style="width: 800px">
+        Now that we've defined a session, let's get to the analysis. We'll start with the distribution of session length.
+    </p>
+
+    <canvas id="sessionLengthChart" width="800" height="400"></canvas>
+
+    <div class="table-responsive">
+        <table class="sortable table table-hover table-sm"
+               style="border:1px solid rgb(168, 168, 168)">
+        <thead>
+            <tr id="ignore">
+                <th colspan="2" style="border-right:1px solid rgb(222, 226, 230)"></th>
+                <th colspan="3" style="text-align:center;" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Win Pct</th>
+            </tr>
+            <tr>
+                <th>Map</th>
+                <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Rounds Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+                <th class="right" title="Percentage of Attack Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Attack</th>
+                <th class="right" title="Percentage of Defense Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Defense</th>
+                <th class="right" title="Attack Win Pct - Defense Win Pct" data-bs-toggle="tooltip" data-bs-placement="top">Diff</th>
+            </tr>
+        </thead>
+        <tbody>
+          {% for p in maps %}
+            <tr>
+                <td><a class="hiddenLink" href="{% url 'map_detail' p.Match__Map %}">{{ p.Match__Map }}</a></td>
+                <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><a href="{% url 'match_list' %}?map={{ p.Match__Map }}">{{ p.N_Matches }}</a></td>
+                <td class="right" style="{% if p.AttackWinPct > 0.5 %}color:green{% elif p.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.AttackWinPct|floatformat:3 }}</td>
+                <td class="right" style="{% if p.DefenseWinPct > 0.5 %}color:green{% elif p.DefenseWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.DefenseWinPct|floatformat:3 }}</td>
+                <td class="right" style="{% if p.Diff > 0 %}color:green{% elif p.Diff == 0 %}{% else %}color:red{% endif %}">{{ p.Diff|floatformat:3 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive-lg">
+        <div id="options" style="white-space: nowrap;">
+            <span style="font-size: 100% !important; font-weight:bold;">Win Percentage: </span>
+            <input type="radio" name="mode" value="Attack"> Attack
+            <input type="radio" name="mode" value="Defense"> Defense
+            <input type="radio" name="mode" value="Diff" checked> Difference
+        </div>
+        <div id="my_dataviz"></div>
+    </div>
+
+    <p style="width: 800px" class="mt-1">
+        
+    </p>
+
+    <br>
+
+</div>
+
+{% endblock %}
