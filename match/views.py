@@ -4698,7 +4698,7 @@ def record_streak(request):
         "Kills_Gr_15_Streak": BestStreak("Kills", 15, ge),
         "Kills_Gr_20_Streak": BestStreak("Kills", 20, ge),
         "Kills_Gr_25_Streak": BestStreak("Kills", 25, ge),
-        #"Kills_Gr_30_Streak": BestStreak("Kills", 30, ge),
+        "Kills_Gr_30_Streak": BestStreak("Kills", 30, ge),
         "WonGameStreak": BestStreak("MatchWon", 1, ge),
         "LostGameStreak": BestStreak("MatchLost", 1, ge),
         "MVPStreak": BestStreak("MVP", 1, eq),
@@ -4745,7 +4745,7 @@ def record_streak(request):
         "Kills_Gr_15_Streak": BestActiveStreak("Kills", 15, ge),
         "Kills_Gr_20_Streak": BestActiveStreak("Kills", 20, ge),
         "Kills_Gr_25_Streak": BestActiveStreak("Kills", 25, ge),
-        #"Kills_Gr_30_Streak": BestActiveStreak("Kills", 30, ge),
+        "Kills_Gr_30_Streak": BestActiveStreak("Kills", 30, ge),
         "WonGameStreak": BestActiveStreak("MatchWon", 1, ge),
         "LostGameStreak": BestActiveStreak("MatchLost", 1, ge),
         "MVPStreak": BestActiveStreak("MVP", 1, eq),
@@ -5973,7 +5973,6 @@ def lineups(request):
 
     # Render template
     return render(request, 'match/lineups.html', context)
-
 
 ### AWARDS
 

@@ -108,19 +108,6 @@ Records · Streaks
 
     <hr>
 
-    <!--
-    <div id="buttons" style="text-align:center;">
-        <div style="display: inline-block;">
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#WinsLosses" role="button">Wins/Losses</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#Kills" role="button">Kills</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#ACS" role="button">ACS</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#KDR" role="button">K/D</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#FB" role="button">First Bloods</a>
-            <a class="btn btn-outline-dark shadow-sm" style="font-size:80%; margin:5px" href="#FD" role="button">First Deaths</a>
-        </div>
-    </div>
-    -->
-
     <ul class="nav justify-content-center" style="margin-top:1%">
         <li class="nav-item">
             <button class="nav-link btn btn-outline-dark shadow-sm active" data-bs-toggle="tab" data-bs-target="#tab-overall">All-Time</button>
@@ -214,6 +201,18 @@ Records · Streaks
                         <div class="col-md-6">
                             <p style="margin-bottom:0;"><strong>Consecutive games with 25+ kills:</strong></p>
                             {% for streak in streaks.Kills_Gr_25_Streak %}
+                                <p style="margin-bottom:0; text-indent: 30px;">
+                                    {% if streak.Active %}
+                                        {% active_streak_element streak %}
+                                    {% else %}
+                                        {% streak_element streak %}
+                                    {% endif %}
+                                </p>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <p style="margin-bottom:0;"><strong>Consecutive games with 30+ kills:</strong></p>
+                            {% for streak in streaks.Kills_Gr_30_Streak %}
                                 <p style="margin-bottom:0; text-indent: 30px;">
                                     {% if streak.Active %}
                                         {% active_streak_element streak %}
@@ -788,6 +787,18 @@ Records · Streaks
                         <div class="col-md-6">
                             <p style="margin-bottom:0;"><strong>Consecutive games with 25+ kills:</strong></p>
                             {% for streak in streaks_active.Kills_Gr_25_Streak %}
+                                <p style="margin-bottom:0; text-indent: 30px;">
+                                    {% if streak.BestStreak %}
+                                        {% active_streak_element streak %}
+                                    {% else %}
+                                        {% streak_element streak %}
+                                    {% endif %}
+                                </p>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <p style="margin-bottom:0;"><strong>Consecutive games with 30+ kills:</strong></p>
+                            {% for streak in streaks_active.Kills_Gr_30_Streak %}
                                 <p style="margin-bottom:0; text-indent: 30px;">
                                     {% if streak.BestStreak %}
                                         {% active_streak_element streak %}
