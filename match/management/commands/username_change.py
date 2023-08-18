@@ -76,7 +76,7 @@ class Command(BaseCommand):
 
         ### UPDATE LIST OF SQUAD TEAMMATES
 
-        with open('match/squad.json', 'r') as f:
+        with open('match/squad.json', 'r', encoding='utf8') as f:
             usernames = json.load(f)
 
         try:
