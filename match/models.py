@@ -23,6 +23,18 @@ agent_map = {"41fb69c1-4189-7b37-f117-bcaf1e96f1bf":"Astra",
              "707eab51-4836-f488-046a-cda6bf494859":"Viper",
              "7f94d92c-4234-0a36-9646-3a87eb8b5c89":"Yoru"}
 
+def rank_to_number(rank):
+    ranks = ["Iron", "Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ascendant", "Immortal"]
+    try:
+        tier, number = rank.split()
+        number = int(number)
+        if tier not in ranks or number < 1 or number > 3:
+            raise ValueError
+    except ValueError:
+        return 0
+    else:
+        return ranks.index(tier) * 3 + number + 2
+
 class Match(models.Model):
     MatchID = models.CharField(max_length=200, unique=True)
     Map = models.CharField(max_length=200)
@@ -47,6 +59,10 @@ class Match(models.Model):
     N_Sentinels = models.IntegerField()
     N_Initiators = models.IntegerField()
     N_Controllers = models.IntegerField()
+    AverageRank = models.CharField(max_length=200, null=True)
+    AverageOppRank = models.CharField(max_length=200, null=True)
+    AverageRankSimple = models.CharField(max_length=200, null=True)
+    AverageOppRankSimple = models.CharField(max_length=200, null=True)
     
     def __str__(self):
         return ', '.join(f'{field.name}={getattr(self, field.name)}' for field in self._meta.fields)
@@ -59,6 +75,22 @@ class Match(models.Model):
             return "Loss"
         elif self.MatchDraw:
             return "Draw"
+        
+    @property
+    def AverageRankNumber(self):
+        return rank_to_number(self.AverageRank)
+    
+    @property
+    def AverageOppRankNumber(self):
+        return rank_to_number(self.AverageOppRank)
+        
+    @property
+    def AverageRankImage(self):
+        return f"https://trackercdn.com/cdn/tracker.gg/valorant/icons/tiersv2/{self.AverageRankNumber}.png"
+        
+    @property
+    def AverageOppRankImage(self):
+        return f"https://trackercdn.com/cdn/tracker.gg/valorant/icons/tiersv2/{self.AverageOppRankNumber}.png"
 
 class Player(models.Model):
     Match = models.ForeignKey(Match, on_delete=models.CASCADE)

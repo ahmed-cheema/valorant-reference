@@ -113,7 +113,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
@@ -129,8 +129,8 @@ Match
       {% for player in players %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right">{{ player.Assists }}</td>
@@ -147,7 +147,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
@@ -163,8 +163,8 @@ Match
       {% for player in players %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right">{{ player.Assists }}</td>
@@ -191,7 +191,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Tracker Score" data-bs-toggle="tooltip" data-bs-placement="top">TRS</th>
         <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
@@ -206,8 +206,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.TRS }}</td>
             <td class="right">{{ player.ACS }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
@@ -223,7 +223,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Tracker Score" data-bs-toggle="tooltip" data-bs-placement="top">TRS</th>
         <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
@@ -238,8 +238,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.TRS }}</td>
             <td class="right">{{ player.ACS }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
@@ -265,7 +265,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
@@ -281,8 +281,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
@@ -299,7 +299,7 @@ Match
     <thead>
       <tr style="font-size:100%;">
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
         <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
@@ -315,8 +315,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Kills }}</td>
             <td class="right">{{ player.Deaths }}</td>
             <td class="right" style="{% if player.KillDeathRatio > 1 %}color:green{% elif player.KillDeathRatio == 1 %}{% else %}color:red{% endif %}">{{ player.KillDeathRatio|floatformat:2 }}</td>
@@ -349,7 +349,7 @@ Match
       </tr>
       <tr>
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Attack Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
         <th class="right" title="Attack Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Attack Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
@@ -366,8 +366,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right" style="{% if player.AttackWinPct > 0.5 %}color:green{% elif player.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.AttackScore }}</td>
             <td class="right">{{ player.AttackKills }}</td>
             <td class="right">{{ player.AttackDeaths }}</td>
@@ -391,7 +391,7 @@ Match
       </tr>
       <tr>
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Attack Win-Loss Record" data-bs-toggle="tooltip" data-bs-placement="top">W-L</th>
         <th class="right" title="Attack Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Attack Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
@@ -408,8 +408,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right" style="{% if player.AttackWinPct > 0.5 %}color:green{% elif player.AttackWinPct == 0.5 %}{% else %}color:red{% endif %}">{{ player.AttackScore }}</td>
             <td class="right">{{ player.AttackKills }}</td>
             <td class="right">{{ player.AttackDeaths }}</td>
@@ -443,7 +443,7 @@ Match
       </tr>
       <tr>
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230); width:1%"></th> 
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right">0K</th>
         <th class="right">1K</th>
         <th class="right">2K</th>
@@ -464,8 +464,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.ZeroKillRounds }}</td>
             <td class="right">{{ player.OneKillRounds }}</td>
             <td class="right">{{ player.TwoKillRounds }}</td>
@@ -493,7 +493,7 @@ Match
       </tr>
       <tr>
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230); width:1%"></th> 
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right">0K</th>
         <th class="right">1K</th>
         <th class="right">2K</th>
@@ -514,8 +514,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.ZeroKillRounds }}</td>
             <td class="right">{{ player.OneKillRounds }}</td>
             <td class="right">{{ player.TwoKillRounds }}</td>
@@ -553,7 +553,7 @@ Match
       </tr>
       <tr>
         <th>Team</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=25px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
         <th class="right" title="Kills in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
@@ -570,8 +570,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team A" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   <a class="hiddenLink" href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></a></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Match.TeamOneScore }}</td>
             <td class="right">{{ player.WinKills }}</td>
             <td class="right">{{ player.WinDeaths }}</td>
@@ -595,7 +595,7 @@ Match
       </tr>
       <tr>
         <th>Opponents</th>
-        <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+        <th class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=25px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></th>
         <th class="right" title="Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rds</th>
         <th class="right" title="Kills in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
         <th class="right" title="Deaths in Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
@@ -612,8 +612,8 @@ Match
       {% for player in match.player_set.all %}
         {% if player.Team == "Team B" %}
           <tr>
-            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=30px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
-            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=30px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+            <td><img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">   {{ player.DisplayName }} <span class="badge" style="color:white; background-color:grey">{{ player.UserTag }}</span></td>
+            <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><img src="{{ player.RankImage }}" alt="{{ player.Rank }}" height=25px title="{{ player.Rank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
             <td class="right">{{ player.Match.TeamOneScore }}</td>
             <td class="right">{{ player.WinKills }}</td>
             <td class="right">{{ player.WinDeaths }}</td>
@@ -631,6 +631,6 @@ Match
   </table>
   </div>
 
-  <br><br><br>
+  <br>
 
 {% endblock %}

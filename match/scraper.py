@@ -61,7 +61,35 @@ def map_rank(url):
             return f"Ascendant {rank}"
         elif tier == 7:
             return f"Immortal {rank}"
-        
+
+def average_rank(ranks, number=True):
+    rank_mapping = {
+        "Iron 1": 0, "Iron 2": 1, "Iron 3": 2,
+        "Bronze 1": 3, "Bronze 2": 4, "Bronze 3": 5,
+        "Silver 1": 6, "Silver 2": 7, "Silver 3": 8,
+        "Gold 1": 9, "Gold 2": 10, "Gold 3": 11,
+        "Platinum 1": 12, "Platinum 2": 13, "Platinum 3": 14,
+        "Diamond 1": 15, "Diamond 2": 16, "Diamond 3": 17,
+        "Ascendant 1": 18, "Ascendant 2": 19, "Ascendant 3": 20,
+        "Immortal 1": 21, "Immortal 2": 22, "Immortal 3": 23,
+        "Radiant": 24
+    }
+
+    reverse_mapping = {v: k for k, v in rank_mapping.items()}
+
+    valid_ranks = [rank for rank in ranks if rank != "N/A"]
+
+    if not valid_ranks:
+        return "None"
+
+    rank_numbers = [rank_mapping[rank] for rank in valid_ranks]
+    average_rank_number = round(sum(rank_numbers) / len(valid_ranks))
+
+    if number:
+        return reverse_mapping[average_rank_number]
+    else:
+        return reverse_mapping[average_rank_number][0:-2]
+
 def xpath_soup(element):
     """
     Generate xpath of soup element
@@ -461,6 +489,11 @@ def ScrapeMatch(match_id):
     K_Leaders = teamA_df.sort_values(by=["Kills","ACS","KillDeathRatio"], ascending=False).reset_index(drop=True)
     KDR_Leaders = teamA_df.sort_values(by=["KillDeathRatio","Kills","ACS"], ascending=False).reset_index(drop=True)
 
+    AvgTeamRank = average_rank(list(teamA_df.Rank), number=True)
+    AvgOppRank = average_rank(list(teamB_df.Rank), number=True)
+    AvgTeamRankSimple = average_rank(list(teamA_df.Rank), number=False)
+    AvgOppRankSimple = average_rank(list(teamB_df.Rank), number=False)
+
     match = Match(MatchID = db["GameID"][0],
                   Map = db["Map"][0],
                   Date = db["Date"][0],
@@ -483,7 +516,11 @@ def ScrapeMatch(match_id):
                   N_Duelists = role_vc.get("Duelist",0),
                   N_Sentinels = role_vc.get("Sentinel",0),
                   N_Initiators = role_vc.get("Initiator",0),
-                  N_Controllers = role_vc.get("Controller",0))
+                  N_Controllers = role_vc.get("Controller",0),
+                  AverageRank = AvgTeamRank,
+                  AverageOppRank = AvgOppRank,
+                  AverageRankSimple = AvgTeamRankSimple,
+                  AverageOppRankSimple = AvgOppRankSimple)
     match.save()
 
     for idx, row in db.iterrows():

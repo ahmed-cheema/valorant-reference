@@ -1,4 +1,4 @@
-{% extends 'match/base.html' %}
+  {% extends 'match/base.html' %}
 {% load custom_filters %}
 
 {% block title %}
@@ -297,6 +297,8 @@ $(function() {
         <th>Date</th>
         <th>Map</th>
         <th>Score</th>
+        <th title="Team Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Rk</th>
+        <th title="Opponent Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Opp</th>
         <th>Team MVP</th>
         <th>Most Kills</th>
         <th>Best K/D</th>
@@ -309,6 +311,8 @@ $(function() {
           <td style="font-weight:bold"><a href="{% url 'match_detail' match.MatchID %}">{{ match.Date|date:"n/j/y" }} {{ match.Date|time:"g:i A" }}</a></td>
           <td><a href="{% url 'map_detail' match.Map %}">{{ match.Map }}</a></td>
           <td>{{ match.Score }}{% if match.Surrender == 1 %} <i title="Surrender" data-bs-toggle="tooltip" data-bs-placement="top" class="far fa-flag"></i>{% endif %}</td>
+          <td><img src="{{ match.AverageRankImage }}" alt="{{ match.AverageRank }}" height=20px title="{{ match.AverageRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
+          <td><img src="{{ match.AverageOppRankImage }}" alt="{{ match.AverageOppRank }}" height=20px title="{{ match.AverageOppRank }}" data-bs-toggle="tooltip" data-bs-placement="top"></td>
           <td>{{ match.MVP }} ({{ match.MVP_ACS }})</td>
           <td>{{ match.TopKiller }} ({{ match.MostKills }})</td>
           <td>{{ match.TopKDR }} ({{ match.TopKDRValue|floatformat:2 }})</td>

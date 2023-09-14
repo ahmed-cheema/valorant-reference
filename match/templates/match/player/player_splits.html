@@ -751,6 +751,196 @@
   </div>
 
   <br>
+  <h4 style="font-weight:normal">Opponent Rank</h4>
+  
+  <ul class="nav nav-tabs" id="rankTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom active" style="font-size:80%;" id="basic-tab" data-bs-toggle="tab" href="#rank-basic" role="tab">Basic</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="rate-tab" data-bs-toggle="tab" href="#rank-rate" role="tab">Rate</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="side-tab" data-bs-toggle="tab" href="#rank-side" role="tab">Side</a>
+    </li>
+    <li class="nav-item" role="presentation">
+      <a class="nav-link nav-custom" style="font-size:80%;" id="highs-tab" data-bs-toggle="tab" href="#rank-highs" role="tab">Highs</a>
+    </li>
+  </ul>
+
+  <div id="rank-tabs" class="tab-content">
+
+    <div id="rank-basic" class="tab-pane active table-responsive-lg">
+      <table id="table-rank-basic" class="sortable table table-hover table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th class="sorttable_nosort" title="Opponent Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Opp. Rank</th>
+              <th class="sorttable_nosort" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
+              <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th class="right" title="Percentage of Matches Won" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Kills per Round" data-bs-toggle="tooltip" data-bs-placement="top">KPR</th>
+              <th class="right" title="Average Damage Delta" data-bs-toggle="tooltip" data-bs-placement="top">DD</th>
+              <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+              <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th class="right" title="Headshot Percentage" data-bs-toggle="tooltip" data-bs-placement="top">HS%</th>
+              <th class="right" title="Percent of Rounds with 1+ Kill" data-bs-toggle="tooltip" data-bs-placement="top">K%</th>
+              <th class="right" title="Killed/Assisted/Survived/Traded Round Percentage" data-bs-toggle="tooltip" data-bs-placement="top">KAST%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in rank_splits %}
+            <tr>
+              <td>{{ p.Match__AverageOppRankSimple }}</a></td>
+              <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"><a href="{% url 'agent_detail' p.TopAgent|remove_slash %}"> {{ p.TopAgent }}</a></td>
+              <td class="right"><a href="{% url 'player_gamelog' User.Username %}?map={{ p.Match__Map }}">{{ p.num_matches }}</a></td>
+              <td class="right" style="{% if p.win_pct > 0.5 %}color:green{% elif p.win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.WinLossRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.win_pct|floatformat:3 }}</td>
+              <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.kpr|floatformat:3 }}</td>
+              <td class="right" style="{% if p.damage_delta > 0 %}color:green{% elif p.damage_delta == 0 %}{% else %}color:red{% endif %}">{{ p.damage_delta|floatformat:0 }}</td>
+              <td class="right">{{ p.acs|floatformat:1 }}</td>
+              <td class="right">{{ p.adr|floatformat:1 }}</td>
+              <td class="right">{{ p.hs_pct|floatformat:2 }}</td>
+              <td class="right" style="{% if p.k_pct > 0.5 %}color:green{% elif p.k_pct == 0.5 %}{% else %}color:red{% endif %}">{{ p.k_pct|floatformat:3 }}</td>
+              <td class="right">{{ p.kast|floatformat:3 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="rank-rate" class="tab-pane table-responsive-lg">
+      <table id="table-rank-rate" class="sortable table table-hover table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th class="sorttable_nosort" title="Opponent Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Opp. Rank</th>
+              <th class="sorttable_nosort" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
+              <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th class="right" title="Percentage of Rounds Won" data-bs-toggle="tooltip" data-bs-placement="top">Rd Win%</th>
+              <th class="right" title="Kills per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th class="right" title="Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th class="right" title="Assists per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
+              <th class="right" title="Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+              <th class="right" title="Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th class="right" title="First Bloods per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+              <th class="right" title="First Deaths per 20 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+              <th class="right" title="First Blood/First Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">FB/FD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in rank_splits %}
+            <tr>
+              <td>{{ p.Match__AverageOppRankSimple }}</a></td>
+              <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"><a href="{% url 'agent_detail' p.TopAgent|remove_slash %}"> {{ p.TopAgent }}</a></td>
+              <td class="right"><a href="{% url 'player_gamelog' User.Username %}?map={{ p.Match__Map }}">{{ p.num_matches }}</a></td>
+              <td class="right" style="{% if p.round_win_pct > 0.5 %}color:green{% elif p.RoundWinPct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.RoundRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.round_win_pct|floatformat:3 }}</td>
+              <td class="right">{{ p.kills_per_20|floatformat:1 }}</td>
+              <td class="right">{{ p.deaths_per_20|floatformat:1 }}</td>
+              <td class="right">{{ p.assists_per_20|floatformat:1 }}</td>
+              <td class="right" style="{% if p.kdr > 1 %}color:green{% elif p.kdr == 1 %}{% else %}color:red{% endif %}">{{ p.kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.acs|floatformat:1 }}</td>
+              <td class="right">{{ p.adr|floatformat:1 }}</td>
+              <td class="right">{{ p.fb_per_20|floatformat:1 }}</td>
+              <td class="right">{{ p.fd_per_20|floatformat:1 }}</td>
+              <td class="right" style="{% if p.fb_fd_ratio > 1 %}color:green{% elif p.fb_fd_ratio == 1 %}{% else %}color:red{% endif %}">{{ p.fb_fd_ratio|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="rank-side" class="tab-pane table-responsive-lg">
+      <table id="table-rank-side" class="sortable table table-hover table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr id="ignore">
+            <th colspan="2"></th>
+            <th style="border-right:1px solid rgb(222, 226, 230)"></th>
+            <th colspan="5" style="text-align:center; border-right:1px solid rgb(222, 226, 230)">Attack</th>
+            <th colspan="5" style="text-align:center">Defense</th>
+          </tr>
+          <tr>
+              <th class="sorttable_nosort" title="Opponent Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Opp. Rank</th>
+              <th class="sorttable_nosort" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
+              <th class="right" style="border-right:1px solid rgb(222, 226, 230)" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th class="right" title="Attack Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              <th class="right" title="Attack Kills per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th class="right" title="Attack Deaths per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th class="right" title="Attack Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right"style="border-right:1px solid rgb(222, 226, 230)" title="Attack Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th class="right" title="Defense Win Percentage" data-bs-toggle="tooltip" data-bs-placement="top">Win%</th>
+              <th class="right" title="Defense Kills per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th class="right" title="Defense Deaths per 12 Rounds" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th class="right" title="Defense Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Defense Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in rank_splits %}
+            <tr>
+              <td>{{ p.Match__AverageOppRankSimple }}</a></td>
+              <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"><a href="{% url 'agent_detail' p.TopAgent|remove_slash %}"> {{ p.TopAgent }}</a></td>
+              <td class="right" style="border-right:1px solid rgb(222, 226, 230)"><a href="{% url 'player_gamelog' User.Username %}?map={{ p.Match__Map }}">{{ p.num_matches }}</a></td>
+              <td class="right" style="{% if p.attack_win_pct > 0.5 %}color:green{% elif p.attack_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.AttackRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.attack_win_pct|floatformat:3 }}</td>
+              <td class="right">{{ p.attack_kp12|floatformat:1 }}</td>
+              <td class="right">{{ p.attack_dp12|floatformat:1 }}</td>
+              <td class="right" style="{% if p.attack_kdr > 1 %}color:green{% elif p.attack_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.attack_kdr|floatformat:2 }}</td>
+              <td class="right" style="border-right:1px solid rgb(222, 226, 230)">{{ p.attack_adr|floatformat:1 }}</td>
+              <td class="right" style="{% if p.defense_win_pct > 0.5 %}color:green{% elif p.defense_win_pct == 0.5 %}{% else %}color:red{% endif %}" title="{{ p.DefenseRecord }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ p.defense_win_pct|floatformat:3 }}</td>
+              <td class="right">{{ p.defense_kp12|floatformat:1 }}</td>
+              <td class="right">{{ p.defense_dp12|floatformat:1 }}</td>
+              <td class="right" style="{% if p.defense_kdr > 1 %}color:green{% elif p.defense_kdr == 1 %}{% else %}color:red{% endif %}">{{ p.defense_kdr|floatformat:2 }}</td>
+              <td class="right">{{ p.defense_adr|floatformat:1 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="rank-highs" class="tab-pane table-responsive-lg">
+      <table id="table-rank-highs" class="sortable table table-hover table-sm center"
+              style="overflow:hidden; width:75%; border:1px solid rgb(168, 168, 168)">
+        <thead>
+          <tr>
+              <th class="sorttable_nosort" title="Opponent Average Rank" data-bs-toggle="tooltip" data-bs-placement="top">Opp. Rank</th>
+              <th class="sorttable_nosort" title="Top Agent Played (Hover for all agents)" data-bs-toggle="tooltip" data-bs-placement="top">Top Agent</th>
+              <th class="right" title="Matches Played" data-bs-toggle="tooltip" data-bs-placement="top">MP</th>
+              <th class="right" title="Most Kills" data-bs-toggle="tooltip" data-bs-placement="top">K</th>
+              <th class="right" title="Most Deaths" data-bs-toggle="tooltip" data-bs-placement="top">D</th>
+              <th class="right" title="Most Assists" data-bs-toggle="tooltip" data-bs-placement="top">A</th>
+              <th class="right" title="Highest Kill Death Ratio" data-bs-toggle="tooltip" data-bs-placement="top">K/D</th>
+              <th class="right" title="Highest Average Combat Score" data-bs-toggle="tooltip" data-bs-placement="top">ACS</th>
+              <th class="right" title="Highest Average Damage per Round" data-bs-toggle="tooltip" data-bs-placement="top">ADR</th>
+              <th class="right" title="Most First Bloods" data-bs-toggle="tooltip" data-bs-placement="top">FB</th>
+              <th class="right" title="Most First Deaths" data-bs-toggle="tooltip" data-bs-placement="top">FD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in rank_splits %}
+            <tr>
+              <td>{{ p.Match__AverageOppRankSimple }}</a></td>
+              <td><img src="{{ p.TopAgentImage }}" alt="{{ p.TopAgent }}" height=30px title="{{ p.AgentString }}" data-bs-toggle="tooltip" data-bs-placement="top"><a href="{% url 'agent_detail' p.TopAgent|remove_slash %}"> {{ p.TopAgent }}</a></td>
+              <td class="right"><a href="{% url 'player_gamelog' User.Username %}?map={{ p.Match__Map }}">{{ p.num_matches }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_kills_id %}">{{ p.max_kills }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_deaths_id %}">{{ p.max_deaths }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_assists_id %}">{{ p.max_assists }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_kdr_id %}">{{ p.max_kdr|floatformat:2 }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_acs_id %}">{{ p.max_acs }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_adr_id %}">{{ p.max_adr|floatformat:1 }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_fb_id %}">{{ p.max_fb }}</a></td>
+              <td class="right"><a href="{% url 'match_detail' p.max_fd_id %}">{{ p.max_fd }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <br>
   <h4 style="font-weight:normal">Match Outcome</h4>
 
   <ul class="nav nav-tabs" id="outcomeTabs" role="tablist">
