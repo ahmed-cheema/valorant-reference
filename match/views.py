@@ -4478,48 +4478,56 @@ def record_overview(request):
     # Who has played most / least
     UsernameCounts = Player.objects.filter(Team="Team A").values('Username').annotate(
                         Count=Count('Username')
-                     ).order_by('-Count')
-    
-    TopPlayerUsername = UsernameCounts[0]['Username']
-    TopPlayerDisplayName = TopPlayerUsername.split("#")[0]
-    TopPlayerGames = UsernameCounts[0]['Count']
+                    ).order_by('-Count')
 
-    UsernameCounts = UsernameCounts.order_by('Count')
+    TopPlayerGames = UsernameCounts.first()['Count']
+    BotPlayerGames = UsernameCounts.last()['Count']
 
-    BotPlayerUsername = UsernameCounts[0]['Username']
-    BotPlayerDisplayName = BotPlayerUsername.split("#")[0]
-    BotPlayerGames = UsernameCounts[0]['Count']
+    TopPlayers = UsernameCounts.filter(Count=TopPlayerGames)
+    BotPlayers = UsernameCounts.filter(Count=BotPlayerGames)
 
-    # Get most frequent agent of the player who played most / least
-    PlayerAgentCounts = Player.objects.filter(Team="Team A",Username=TopPlayerUsername).values('Agent').annotate(
-                        Count=Count('Agent')
-                     ).order_by('-Count')
-    TopPlayerAgent = PlayerAgentCounts[0]['Agent']
-    TopPlayerAgentImage = AgentImage(TopPlayerAgent)
+    TopPlayersList = [{
+        'Username': player['Username'],
+        'DisplayName': player['Username'].split("#")[0],
+        'Agent': Player.objects.filter(Team="Team A", Username=player['Username']).values('Agent')\
+                               .annotate(Count=Count('Agent')).order_by('-Count').first()["Agent"],
+        'AgentImage': AgentImage(Player.objects.filter(Team="Team A", Username=player['Username']).values('Agent')\
+                                               .annotate(Count=Count('Agent')).order_by('-Count').first()["Agent"]),
+        'GamesPlayed': player['Count']
+    } for player in TopPlayers]
 
-    PlayerAgentCounts = Player.objects.filter(Team="Team A",Username=BotPlayerUsername).values('Agent').annotate(
-                        Count=Count('Agent')
-                     ).order_by('-Count')
-    BotPlayerAgent = PlayerAgentCounts[0]['Agent']
-    BotPlayerAgentImage = AgentImage(BotPlayerAgent)
+    BotPlayersList = [{
+        'Username': player['Username'],
+        'DisplayName': player['Username'].split("#")[0],
+        'Agent': Player.objects.filter(Team="Team A", Username=player['Username']).values('Agent')\
+                               .annotate(Count=Count('Agent')).order_by('-Count').first()["Agent"],
+        'AgentImage': AgentImage(Player.objects.filter(Team="Team A", Username=player['Username']).values('Agent')\
+                                               .annotate(Count=Count('Agent')).order_by('-Count').first()["Agent"]),
+        'GamesPlayed': player['Count']
+    } for player in BotPlayers]
 
     # Get most and least played agents
+    AgentCounts = Player.objects.filter(Team="Team A").values('Agent').annotate(
+                    Count=Count('Agent')
+                ).order_by('-Count')
 
-    AgentCounts = []
-    for x in agent_map.values():
-        agent_filter = Player.objects.filter(Team="Team A",
-                                             Agent=x)
-        AgentCounts.append({"Agent":x, "Count":len(agent_filter)})
+    TopAgentCount = AgentCounts.first()['Count']
+    BotAgentCount = AgentCounts.last()['Count']
 
-    AgentCounts = sorted(AgentCounts, key=lambda x: x['Count'], reverse=True)
+    TopAgents = [agent for agent in AgentCounts if agent['Count'] == TopAgentCount]
+    BotAgents = [agent for agent in AgentCounts if agent['Count'] == BotAgentCount]
 
-    TopAgent = AgentCounts[0]['Agent']
-    TopAgentImage = AgentImage(TopAgent)
-    TopAgentCount = AgentCounts[0]['Count']
+    TopAgentsList = [{
+        'Agent': agent['Agent'],
+        'AgentImage': AgentImage(agent['Agent']),
+        'Count': agent['Count']
+    } for agent in TopAgents]
 
-    BotAgent = AgentCounts[-1]['Agent']
-    BotAgentImage = AgentImage(BotAgent)
-    BotAgentCount = AgentCounts[-1]['Count']
+    BotAgentsList = [{
+        'Agent': agent['Agent'],
+        'AgentImage': AgentImage(agent['Agent']),
+        'Count': agent['Count']
+    } for agent in BotAgents]
 
     context = {
         "TotalGames": TotalGames,
@@ -4532,25 +4540,11 @@ def record_overview(request):
         "BiggestLoss": BiggestLoss,
         "LongestGame": LongestGame,
 
-        "TopPlayerUsername": TopPlayerUsername,
-        "TopPlayerDisplayName": TopPlayerDisplayName,
-        "TopPlayerAgent": TopPlayerAgent,
-        "TopPlayerAgentImage": TopPlayerAgentImage,
-        "TopPlayerGames": TopPlayerGames,
+        "TopPlayers": TopPlayersList,
+        "BotPlayers": BotPlayersList,
 
-        "BotPlayerUsername": BotPlayerUsername,
-        "BotPlayerDisplayName": BotPlayerDisplayName,
-        "BotPlayerAgent": BotPlayerAgent,
-        "BotPlayerAgentImage": BotPlayerAgentImage,
-        "BotPlayerGames": BotPlayerGames,
-
-        "TopAgent": TopAgent,
-        "TopAgentImage": TopAgentImage,
-        "TopAgentCount": TopAgentCount,
-
-        "BotAgent": BotAgent,
-        "BotAgentImage": BotAgentImage,
-        "BotAgentCount": BotAgentCount
+        "TopAgents": TopAgentsList,
+        "BotAgents": BotAgentsList,
     }
 
     return render(request, "match/recordbook/record_overview.html", context)
@@ -4612,48 +4606,54 @@ def record_game(request):
 
     players = players.order_by('-fb_pct')
     qual_players = players.filter(fb_pct=players.first().fb_pct)
-    HighestFB_Pct = [{'Username': players.first().Username,
-                    'Value': players.first().fb_pct,
-                    'Date': players.first().Match.Date,
-                    'DisplayName': players.first().DisplayName,
-                    'UserTag': players.first().UserTag,
-                    'Agent': players.first().Agent,
-                    'AgentImage': AgentImage(players.first().Agent),
-                    'MatchID': players.first().Match.MatchID,
-                    } for player in qual_players if getattr(player, "fb_pct") == players.first().fb_pct]
+    HighestFB_Pct = [{
+        'Username': player.Username,
+        'Value': player.fb_pct,
+        'Date': player.Match.Date,
+        'DisplayName': player.DisplayName,
+        'UserTag': player.UserTag,
+        'Agent': player.Agent,
+        'AgentImage': AgentImage(player.Agent),
+        'MatchID': player.Match.MatchID,
+    } for player in qual_players]
+
     players = players.order_by('-fd_pct')
     qual_players = players.filter(fd_pct=players.first().fd_pct)
-    HighestFD_Pct = [{'Username': players.first().Username,
-                    'Value': players.first().fd_pct,
-                    'Date': players.first().Match.Date,
-                    'DisplayName': players.first().DisplayName,
-                    'UserTag': players.first().UserTag,
-                    'Agent': players.first().Agent,
-                    'AgentImage': AgentImage(players.first().Agent),
-                    'MatchID': players.first().Match.MatchID,
-                    } for player in qual_players if getattr(player, "fd_pct") == players.first().fd_pct]
+    HighestFD_Pct = [{
+        'Username': player.Username,
+        'Value': player.fd_pct,
+        'Date': player.Match.Date,
+        'DisplayName': player.DisplayName,
+        'UserTag': player.UserTag,
+        'Agent': player.Agent,
+        'AgentImage': AgentImage(player.Agent),
+        'MatchID': player.Match.MatchID,
+    } for player in qual_players]
 
     players = players.order_by('-k_pct')
     qual_players = players.filter(k_pct=players.first().k_pct)
-    HighestK_Pct = [{'Username': players.first().Username,
-                    'Value': players.first().k_pct,
-                    'Date': players.first().Match.Date,
-                    'DisplayName': players.first().DisplayName,
-                    'UserTag': players.first().UserTag,
-                    'Agent': players.first().Agent,
-                    'AgentImage': AgentImage(players.first().Agent),
-                    'MatchID': players.first().Match.MatchID,
-                    } for player in qual_players if getattr(player, "k_pct") == players.first().k_pct]
+    HighestK_Pct = [{
+        'Username': player.Username,
+        'Value': player.k_pct,
+        'Date': player.Match.Date,
+        'DisplayName': player.DisplayName,
+        'UserTag': player.UserTag,
+        'Agent': player.Agent,
+        'AgentImage': AgentImage(player.Agent),
+        'MatchID': player.Match.MatchID,
+    } for player in qual_players]
+    
     qual_players = players.filter(k_pct=players.last().k_pct)
-    LowestK_Pct = [{'Username': players.last().Username,
-                    'Value': players.last().k_pct,
-                    'Date': players.last().Match.Date,
-                    'DisplayName': players.last().DisplayName,
-                    'UserTag': players.last().UserTag,
-                    'Agent': players.last().Agent,
-                    'AgentImage': AgentImage(players.last().Agent),
-                    'MatchID': players.last().Match.MatchID,
-                    } for player in qual_players if getattr(player, "k_pct") == players.last().k_pct]
+    LowestK_Pct = [{
+        'Username': player.Username,
+        'Value': player.k_pct,
+        'Date': player.Match.Date,
+        'DisplayName': player.DisplayName,
+        'UserTag': player.UserTag,
+        'Agent': player.Agent,
+        'AgentImage': AgentImage(player.Agent),
+        'MatchID': player.Match.MatchID,
+    } for player in qual_players]
 
     HighestHS_Pct = BestGame("HS_Pct")
     LowestHS_Pct = BestGame("HS_Pct","asc")

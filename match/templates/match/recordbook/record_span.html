@@ -145,7 +145,7 @@ Records · Spans
                                     <td>{{ key.0 }}</td>
                                     <td>
                                         {% for game in games %}
-                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="20px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
+                                            <img src="{{ game.AgentImage }}" alt="{{ game.Agent }}" height="17px" title="{{ game.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top">
                                             <a style="{% if game.Active %}font-weight:bold;{% endif %}" href="{% url 'player_detail' game.Username %}">{{ game.DisplayName }}</a> 
                                             <br>
                                         {% endfor %}

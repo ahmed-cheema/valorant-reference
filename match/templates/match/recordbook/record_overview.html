@@ -138,19 +138,23 @@ Records · General
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Most games played:</strong></p>
+            {% for player in TopPlayers %}
             <p>
-                <img src="{{ TopPlayerAgentImage }}" alt="{{ TopPlayerAgent }}" height=30px title="{{ TopPlayerAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
-                <a href="{% url 'player_detail' TopPlayerUsername %}">{{ TopPlayerDisplayName }}:</a> 
-                {{ TopPlayerGames }} 
+                <img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }}:</a> 
+                {{ player.GamesPlayed }} 
             </p>
+            {% endfor %}
         </div>
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Fewest games played:</strong></p>
-            <p>
-                <img src="{{ BotPlayerAgentImage }}" alt="{{ BotPlayerAgent }}" height=30px title="{{ BotPlayerAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
-                <a href="{% url 'player_detail' BotPlayerUsername %}">{{ BotPlayerDisplayName }}:</a> 
-                {{ BotPlayerGames }} 
+            {% for player in BotPlayers %}
+            <p style="margin-bottom: 0%">
+                <img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }}:</a> 
+                {{ player.GamesPlayed }} 
             </p>
+            {% endfor %}
         </div>
     </div>
 
@@ -161,19 +165,23 @@ Records · General
     <div class="row justify-content-center" >
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Most games played:</strong></p>
+            {% for agent in TopAgents %}
             <p>
-                <img src="{{ TopAgentImage }}" alt="{{ TopAgent }}" height=30px title="{{ TopAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
-                <a href="{% url 'player_detail' TopAgent %}">{{ TopAgent }}:</a> 
-                {{ TopAgentCount }} 
+                <img src="{{ agent.AgentImage }}" alt="{{ agent.Agent }}" height=25px title="{{ agent.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'agent_detail' agent.Agent %}">{{ agent.Agent }}:</a> 
+                {{ agent.Count }} 
             </p>
+            {% endfor %}
         </div>
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Fewest games played:</strong></p>
+            {% for agent in BotAgents %}
             <p>
-                <img src="{{ BotAgentImage }}" alt="{{ BotAgent }}" height=30px title="{{ BotAgent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
-                <a href="{% url 'player_detail' BotAgent %}">{{ BotAgent }}:</a> 
-                {{ BotAgentCount }} 
+                <img src="{{ agent.AgentImage }}" alt="{{ agent.Agent }}" height=25px title="{{ agent.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
+                <a href="{% url 'agent_detail' agent.Agent %}">{{ agent.Agent }}:</a> 
+                {{ agent.Count }} 
             </p>
+            {% endfor %}
         </div>
     </div>
 
