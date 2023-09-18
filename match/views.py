@@ -7487,7 +7487,7 @@ def average_rank(ranks, number=True):
 def impact(request):
 
     ALPHA = 100
-    MIN_ROUNDS = 500
+    MIN_ROUNDS = 1000
 
     usernames = Player.objects.filter(Team="Team A").values_list('Username', flat=True).distinct()
     player_count = len(usernames)

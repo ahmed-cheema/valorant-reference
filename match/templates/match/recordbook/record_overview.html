@@ -139,7 +139,7 @@ Records · General
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Most games played:</strong></p>
             {% for player in TopPlayers %}
-            <p>
+            <p style="margin-bottom: 0%">
                 <img src="{{ player.AgentImage }}" alt="{{ player.Agent }}" height=25px title="{{ player.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
                 <a href="{% url 'player_detail' player.Username %}">{{ player.DisplayName }}:</a> 
                 {{ player.GamesPlayed }} 
@@ -166,7 +166,7 @@ Records · General
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Most games played:</strong></p>
             {% for agent in TopAgents %}
-            <p>
+            <p style="margin-bottom: 0%">
                 <img src="{{ agent.AgentImage }}" alt="{{ agent.Agent }}" height=25px title="{{ agent.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
                 <a href="{% url 'agent_detail' agent.Agent %}">{{ agent.Agent }}:</a> 
                 {{ agent.Count }} 
@@ -176,7 +176,7 @@ Records · General
         <div class="col-md-3">
             <p style="margin-bottom:0;"><strong>Fewest games played:</strong></p>
             {% for agent in BotAgents %}
-            <p>
+            <p style="margin-bottom: 0%">
                 <img src="{{ agent.AgentImage }}" alt="{{ agent.Agent }}" height=25px title="{{ agent.Agent }}" data-bs-toggle="tooltip" data-bs-placement="top"> 
                 <a href="{% url 'agent_detail' agent.Agent %}">{{ agent.Agent }}:</a> 
                 {{ agent.Count }} 
